@@ -50,11 +50,11 @@ Este projeto depende do framework educacional:
 
 **Integrantes do Time:**
 
-1. ____________________________________
-2. ____________________________________
-3. ____________________________________
-4. ____________________________________
-5. ____________________________________
+1. André Almeida Gomes Neto
+2. Deivid Souza dos Santos Oliveira
+3. Hellen Verena da Conceição Magalhães
+4. Ismael Rodrigues de Oliveira Neto
+5. João Vitor da Conceição de Almeida
 
 ---
 
