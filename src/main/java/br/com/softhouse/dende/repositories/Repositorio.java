@@ -23,36 +23,41 @@ public class Repositorio {
 
     // Métodos novos paras minhas APIs 01, 02 e 03
 
-    //1. Vai verificar se o email já existe em algum dos mapas (usuariosComum ou organizadores)
-    public boolean emailExiste(String email) 
-    {
-        return usuariosComum.containsKey(email) || organizadores.containsKey(email);
-    }
-
-    //2. Vai salavar ou atualizar um usuário comum
-    public void salvarUsuarioComum(Usuario usuario) 
-    {
-        usuariosComum.put(usuario.getEmail(), usuario);
-    }
-
-    //3. Vai salvar ou atualizar um organizador
-    public void salvarOrganizador(Organizador organizador) {
-        organizadores.put(organizador.getEmail(), organizador);
-    }
-
-    //4. Vai buscar um usuário comum pelo email
-    public Usuario buscarUsuario(String email) {
-        return usuariosComum.get(email);
-    }
-
-    //5. Vai buscar um organizador pelo email
-    public Organizador buscarOrganizador(String email) {
-        return organizadores.get(email);
-    }
-
-    // 6. Salva ou atualiza um Usuário Comum
+    // Salva ou atualiza um Usuário Comum usando o ID
     public void salvarUsuario(Usuario usuario) {
-        usuariosComum.put(usuario.getEmail(), usuario);
+        usuariosComum.put(usuario.getId(), usuario);
+    }
+
+    // Salva ou atualiza um Organizador usando o ID
+    public void salvarOrganizador(Organizador organizador) {
+        organizadores.put(organizador.getId(), organizador);
+    }
+
+    // Busca um usuário específico pelo ID
+    public Usuario buscarUsuarioPorId(String id) {
+        return usuariosComum.get(id);
+    }
+
+    // Busca um organizador específico pelo ID
+    public Organizador buscarOrganizadorPorId(String id) {
+        return organizadores.get(id);
+    }
+    
+    // Verifica se o e-mail já existe em QUALQUER UMA das listas (Regra de Negócio)
+    public boolean emailExiste(String email) {
+        // Procura na lista de usuários comuns
+        for (Usuario u : usuariosComum.values()) {
+            if (u.getEmail().equals(email)) {
+                return true;
+            }
+        }
+        // Procura na lista de organizadores
+        for (Organizador o : organizadores.values()) {
+            if (o.getEmail().equals(email)) {
+                return true;
+            }
+        }
+        return false; // Se não achou em nenhuma das duas, o e-mail está liberado!
     }
 }
 

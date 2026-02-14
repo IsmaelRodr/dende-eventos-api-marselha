@@ -29,33 +29,34 @@ public class OrganizadorController {
         }
         
         repositorio.salvarOrganizador(organizador);
-        return ResponseEntity.ok("Organizador " + organizador.getNome() + " registado com sucesso!");
+        return ResponseEntity.ok("Organizador " + organizador.getNome() + " registado com sucesso! O seu ID é: " + organizador.getId());
     }
 
-    // API 03 - Alterar Perfil do Organizador
-    @PutMapping(path = "/{email}")
-    public ResponseEntity<String> alterarOrganizador(@PathVariable(parameter = "email") String email, @RequestBody Organizador organizadorAtualizado) {
-        Organizador organizadorExistente = repositorio.buscarOrganizador(email);
+    // API 03 - Alterar Perfil do Organizador (AGORA POR ID)
+    @PutMapping(path = "/{id}")
+    public ResponseEntity<String> atualizarOrganizador(@PathVariable(parameter = "id") String id, @RequestBody Organizador organizadorAtualizado) {
+        
+        // CORREÇÃO AQUI: Agora ele chama o método novo com "PorId" no final!
+        Organizador organizadorExistente = repositorio.buscarOrganizadorPorId(id);
         
         if (organizadorExistente == null) {
-            return ResponseEntity.ok("Erro: Organizador não encontrado.");
+            return ResponseEntity.ok("Erro: Organizador não encontrado com este ID.");
         }
-        
-        // Regra de Negócio: Não é permitido modificar o e-mail
+
+        // A regra de negócio de bloquear a troca de e-mail 
         if (!organizadorExistente.getEmail().equals(organizadorAtualizado.getEmail())) {
             return ResponseEntity.ok("Erro: Não é permitido alterar o e-mail de acesso.");
         }
-        
-        // Atualiza os dados permitidos
+
+        // Atualiza os dados permitidos do organizador
         organizadorExistente.setNome(organizadorAtualizado.getNome());
-        organizadorExistente.setDataNascimento(organizadorAtualizado.getDataNascimento());
-        organizadorExistente.setSexo(organizadorAtualizado.getSexo());
         organizadorExistente.setSenha(organizadorAtualizado.getSenha());
-        organizadorExistente.setCnpj(organizadorAtualizado.getCnpj());
         organizadorExistente.setRazaoSocial(organizadorAtualizado.getRazaoSocial());
         organizadorExistente.setNomeFantasia(organizadorAtualizado.getNomeFantasia());
         
+        // Salva a atualização
         repositorio.salvarOrganizador(organizadorExistente);
-        return ResponseEntity.ok("Perfil do organizador " + organizadorExistente.getNome() + " atualizado com sucesso!");
+
+        return ResponseEntity.ok("Perfil do organizador atualizado com sucesso!");
     }
 }

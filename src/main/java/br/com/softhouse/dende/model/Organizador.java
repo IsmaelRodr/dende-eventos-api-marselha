@@ -5,6 +5,7 @@ import java.util.Objects;
 
 public class Organizador {
 
+    private String id;
     private String nome;
     private LocalDate dataNascimento;
     private String sexo;
@@ -15,6 +16,7 @@ public class Organizador {
     private String nomeFantasia;
 
     public Organizador(String nome, LocalDate dataNascimento, String sexo, String email, String senha, String cnpj, String razaoSocial, String nomeFantasia) {
+        this.id = java.util.UUID.randomUUID().toString();
         this.nome = nome;
         this.dataNascimento = dataNascimento;
         this.sexo = sexo;
@@ -84,6 +86,10 @@ public class Organizador {
         this.nomeFantasia = nomeFantasia;
     }
 
+    public String getId() {
+        return id;
+    }
+    
     public String getSenha() { return senha; }
     public void setSenha(String senha) { this.senha = senha; }
 
