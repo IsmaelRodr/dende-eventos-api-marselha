@@ -9,20 +9,17 @@ public class Usuario {
     private LocalDate dataNascimento;
     private String sexo;
     private String email;
-    private String senha;
 
     public Usuario(
             final String nome,
             final LocalDate dataNascimento,
             final String sexo,
-            final String email,
-            final String senha
+            final String email
     ) {
         this.nome = nome;
         this.dataNascimento = dataNascimento;
         this.sexo = sexo;
         this.email = email;
-        this.senha = senha;
     }
 
     public Usuario() {
@@ -61,9 +58,6 @@ public class Usuario {
         this.email = email;
     }
 
-    public String getSenha() { return senha; }
-    public void setSenha(String senha) { this.senha = senha; }
-    
     @Override
     public boolean equals(Object object) {
         if (this == object) return true;

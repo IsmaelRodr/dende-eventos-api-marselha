@@ -9,17 +9,15 @@ public class Organizador {
     private LocalDate dataNascimento;
     private String sexo;
     private String email;
-    private String senha;
     private String cnpj;
     private String razaoSocial;
     private String nomeFantasia;
 
-    public Organizador(String nome, LocalDate dataNascimento, String sexo, String email, String senha, String cnpj, String razaoSocial, String nomeFantasia) {
+    public Organizador(String nome, LocalDate dataNascimento, String sexo, String email, String cnpj, String razaoSocial, String nomeFantasia) {
         this.nome = nome;
         this.dataNascimento = dataNascimento;
         this.sexo = sexo;
         this.email = email;
-        this.senha = senha;
         this.cnpj = cnpj;
         this.razaoSocial = razaoSocial;
         this.nomeFantasia = nomeFantasia;
@@ -83,9 +81,6 @@ public class Organizador {
     public void setNomeFantasia(String nomeFantasia) {
         this.nomeFantasia = nomeFantasia;
     }
-
-    public String getSenha() { return senha; }
-    public void setSenha(String senha) { this.senha = senha; }
 
     @Override
     public boolean equals(Object object) {

@@ -20,40 +20,13 @@ public class UsuarioController {
         this.repositorio = Repositorio.getInstance();
     }
 
-    // API 01 - Cadastrar Utilizador Comum
     @PostMapping
-    public ResponseEntity<String> cadastroUsuario(@RequestBody Usuario usuario) {
-        // Regra de Negócio: Não podemos ter dois utilizadores com o mesmo e-mail
-        if (repositorio.emailExiste(usuario.getEmail())) {
-            return ResponseEntity.ok("Erro: Já existe um utilizador registado com este e-mail!");
-        }
-        
-        repositorio.salvarUsuario(usuario);
-        return ResponseEntity.ok("Utilizador " + usuario.getNome() + " registado com sucesso!");
+    public ResponseEntity<String> cadastroUsuario(@RequestBody Usuario usuario){
+        return ResponseEntity.ok("Usuario " + usuario.getEmail() + " registrado com sucesso!");
     }
 
-    // API 03 - Alterar Perfil do Utilizador Comum
-    @PutMapping(path = "/{email}")
-    public ResponseEntity<String> alterarUsuario(@PathVariable(parameter = "email") String email, @RequestBody Usuario usuarioAtualizado) {
-        Usuario usuarioExistente = repositorio.buscarUsuario(email);
-        
-        if (usuarioExistente == null) {
-            return ResponseEntity.ok("Erro: Utilizador não encontrado.");
-        }
-        
-        // Regra de Negócio: Não é permitido modificar o e-mail
-        if (!usuarioExistente.getEmail().equals(usuarioAtualizado.getEmail())) {
-            return ResponseEntity.ok("Erro: Não é permitido alterar o e-mail de acesso.");
-        }
-        
-        // Atualiza os dados permitidos
-        usuarioExistente.setNome(usuarioAtualizado.getNome());
-        usuarioExistente.setDataNascimento(usuarioAtualizado.getDataNascimento());
-        usuarioExistente.setSexo(usuarioAtualizado.getSexo());
-        usuarioExistente.setSenha(usuarioAtualizado.getSenha());
-        
-        // Guarda a atualização
-        repositorio.salvarUsuario(usuarioExistente);
-        return ResponseEntity.ok("Perfil de " + usuarioExistente.getNome() + " atualizado com sucesso!");
+    @PutMapping(path = "/{usuarioId}")
+    public ResponseEntity<String> alterarUsuario(@PathVariable(parameter = "usuarioId") long usuarioId, @RequestBody Usuario usuario) {
+        return ResponseEntity.ok("Usuario " + usuario.getEmail() + " do usuarioId = " + usuarioId + " alterado com sucesso!");
     }
 }
