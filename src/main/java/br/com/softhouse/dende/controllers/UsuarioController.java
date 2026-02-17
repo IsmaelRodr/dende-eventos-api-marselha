@@ -1,59 +1,89 @@
 package br.com.softhouse.dende.controllers;
 
 import br.com.dende.softhouse.annotations.Controller;
-import br.com.dende.softhouse.annotations.request.PostMapping;
-import br.com.dende.softhouse.annotations.request.PutMapping;
-import br.com.dende.softhouse.annotations.request.RequestBody;
-import br.com.dende.softhouse.annotations.request.RequestMapping;
-import br.com.dende.softhouse.annotations.request.PathVariable;
+import br.com.dende.softhouse.annotations.request.*;
 import br.com.dende.softhouse.process.route.ResponseEntity;
 import br.com.softhouse.dende.model.Usuario;
 import br.com.softhouse.dende.repositories.Repositorio;
 
-@Controller
-@RequestMapping(path = "/usuarios")
-public class UsuarioController {
+import java.time.LocalDate;
+import java.time.Period;
+import java.util.HashMap;
+import java.util.Map;
 
-    private final Repositorio repositorio;
 
-    public UsuarioController() {
-        this.repositorio = Repositorio.getInstance();
+
+    // API 04 Visualizar Perfil de Usuario Comum
+    @GetMapping(path = "/{email}")
+    public ResponseEntity<?> visualizarPerfil(@PathVariable(parameter = "email") String email) {
+        Usuario usuario = repositorio.buscarUsuario(email);
+
+        if (usuario == null) {
+            return ResponseEntity.ok("Usuário não encontrado");
+        }
+
+        // Regra de Négocio: Data de Nascimento Formatada em Anos-Meses-Dias.
+        LocalDate hoje = LocalDate.now();
+        Period periodo = Period.between(usuario.getDataNascimento(), hoje);
+        String idade = String.format("%d anos, %d meses e %d dias",
+                periodo.getYears(),
+                periodo.getMonths(),
+                periodo.getDays());
+
+        Map<String, Object> perfil = new HashMap<>();
+        perfil.put("nome", usuario.getNome());
+        perfil.put("dataNascimento", usuario.getDataNascimento().toString());
+        perfil.put("idade", idade);
+        perfil.put("sexo", usuario.getSexo());
+        perfil.put("email", usuario.getEmail());
+
+        return ResponseEntity.ok(perfil);
     }
 
-    // API 01 - Cadastrar Utilizador Comum
-    @PostMapping
-    public ResponseEntity<String> cadastroUsuario(@RequestBody Usuario usuario) {
-        // Regra de Negócio: Não podemos ter dois utilizadores com o mesmo e-mail
-        if (repositorio.emailExiste(usuario.getEmail())) {
-            return ResponseEntity.ok("Erro: Já existe um utilizador registado com este e-mail!");
+    // API 05 Desativa Perfil de Usuário
+    @PatchMapping(path = "/{email}/desativar")
+    public ResponseEntity<?> desativarUsuario (@PathVariable( parameter = "email") String email){
+        Usuario usuario = repositorio.buscarUsuario(email);
+        if(usuario != null){
+            if(! usuario.isAtivo()){
+                return ResponseEntity.status(409,"Usuário já está Inativo!");
+            } else {
+                usuario.setAtivo(false);
+                repositorio.salvarUsuario(usuario);
+                return ResponseEntity.status(200,"Usuário Desativado!");
+            }
+        } else {
+            return ResponseEntity.status(404,"Usuário Não Encontrado!");
+
         }
-        
-        repositorio.salvarUsuario(usuario);
-        return ResponseEntity.ok("Utilizador " + usuario.getNome() + " registado com sucesso!");
     }
 
-    // API 03 - Alterar Perfil do Utilizador Comum
-    @PutMapping(path = "/{email}")
-    public ResponseEntity<String> alterarUsuario(@PathVariable(parameter = "email") String email, @RequestBody Usuario usuarioAtualizado) {
-        Usuario usuarioExistente = repositorio.buscarUsuario(email);
-        
-        if (usuarioExistente == null) {
-            return ResponseEntity.ok("Erro: Utilizador não encontrado.");
+    // API 06  Reativar Perfil de Usuário
+    @PatchMapping(path = "/{email}/ativar")
+    public ResponseEntity<?> ativarUsuario (@PathVariable(parameter = "email") String email,
+                                            @RequestBody Usuario.Credenciais credenciais){
+
+
+        // Regra de Negócio: Validação de email e senha
+        if (credenciais.senha() == null || credenciais.senha().isEmpty()) {
+            return ResponseEntity.status(400, "Senha é obrigatória.");
         }
-        
-        // Regra de Negócio: Não é permitido modificar o e-mail
-        if (!usuarioExistente.getEmail().equals(usuarioAtualizado.getEmail())) {
-            return ResponseEntity.ok("Erro: Não é permitido alterar o e-mail de acesso.");
+
+        Usuario usuario = repositorio.buscarUsuario(email);
+
+        if(usuario != null){
+            if (!usuario.getSenha().equals(credenciais.senha())) {
+                return ResponseEntity.status(401, "Senha inválida.");
+            }
+            if(usuario.isAtivo()){
+                return ResponseEntity.status(409,"Usuário já está Ativo!");
+            } else {
+                usuario.setAtivo(true);
+                repositorio.salvarUsuario(usuario);
+                return ResponseEntity.status(200,"Usuário Reativado!");
+            }
+        } else {
+            return ResponseEntity.status(404,"Usuário Não Encontrado!");
         }
-        
-        // Atualiza os dados permitidos
-        usuarioExistente.setNome(usuarioAtualizado.getNome());
-        usuarioExistente.setDataNascimento(usuarioAtualizado.getDataNascimento());
-        usuarioExistente.setSexo(usuarioAtualizado.getSexo());
-        usuarioExistente.setSenha(usuarioAtualizado.getSenha());
-        
-        // Guarda a atualização
-        repositorio.salvarUsuario(usuarioExistente);
-        return ResponseEntity.ok("Perfil de " + usuarioExistente.getNome() + " atualizado com sucesso!");
     }
 }
