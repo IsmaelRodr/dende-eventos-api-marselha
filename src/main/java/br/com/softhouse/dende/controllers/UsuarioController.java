@@ -11,7 +11,25 @@ import java.time.Period;
 import java.util.HashMap;
 import java.util.Map;
 
+@Controller
+@RequestMapping(path = "/usuarios")
+public class UsuarioController {
 
+    private final Repositorio repositorio;
+
+    public UsuarioController() {
+        this.repositorio = Repositorio.getInstance();
+    }
+
+    @PostMapping
+    public ResponseEntity<String> cadastroUsuario(@RequestBody Usuario usuario){
+        return ResponseEntity.ok("Usuario " + usuario.getEmail() + " registrado com sucesso!");
+    }
+
+    @PutMapping(path = "/{usuarioId}")
+    public ResponseEntity<String> alterarUsuario(@PathVariable(parameter = "usuarioId") long usuarioId, @RequestBody Usuario usuario) {
+        return ResponseEntity.ok("Usuario " + usuario.getEmail() + " do usuarioId = " + usuarioId + " alterado com sucesso!");
+    }
 
     // API 04 Visualizar Perfil de Usuario Comum
     @GetMapping(path = "/{email}")

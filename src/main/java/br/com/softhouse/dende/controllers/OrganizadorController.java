@@ -4,7 +4,6 @@ import br.com.dende.softhouse.annotations.Controller;
 import br.com.dende.softhouse.annotations.request.*;
 import br.com.dende.softhouse.process.route.ResponseEntity;
 import br.com.softhouse.dende.model.Organizador;
-import br.com.softhouse.dende.model.Usuario;
 import br.com.softhouse.dende.repositories.Repositorio;
 
 import java.time.LocalDate;
@@ -12,6 +11,15 @@ import java.time.Period;
 import java.util.HashMap;
 import java.util.Map;
 
+@Controller
+@RequestMapping(path = "/organizadores")
+public class OrganizadorController {
+
+    private final Repositorio repositorio;
+
+    public OrganizadorController() {
+        this.repositorio = Repositorio.getInstance();
+    }
 
     // API 04 Visualizar Perfil de Usuário Organizador
     @GetMapping(path = "/{email}")
