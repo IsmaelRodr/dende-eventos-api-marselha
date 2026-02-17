@@ -17,8 +17,9 @@ public class OrganizadorController {
     private final Repositorio repositorio;
 
     public OrganizadorController() {
-        this.repositorio = Repositorio.getInstance();
+        this.repositorio = new Repositorio();
     }
+    
 
     // API 02 - Cadastrar Utilizador Organizador
     @PostMapping
@@ -33,29 +34,25 @@ public class OrganizadorController {
     }
 
     // API 03 - Alterar Perfil do Organizador (AGORA POR ID)
-    @PutMapping(path = "/{id}")
+   @PutMapping(path = "/{id}")
     public ResponseEntity<String> atualizarOrganizador(@PathVariable(parameter = "id") String id, @RequestBody Organizador organizadorAtualizado) {
         
-        // CORREÇÃO AQUI: Agora ele chama o método novo com "PorId" no final!
-        Organizador organizadorExistente = repositorio.buscarOrganizadorPorId(id);
+        // 1. AQUI ESTÁ O TRADUTOR DE STRING PARA LONG
+        Long idNumerico = Long.parseLong(id);
+        
+        // 2. Busca pelo número
+        Organizador organizadorExistente = repositorio.buscarOrganizadorPorId(idNumerico);
         
         if (organizadorExistente == null) {
-            return ResponseEntity.ok("Erro: Organizador não encontrado com este ID.");
+            return ResponseEntity.status(404, "Erro: Organizador não encontrado com este ID.");
         }
 
-        // A regra de negócio de bloquear a troca de e-mail 
         if (!organizadorExistente.getEmail().equals(organizadorAtualizado.getEmail())) {
-            return ResponseEntity.ok("Erro: Não é permitido alterar o e-mail de acesso.");
+            return ResponseEntity.status(400, "Erro: Não é permitido alterar o e-mail de acesso.");
         }
 
-        // Atualiza os dados permitidos do organizador
-        organizadorExistente.setNome(organizadorAtualizado.getNome());
-        organizadorExistente.setSenha(organizadorAtualizado.getSenha());
-        organizadorExistente.setRazaoSocial(organizadorAtualizado.getRazaoSocial());
-        organizadorExistente.setNomeFantasia(organizadorAtualizado.getNomeFantasia());
-        
-        // Salva a atualização
-        repositorio.salvarOrganizador(organizadorExistente);
+        // Atualiza os dados usando o método novo
+        repositorio.atualizarDadosOrganizador(organizadorExistente, organizadorAtualizado);
 
         return ResponseEntity.ok("Perfil do organizador atualizado com sucesso!");
     }

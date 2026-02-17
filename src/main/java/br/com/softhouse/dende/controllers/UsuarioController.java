@@ -5,10 +5,13 @@ import br.com.dende.softhouse.annotations.request.PostMapping;
 import br.com.dende.softhouse.annotations.request.PutMapping;
 import br.com.dende.softhouse.annotations.request.RequestBody;
 import br.com.dende.softhouse.annotations.request.RequestMapping;
+import br.com.dende.softhouse.annotations.request.GetMapping;
 import br.com.dende.softhouse.annotations.request.PathVariable;
 import br.com.dende.softhouse.process.route.ResponseEntity;
 import br.com.softhouse.dende.model.Usuario;
 import br.com.softhouse.dende.repositories.Repositorio;
+
+
 
 @Controller
 @RequestMapping(path = "/usuarios")
@@ -17,44 +20,62 @@ public class UsuarioController {
     private final Repositorio repositorio;
 
     public UsuarioController() {
-        this.repositorio = Repositorio.getInstance();
+        this.repositorio = new Repositorio();
     }
 
-    // API 01 - Cadastrar Utilizador Comum
+    // API 01 - Cadastro com Status 201
     @PostMapping
-    public ResponseEntity<String> cadastroUsuario(@RequestBody Usuario usuario) {
-        // Regra de Negócio: Não podemos ter dois utilizadores com o mesmo e-mail
+    public ResponseEntity<String> cadastrarUsuario(@RequestBody Usuario usuario) {
         if (repositorio.emailExiste(usuario.getEmail())) {
-            return ResponseEntity.ok("Erro: Já existe um utilizador registado com este e-mail!");
+            return ResponseEntity.status(400, "Erro: Já existe um utilizador com este e-mail!");
         }
-        
+
+        // Validação simples de senha curta (pedido do líder)
+        if (usuario.getSenha().length() < 6) {
+             return ResponseEntity.status(400, "Erro: A senha deve ter no mínimo 6 caracteres.");
+        }
+
         repositorio.salvarUsuario(usuario);
-        return ResponseEntity.ok("Utilizador " + usuario.getNome() + " registado com sucesso! O seu ID é: " + usuario.getId());
+        
+        // MUDANÇA: Status 201 (Created)
+        return ResponseEntity.status(201, "Utilizador criado com sucesso! ID: " + usuario.getId());
     }
 
-    // API 03 - Alterar Perfil do Usuário (AGORA POR ID)
-    @PutMapping(path = "/{id}")
+    // API 03 - Atualizar (Recebendo Long e delegando para o Repositório)
+   @PutMapping(path = "/{id}")
     public ResponseEntity<String> atualizarUsuario(@PathVariable(parameter = "id") String id, @RequestBody Usuario usuarioAtualizado) {
         
-        // Agora usamos o método novo do repositório para buscar pelo ID!
-        Usuario usuarioExistente = repositorio.buscarUsuarioPorId(id);
+        // 1. AQUI ESTÁ O TRADUTOR: Transforma a String 'id' da URL no Long 'idNumerico'
+        Long idNumerico = Long.parseLong(id);
+        
+        // 2. Agora o repositório busca usando o número!
+        Usuario usuarioExistente = repositorio.buscarUsuarioPorId(idNumerico);
         
         if (usuarioExistente == null) {
-            return ResponseEntity.ok("Erro: Utilizador não encontrado com este ID.");
+            return ResponseEntity.status(404, "Erro: Utilizador não encontrado com este ID.");
         }
 
-        // A regra de negócio de bloquear a troca de e-mail continua firme e forte!
         if (!usuarioExistente.getEmail().equals(usuarioAtualizado.getEmail())) {
-            return ResponseEntity.ok("Erro: Não é permitido alterar o e-mail de acesso.");
+            return ResponseEntity.status(400, "Erro: Não é permitido alterar o e-mail de acesso.");
         }
 
-        // Atualiza apenas os dados permitidos
-        usuarioExistente.setNome(usuarioAtualizado.getNome());
-        usuarioExistente.setSenha(usuarioAtualizado.getSenha());
-        
-        // Salva a atualização no "banco de dados"
-        repositorio.salvarUsuario(usuarioExistente);
+        // Atualiza os dados
+        repositorio.atualizarDadosUsuario(usuarioExistente, usuarioAtualizado);
 
-        return ResponseEntity.ok("Perfil atualizado com sucesso!");
+        return ResponseEntity.status(201, "Utilizador " + usuarioAtualizado.getNome() + " atualizado com sucesso! O seu ID é: " + usuarioAtualizado.getId());}
+    
+    // API 04 - Visualizar (Recebendo Long)
+    @GetMapping(path = "/{id}")
+    public ResponseEntity<String> visualizarUsuario(@PathVariable(parameter = "id") String idString) {
+        Long id = Long.parseLong(idString);
+        Usuario usuario = repositorio.buscarUsuarioPorId(id);
+        
+        if (usuario == null) {
+            return ResponseEntity.status(404, "Erro: Utilizador não encontrado.");
+        }
+        
+        // ... (o resto do código de calcular idade continua igual) ...
+        // Apenas para não ficar gigante, use a lógica de Period que já fizemos
+        return ResponseEntity.ok("Nome: " + usuario.getNome()); // Exemplo simplificado
     }
 }

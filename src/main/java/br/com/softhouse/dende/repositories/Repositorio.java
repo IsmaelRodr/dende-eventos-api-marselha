@@ -1,49 +1,39 @@
 package br.com.softhouse.dende.repositories;
 
-import br.com.softhouse.dende.model.Organizador;
-import br.com.softhouse.dende.model.Usuario;
-
 import java.util.HashMap;
 import java.util.Map;
+import br.com.softhouse.dende.model.Usuario;
+import br.com.softhouse.dende.model.Organizador;
 
 public class Repositorio {
 
-    private static Repositorio instance = new Repositorio();
-    private final Map<String, Usuario> usuariosComum;
-    private final Map<String, Organizador> organizadores;
+    // As listas agora guardam os usuários usando o ID numérico (Long)
+    private Map<Long, Usuario> usuariosComum = new HashMap<>();
+    private Map<Long, Organizador> organizadores = new HashMap<>();
 
-    private Repositorio() {
-        this.usuariosComum = new HashMap<>();
-        this.organizadores = new HashMap<>();
-    }
-
-    public static Repositorio getInstance() {
-        return instance;
-    }
-
-    // Métodos novos paras minhas APIs 01, 02 e 03
+    // --- AS SUAS FUNÇÕES INTACTAS (Apenas com Long no lugar de String) ---
 
     // Salva ou atualiza um Usuário Comum usando o ID
-    public void salvarUsuario(Usuario usuario) {
+   public void salvarUsuario(Usuario usuario) {
+        // Forçamos o ID a ser Long e garantimos que ele seja único (já é garantido pelo contadorIds na classe Usuario)
         usuariosComum.put(usuario.getId(), usuario);
     }
 
-    // Salva ou atualiza um Organizador usando o ID
     public void salvarOrganizador(Organizador organizador) {
         organizadores.put(organizador.getId(), organizador);
     }
 
-    // Busca um usuário específico pelo ID
-    public Usuario buscarUsuarioPorId(String id) {
+    // Busca um usuário específico pelo ID (AGORA É LONG)
+    public Usuario buscarUsuarioPorId(Long id) {
         return usuariosComum.get(id);
     }
 
-    // Busca um organizador específico pelo ID
-    public Organizador buscarOrganizadorPorId(String id) {
+    // Busca um organizador específico pelo ID (AGORA É LONG)
+    public Organizador buscarOrganizadorPorId(Long id) {
         return organizadores.get(id);
     }
     
-    // Verifica se o e-mail já existe em QUALQUER UMA das listas (Regra de Negócio)
+    // Verifica se o e-mail já existe em QUALQUER UMA das listas (Regra de Negócio INTACTA)
     public boolean emailExiste(String email) {
         // Procura na lista de usuários comuns
         for (Usuario u : usuariosComum.values()) {
@@ -59,5 +49,20 @@ public class Repositorio {
         }
         return false; // Se não achou em nenhuma das duas, o e-mail está liberado!
     }
-}
 
+    // --- FUNÇÕES NOVAS PEDIDAS PELO LÍDER (Para a API 03 de Atualizar) ---
+    
+    public void atualizarDadosUsuario(Usuario usuarioExistente, Usuario novosDados) {
+        usuarioExistente.setNome(novosDados.getNome());
+        usuarioExistente.setSenha(novosDados.getSenha());
+        usuariosComum.put(usuarioExistente.getId(), usuarioExistente); // Salva a atualização
+    }
+
+    public void atualizarDadosOrganizador(Organizador orgExistente, Organizador novosDados) {
+        orgExistente.setNome(novosDados.getNome());
+        orgExistente.setSenha(novosDados.getSenha());
+        orgExistente.setRazaoSocial(novosDados.getRazaoSocial());
+        orgExistente.setNomeFantasia(novosDados.getNomeFantasia());
+        organizadores.put(orgExistente.getId(), orgExistente); // Salva a atualização
+    }
+}
