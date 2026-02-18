@@ -5,25 +5,46 @@ import java.util.Objects;
 
 public class Usuario {
 
+    private long id;
     private String nome;
     private LocalDate dataNascimento;
     private String sexo;
     private String email;
+    private String senha;
+    private boolean ativo;
 
     public Usuario(
+
+            final long id,
             final String nome,
             final LocalDate dataNascimento,
             final String sexo,
-            final String email
+            final String email,
+            final String senha
+
     ) {
+        this.id = id;
         this.nome = nome;
         this.dataNascimento = dataNascimento;
         this.sexo = sexo;
         this.email = email;
+        this.senha = senha;
+        this.ativo = true;
     }
 
     public Usuario() {
 
+    }
+
+    public record Credenciais(String senha) {}
+
+
+    public long getId() {
+        return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
     }
 
     public String getNome() {
@@ -56,6 +77,17 @@ public class Usuario {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getSenha() { return senha; }
+    public void setSenha(String senha) { this.senha = senha; }
+
+    public void setAtivo(boolean ativo) {
+        this.ativo = ativo;
+    }
+
+    public boolean isAtivo() {
+        return ativo;
     }
 
     @Override

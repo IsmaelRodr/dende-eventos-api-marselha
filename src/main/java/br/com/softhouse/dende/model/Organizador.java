@@ -5,19 +5,25 @@ import java.util.Objects;
 
 public class Organizador {
 
+
     private String nome;
     private LocalDate dataNascimento;
     private String sexo;
     private String email;
+    private String senha;
+    private boolean ativo;
     private String cnpj;
     private String razaoSocial;
     private String nomeFantasia;
 
-    public Organizador(String nome, LocalDate dataNascimento, String sexo, String email, String cnpj, String razaoSocial, String nomeFantasia) {
+
+    public Organizador(String nome, LocalDate dataNascimento, String sexo, String email, String senha, String cnpj, String razaoSocial, String nomeFantasia) {
         this.nome = nome;
         this.dataNascimento = dataNascimento;
         this.sexo = sexo;
         this.email = email;
+        this.senha = senha;
+        this.ativo = true;
         this.cnpj = cnpj;
         this.razaoSocial = razaoSocial;
         this.nomeFantasia = nomeFantasia;
@@ -25,6 +31,9 @@ public class Organizador {
 
     public Organizador() {
     }
+
+    public record Credenciais(String senha) {}
+
 
     public String getNome() {
         return nome;
@@ -80,6 +89,17 @@ public class Organizador {
 
     public void setNomeFantasia(String nomeFantasia) {
         this.nomeFantasia = nomeFantasia;
+    }
+
+    public String getSenha() { return senha; }
+    public void setSenha(String senha) { this.senha = senha; }
+
+    public boolean isAtivo() {
+        return ativo;
+    }
+
+    public void setAtivo(boolean ativo) {
+        this.ativo = ativo;
     }
 
     @Override
