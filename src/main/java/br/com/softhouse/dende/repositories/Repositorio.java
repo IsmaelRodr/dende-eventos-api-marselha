@@ -7,15 +7,27 @@ import br.com.softhouse.dende.model.Organizador;
 
 public class Repositorio {
 
-    // As listas agora guardam os usuários usando o ID numérico (Long)
-    private Map<Long, Usuario> usuariosComum = new HashMap<>();
-    private Map<Long, Organizador> organizadores = new HashMap<>();
+    // 1. Padrão Singleton (A arquitetura que os seus colegas usaram)
+    private static Repositorio instance = new Repositorio();
 
-    // --- AS SUAS FUNÇÕES INTACTAS (Apenas com Long no lugar de String) ---
+    // As listas guardam os utilizadores usando o ID numérico (Long)
+    private Map<Long, Usuario> usuariosComum;
+    private Map<Long, Organizador> organizadores;
 
-    // Salva ou atualiza um Usuário Comum usando o ID
-   public void salvarUsuario(Usuario usuario) {
-        // Forçamos o ID a ser Long e garantimos que ele seja único (já é garantido pelo contadorIds na classe Usuario)
+    // 2. Construtor privado para o Singleton
+    private Repositorio() {
+        this.usuariosComum = new HashMap<>();
+        this.organizadores = new HashMap<>();
+    }
+
+    // 3. O famigerado método getInstance() que estava a dar erro!
+    public static Repositorio getInstance() {
+        return instance;
+    }
+
+    // --- AS NOSSAS FUNÇÕES INTACTAS (Com Long e regra de E-mail) ---
+
+    public void salvarUsuario(Usuario usuario) {
         usuariosComum.put(usuario.getId(), usuario);
     }
 
@@ -23,46 +35,42 @@ public class Repositorio {
         organizadores.put(organizador.getId(), organizador);
     }
 
-    // Busca um usuário específico pelo ID (AGORA É LONG)
     public Usuario buscarUsuarioPorId(Long id) {
         return usuariosComum.get(id);
     }
 
-    // Busca um organizador específico pelo ID (AGORA É LONG)
     public Organizador buscarOrganizadorPorId(Long id) {
         return organizadores.get(id);
     }
     
-    // Verifica se o e-mail já existe em QUALQUER UMA das listas (Regra de Negócio INTACTA)
     public boolean emailExiste(String email) {
-        // Procura na lista de usuários comuns
         for (Usuario u : usuariosComum.values()) {
-            if (u.getEmail().equals(email)) {
-                return true;
-            }
+            if (u.getEmail().equals(email)) return true;
         }
-        // Procura na lista de organizadores
         for (Organizador o : organizadores.values()) {
-            if (o.getEmail().equals(email)) {
-                return true;
-            }
+            if (o.getEmail().equals(email)) return true;
         }
-        return false; // Se não achou em nenhuma das duas, o e-mail está liberado!
+        return false; 
     }
 
-    // --- FUNÇÕES NOVAS PEDIDAS PELO LÍDER (Para a API 03 de Atualizar) ---
+    // --- MÉTODOS DE ATUALIZAR COMPLETOS (Pedido do Líder) ---
     
     public void atualizarDadosUsuario(Usuario usuarioExistente, Usuario novosDados) {
         usuarioExistente.setNome(novosDados.getNome());
+        usuarioExistente.setDataNascimento(novosDados.getDataNascimento());
+        usuarioExistente.setSexo(novosDados.getSexo());
         usuarioExistente.setSenha(novosDados.getSenha());
-        usuariosComum.put(usuarioExistente.getId(), usuarioExistente); // Salva a atualização
+        
+        usuariosComum.put(usuarioExistente.getId(), usuarioExistente); 
     }
 
     public void atualizarDadosOrganizador(Organizador orgExistente, Organizador novosDados) {
         orgExistente.setNome(novosDados.getNome());
+        orgExistente.setDataNascimento(novosDados.getDataNascimento());
+        orgExistente.setSexo(novosDados.getSexo());
         orgExistente.setSenha(novosDados.getSenha());
-        orgExistente.setRazaoSocial(novosDados.getRazaoSocial());
-        orgExistente.setNomeFantasia(novosDados.getNomeFantasia());
-        organizadores.put(orgExistente.getId(), orgExistente); // Salva a atualização
+        orgExistente.setEmpresa(novosDados.getEmpresa()); // Nova classe Empresa
+        
+        organizadores.put(orgExistente.getId(), orgExistente); 
     }
 }

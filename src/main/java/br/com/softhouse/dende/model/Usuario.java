@@ -26,16 +26,29 @@ public class Usuario {
         this.senha = Objects.requireNonNull(senha, "Senha não pode ser nula");
     }
 
+    // Construtor vazio exigido pelo Jackson para receber o JSON
+    public Usuario() {
+        this.id = contadorIds++;
+    }
+    
     // Getters e Setters
     public Long getId() { return id; }
+    
     public String getNome() { return nome; }
     public void setNome(String nome) { this.nome = nome; }
+    
     public LocalDate getDataNascimento() { return dataNascimento; }
+    // --- NOVO SETTER ADICIONADO ---
+    public void setDataNascimento(LocalDate dataNascimento) { this.dataNascimento = dataNascimento; }
+    
     public String getSexo() { return sexo; }
+    // --- NOVO SETTER ADICIONADO ---
+    public void setSexo(String sexo) { this.sexo = sexo; }
+    
     public String getEmail() { return email; }
+    
     public String getSenha() { return senha; }
     public void setSenha(String senha) { this.senha = senha; }
-
     // --- SEUS MÉTODOS QUE NÃO PODEM FALTAR ---
 
     @Override

@@ -17,20 +17,29 @@ public class OrganizadorController {
     private final Repositorio repositorio;
 
     public OrganizadorController() {
-        this.repositorio = new Repositorio();
+        this.repositorio = Repositorio.getInstance();
     }
     
 
     // API 02 - Cadastrar Utilizador Organizador
-    @PostMapping
+   @PostMapping
     public ResponseEntity<String> cadastroOrganizador(@RequestBody Organizador organizador) {
-        // Regra de Negócio: Não podemos ter dois utilizadores com o mesmo e-mail
-        if (repositorio.emailExiste(organizador.getEmail())) {
-            return ResponseEntity.ok("Erro: Já existe um organizador registado com este e-mail!");
-        }
         
+        // 1. VALIDAÇÃO DE TEXTOS VAZIOS (Apenas os dados da Pessoa Física, a Empresa é opcional)
+        if (organizador.getNome().trim().isEmpty() || 
+            organizador.getEmail().trim().isEmpty() || 
+            organizador.getSenha().trim().isEmpty()) {
+            return ResponseEntity.status(400, "Erro: Os campos obrigatórios do organizador não podem estar vazios.");
+        }
+
+        // 2. STATUS 409 PARA CONFLITO DE E-MAIL 
+        if (repositorio.emailExiste(organizador.getEmail())) {
+            return ResponseEntity.status(409, "Erro de Conflito: Já existe um organizador registado com este e-mail!");
+        }
+
         repositorio.salvarOrganizador(organizador);
-        return ResponseEntity.ok("Organizador " + organizador.getNome() + " registado com sucesso! O seu ID é: " + organizador.getId());
+        
+        return ResponseEntity.status(201, "Organizador " + organizador.getNome() + " registado com sucesso! O seu ID é: " + organizador.getId());
     }
 
     // API 03 - Alterar Perfil do Organizador (AGORA POR ID)
