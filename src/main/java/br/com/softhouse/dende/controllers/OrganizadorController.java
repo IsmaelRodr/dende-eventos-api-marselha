@@ -12,6 +12,16 @@ import java.time.Period;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import br.com.dende.softhouse.annotations.request.PostMapping;
+import br.com.dende.softhouse.annotations.request.PutMapping;
+import br.com.dende.softhouse.annotations.request.RequestBody;
+import br.com.dende.softhouse.annotations.request.RequestMapping;
+import br.com.dende.softhouse.annotations.request.PathVariable;
+import br.com.dende.softhouse.process.route.ResponseEntity;
+import br.com.softhouse.dende.model.Organizador;
+import br.com.softhouse.dende.repositories.Repositorio;
+
+import java.util.Objects;
 
 @Controller
 @RequestMapping(path = "/organizadores")
@@ -128,5 +138,63 @@ public class OrganizadorController {
         organizador.setAtivo(true);
         repositorio.salvarOrganizador(organizador);
         return ResponseEntity.status(200, "Organizador reativado com sucesso!");
+    
+
+    // API 02 - Cadastrar Utilizador Organizador
+   @PostMapping
+    public ResponseEntity<String> cadastroOrganizador(@RequestBody Organizador organizador) {
+        
+        // 1. VALIDAÇÃO DE TEXTOS VAZIOS (Apenas os dados da Pessoa Física, a Empresa é opcional)
+       if (organizador.getNome() == null || organizador.getNome().trim().isEmpty() ||
+               organizador.getEmail() == null || organizador.getEmail().trim().isEmpty() ||
+               organizador.getSenha() == null || organizador.getSenha().trim().isEmpty()) {
+
+           return ResponseEntity.status(400,
+                   "Erro: Os campos obrigatórios do organizador não podem estar vazios.");
+       }
+        // 2. STATUS 409 PARA CONFLITO DE E-MAIL 
+        if (repositorio.emailExiste(organizador.getEmail())) {
+            return ResponseEntity.status(409, "Erro de Conflito: Já existe um organizador registado com este e-mail!");
+        }
+
+        repositorio.salvarOrganizador(organizador);
+        
+        return ResponseEntity.status(201, "Organizador " + organizador.getNome() + " registado com sucesso! O seu ID é: " + organizador.getId());
+    }
+
+    // API 03 - Alterar Perfil do Organizador (AGORA POR ID)
+   @PutMapping(path = "/{id}")
+    public ResponseEntity<String> atualizarOrganizador(@PathVariable(parameter = "id") String id, @RequestBody Organizador organizadorAtualizado) {
+        
+        // 1. AQUI ESTÁ O TRADUTOR DE STRING PARA LONG
+       long idNumerico;
+
+       try {
+           idNumerico = Long.parseLong(id);
+       } catch (NumberFormatException e) {
+           return ResponseEntity.status(400, "Erro: ID inválido.");
+       }
+        
+        // 2. Busca pelo número
+        Organizador organizadorExistente = repositorio.buscarOrganizadorPorId(idNumerico);
+        
+        if (organizadorExistente == null) {
+            return ResponseEntity.status(404, "Erro: Organizador não encontrado com este ID.");
+        }
+
+       if (!Objects.equals(organizadorExistente.getEmail(), organizadorAtualizado.getEmail())) {
+            return ResponseEntity.status(400, "Erro: Não é permitido alterar o e-mail de acesso.");
+       }
+
+       if (organizadorAtualizado.getNome() == null || organizadorAtualizado.getNome().trim().isEmpty() ||
+               organizadorAtualizado.getSenha() == null || organizadorAtualizado.getSenha().trim().isEmpty()) {
+
+           return ResponseEntity.status(400, "Erro: Os dados atualizados não podem estar vazios.");
+       }
+
+        // Atualiza os dados usando o método novo
+        repositorio.atualizarDadosOrganizador(organizadorExistente, organizadorAtualizado);
+
+        return ResponseEntity.ok("Perfil do organizador atualizado com sucesso!");
     }
 }
