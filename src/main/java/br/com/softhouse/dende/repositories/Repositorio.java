@@ -22,3 +22,18 @@ public class Repositorio {
     }
 
 }
+
+
+public Usuario buscarUsuarioPorEmail(String email) {
+    return usuariosComum.values().stream()
+            .filter(u -> u.getEmail().equals(email))
+            .findFirst()
+            .orElse(null);
+}
+
+public Organizador buscarOrganizadorPorEmail(String email) {
+    return organizadores.values().stream()
+            .filter(o -> o.getEmail().equals(email))
+            .findFirst()
+            .orElse(null);
+}

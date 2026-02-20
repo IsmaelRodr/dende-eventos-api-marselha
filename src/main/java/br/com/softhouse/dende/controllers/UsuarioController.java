@@ -21,26 +21,18 @@ public class UsuarioController {
         this.repositorio = Repositorio.getInstance();
     }
 
-    @PostMapping
-    public ResponseEntity<String> cadastroUsuario(@RequestBody Usuario usuario){
-        return ResponseEntity.ok("Usuario " + usuario.getEmail() + " registrado com sucesso!");
-    }
-
-    @PutMapping(path = "/{usuarioId}")
-    public ResponseEntity<String> alterarUsuario(@PathVariable(parameter = "usuarioId") long usuarioId, @RequestBody Usuario usuario) {
-        return ResponseEntity.ok("Usuario " + usuario.getEmail() + " do usuarioId = " + usuarioId + " alterado com sucesso!");
-    }
-
-    // API 04 Visualizar Perfil de Usuario Comum
+    // API 4: VISUALIZAR PERFIL
     @GetMapping(path = "/{email}")
-    public ResponseEntity<?> visualizarPerfil(@PathVariable(parameter = "email") String email) {
-        Usuario usuario = repositorio.buscarUsuario(email);
+    public ResponseEntity<?> visualizarPerfil(@PathVariable("email") String email) {
+        // Regra de negócio: buscar usuário pelo e-mail (identificador único)
+        Usuario usuario = repositorio.buscarUsuarioPorEmail(email);
 
+        // Regra de negócio: se não existir, retornar 404
         if (usuario == null) {
-            return ResponseEntity.ok("Usuário não encontrado");
+            return ResponseEntity.status(404, "Usuário não encontrado");
         }
 
-        // Regra de Négocio: Data de Nascimento Formatada em Anos-Meses-Dias.
+        // Regra de negócio: calcular idade em anos, meses e dias a partir da data de nascimento
         LocalDate hoje = LocalDate.now();
         Period periodo = Period.between(usuario.getDataNascimento(), hoje);
         String idade = String.format("%d anos, %d meses e %d dias",
@@ -48,6 +40,7 @@ public class UsuarioController {
                 periodo.getMonths(),
                 periodo.getDays());
 
+        // Monta o perfil com os dados solicitados
         Map<String, Object> perfil = new HashMap<>();
         perfil.put("nome", usuario.getNome());
         perfil.put("dataNascimento", usuario.getDataNascimento().toString());
@@ -58,50 +51,56 @@ public class UsuarioController {
         return ResponseEntity.ok(perfil);
     }
 
-    // API 05 Desativa Perfil de Usuário
+    // API 5: DESATIVAR PERFIL
     @PatchMapping(path = "/{email}/desativar")
-    public ResponseEntity<?> desativarUsuario (@PathVariable( parameter = "email") String email){
-        Usuario usuario = repositorio.buscarUsuario(email);
-        if(usuario != null){
-            if(! usuario.isAtivo()){
-                return ResponseEntity.status(409,"Usuário já está Inativo!");
-            } else {
-                usuario.setAtivo(false);
-                repositorio.salvarUsuario(usuario);
-                return ResponseEntity.status(200,"Usuário Desativado!");
-            }
-        } else {
-            return ResponseEntity.status(404,"Usuário Não Encontrado!");
+    public ResponseEntity<?> desativarUsuario(@PathVariable("email") String email) {
+        // Regra de negócio: buscar usuário pelo e-mail
+        Usuario usuario = repositorio.buscarUsuarioPorEmail(email);
 
+        // Regra de negócio: se não existir, retornar 404
+        if (usuario == null) {
+            return ResponseEntity.status(404, "Usuário não encontrado!");
         }
+
+        // Regra de negócio: verificar se a conta já está inativa
+        if (!usuario.isAtivo()) {
+            return ResponseEntity.status(409, "Usuário já está inativo!");
+        }
+
+        // Aplica a desativação
+        usuario.setAtivo(false);
+        repositorio.salvarUsuario(usuario); // persistência pelo ID
+        return ResponseEntity.status(200, "Usuário desativado com sucesso!");
     }
 
-    // API 06  Reativar Perfil de Usuário
+    // API 6: REATIVAR PERFIL
     @PatchMapping(path = "/{email}/ativar")
-    public ResponseEntity<?> ativarUsuario (@PathVariable(parameter = "email") String email,
-                                            @RequestBody Usuario.Credenciais credenciais){
-
-
-        // Regra de Negócio: Validação de email e senha
+    public ResponseEntity<?> ativarUsuario(@PathVariable("email") String email,
+                                           @RequestBody Usuario.Credenciais credenciais) {
+        // Regra de negócio: a senha é obrigatória para reativação
         if (credenciais.senha() == null || credenciais.senha().isEmpty()) {
             return ResponseEntity.status(400, "Senha é obrigatória.");
         }
 
-        Usuario usuario = repositorio.buscarUsuario(email);
-
-        if(usuario != null){
-            if (!usuario.getSenha().equals(credenciais.senha())) {
-                return ResponseEntity.status(401, "Senha inválida.");
-            }
-            if(usuario.isAtivo()){
-                return ResponseEntity.status(409,"Usuário já está Ativo!");
-            } else {
-                usuario.setAtivo(true);
-                repositorio.salvarUsuario(usuario);
-                return ResponseEntity.status(200,"Usuário Reativado!");
-            }
-        } else {
-            return ResponseEntity.status(404,"Usuário Não Encontrado!");
+        // Regra de negócio: buscar usuário pelo e-mail
+        Usuario usuario = repositorio.buscarUsuarioPorEmail(email);
+        if (usuario == null) {
+            return ResponseEntity.status(404, "Usuário não encontrado!");
         }
+
+        // Regra de negócio: validar a senha fornecida
+        if (!usuario.getSenha().equals(credenciais.senha())) {
+            return ResponseEntity.status(401, "Senha inválida.");
+        }
+
+        // Regra de negócio: verificar se a conta já está ativa
+        if (usuario.isAtivo()) {
+            return ResponseEntity.status(409, "Usuário já está ativo!");
+        }
+
+        // Aplica a reativação
+        usuario.setAtivo(true);
+        repositorio.salvarUsuario(usuario);
+        return ResponseEntity.status(200, "Usuário reativado com sucesso!");
     }
 }
