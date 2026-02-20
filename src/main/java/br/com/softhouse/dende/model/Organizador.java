@@ -59,6 +59,17 @@ public class Organizador {
 
     // --- Métodos de comparação corrigidos ---
 
+    public String getSenha() { return senha; }
+    public void setSenha(String senha) { this.senha = senha; }
+
+    public boolean isAtivo() {
+        return ativo;
+    }
+
+    public void setAtivo(boolean ativo) {
+        this.ativo = ativo;
+    }
+
     @Override
     public boolean equals(Object object) {
         if (this == object) return true;

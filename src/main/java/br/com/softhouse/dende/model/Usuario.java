@@ -51,6 +51,17 @@ public class Usuario {
     public void setSenha(String senha) { this.senha = senha; }
     // --- SEUS MÉTODOS QUE NÃO PODEM FALTAR ---
 
+    public String getSenha() { return senha; }
+    public void setSenha(String senha) { this.senha = senha; }
+
+    public void setAtivo(boolean ativo) {
+        this.ativo = ativo;
+    }
+
+    public boolean isAtivo() {
+        return ativo;
+    }
+
     @Override
     public boolean equals(Object object) {
         if (this == object) return true;

@@ -25,6 +25,21 @@ public class Repositorio {
         return instance;
     }
 
+}
+
+
+public Usuario buscarUsuarioPorEmail(String email) {
+    return usuariosComum.values().stream()
+            .filter(u -> u.getEmail().equals(email))
+            .findFirst()
+            .orElse(null);
+}
+
+public Organizador buscarOrganizadorPorEmail(String email) {
+    return organizadores.values().stream()
+            .filter(o -> o.getEmail().equals(email))
+            .findFirst()
+            .orElse(null);
     // --- AS NOSSAS FUNÇÕES INTACTAS (Com Long e regra de E-mail) ---
 
     public void salvarUsuario(Usuario usuario) {
