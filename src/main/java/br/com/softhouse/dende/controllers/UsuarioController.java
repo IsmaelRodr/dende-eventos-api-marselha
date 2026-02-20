@@ -20,13 +20,55 @@ public class UsuarioController {
         this.repositorio = Repositorio.getInstance();
     }
 
+    // API 01 - Cadastrar
     @PostMapping
-    public ResponseEntity<String> cadastroUsuario(@RequestBody Usuario usuario){
-        return ResponseEntity.ok("Usuario " + usuario.getEmail() + " registrado com sucesso!");
+    public ResponseEntity<String> cadastroUsuario(@RequestBody Usuario usuario) {
+        
+        // 1. VALIDAÇÃO DE TEXTOS VAZIOS
+        if (usuario.getNome().trim().isEmpty() || 
+            usuario.getEmail().trim().isEmpty() || 
+            usuario.getSenha().trim().isEmpty()) {
+            return ResponseEntity.status(400, "Erro: Os campos obrigatórios não podem estar vazios ou em branco.");
+        }
+
+        // 2. STATUS 409 PARA CONFLITO DE E-MAIL
+        if (repositorio.emailExiste(usuario.getEmail())) {
+            return ResponseEntity.status(409, "Erro de Conflito: Já existe um utilizador registado com este e-mail!");
+        }
+
+        repositorio.salvarUsuario(usuario);
+        
+        // Status 201 (Created) para novos cadastros
+        return ResponseEntity.status(201, "Utilizador " + usuario.getNome() + " registado com sucesso! O seu ID é: " + usuario.getId());
     }
 
-    @PutMapping(path = "/{usuarioId}")
-    public ResponseEntity<String> alterarUsuario(@PathVariable(parameter = "usuarioId") long usuarioId, @RequestBody Usuario usuario) {
-        return ResponseEntity.ok("Usuario " + usuario.getEmail() + " do usuarioId = " + usuarioId + " alterado com sucesso!");
+    // API 03 - Atualizar 
+    @PutMapping(path = "/{id}")
+    public ResponseEntity<String> atualizarUsuario(@PathVariable(parameter = "id") String id, @RequestBody Usuario usuarioAtualizado) {
+        
+        // Tradutor: Transforma a String 'id' da URL no Long 'idNumerico'
+        Long idNumerico = Long.parseLong(id);
+        
+        Usuario usuarioExistente = repositorio.buscarUsuarioPorId(idNumerico);
+        
+        if (usuarioExistente == null) {
+            return ResponseEntity.status(404, "Erro: Utilizador não encontrado com este ID.");
+        }
+
+        if (!usuarioExistente.getEmail().equals(usuarioAtualizado.getEmail())) {
+            return ResponseEntity.status(400, "Erro: Não é permitido alterar o e-mail de acesso.");
+        }
+
+        // --- VALIDAÇÃO DE TEXTOS VAZIOS NA ATUALIZAÇÃO (Pedido do Líder) ---
+        if (usuarioAtualizado.getNome().trim().isEmpty() || 
+            usuarioAtualizado.getSenha().trim().isEmpty()) {
+            return ResponseEntity.status(400, "Erro: Os dados atualizados não podem estar vazios.");
+        }
+
+        // Atualiza os dados
+        repositorio.atualizarDadosUsuario(usuarioExistente, usuarioAtualizado);
+
+        // Status 200 (OK) para edições bem sucedidas
+        return ResponseEntity.status(200, "Utilizador " + usuarioAtualizado.getNome() + " atualizado com sucesso!");
     }
 }
