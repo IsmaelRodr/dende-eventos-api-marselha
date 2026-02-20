@@ -5,106 +5,90 @@ import java.util.Objects;
 
 public class Organizador {
 
+    private Long id;
     private String nome;
     private LocalDate dataNascimento;
     private String sexo;
     private String email;
-    private String cnpj;
-    private String razaoSocial;
-    private String nomeFantasia;
+    private String senha;
+    private boolean ativo;
+    
+    // A alteração de mestre: Composição usando a classe opcional Empresa
+    private Empresa empresa;
 
-    public Organizador(String nome, LocalDate dataNascimento, String sexo, String email, String cnpj, String razaoSocial, String nomeFantasia) {
-        this.nome = nome;
-        this.dataNascimento = dataNascimento;
-        this.sexo = sexo;
-        this.email = email;
-        this.cnpj = cnpj;
-        this.razaoSocial = razaoSocial;
-        this.nomeFantasia = nomeFantasia;
+    public Organizador(String nome, LocalDate dataNascimento, String sexo, String email, String senha, Empresa empresa) {
+        // Validações obrigatórias da Pessoa Física (Idêntico ao Usuario)
+        this.nome = Objects.requireNonNull(nome, "O nome é obrigatório");
+        this.dataNascimento = Objects.requireNonNull(dataNascimento, "A data de nascimento é obrigatória");
+        this.sexo = Objects.requireNonNull(sexo, "O sexo é obrigatório");
+        this.email = Objects.requireNonNull(email, "O e-mail é obrigatório");
+        this.senha = Objects.requireNonNull(senha, "A senha é obrigatória");
+        this.ativo = true;
+        
+        // A empresa é opcional, logo aceita valores nulos tranquilamente
+        this.empresa = empresa;
     }
 
-    public Organizador() {
+    // Construtor vazio exigido pelo Jackson para receber o JSON
+    public Organizador() {}
+
+    public record Credenciais(String email, String senha) {}
+    
+    // Getters e Setters
+
+    public void setId(Long id) { this.id = id; }
+    public Long getId() { return id; }
+    
+    public String getNome() { return nome; }
+    public void setNome(String nome) { this.nome = nome; }
+    
+    public LocalDate getDataNascimento() { return dataNascimento; }
+    public void setDataNascimento(LocalDate dataNascimento) { this.dataNascimento = dataNascimento; }
+    
+    public String getSexo() { return sexo; }
+    public void setSexo(String sexo) { this.sexo = sexo; }
+    
+    public String getEmail() { return email; }
+    
+    public String getSenha() { return senha; }
+    public void setSenha(String senha) { this.senha = senha; }
+
+    // Get e Set da Empresa
+    public Empresa getEmpresa() { return empresa; }
+    public void setEmpresa(Empresa empresa) { this.empresa = empresa; }
+
+    public boolean isAtivo() {
+        return ativo;
     }
 
-    public String getNome() {
-        return nome;
-    }
-
-    public void setNome(String nome) {
-        this.nome = nome;
-    }
-
-    public LocalDate getDataNascimento() {
-        return dataNascimento;
-    }
-
-    public void setDataNascimento(LocalDate dataNascimento) {
-        this.dataNascimento = dataNascimento;
-    }
-
-    public String getSexo() {
-        return sexo;
-    }
-
-    public void setSexo(String sexo) {
-        this.sexo = sexo;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getCnpj() {
-        return cnpj;
-    }
-
-    public void setCnpj(String cnpj) {
-        this.cnpj = cnpj;
-    }
-
-    public String getRazaoSocial() {
-        return razaoSocial;
-    }
-
-    public void setRazaoSocial(String razaoSocial) {
-        this.razaoSocial = razaoSocial;
-    }
-
-    public String getNomeFantasia() {
-        return nomeFantasia;
-    }
-
-    public void setNomeFantasia(String nomeFantasia) {
-        this.nomeFantasia = nomeFantasia;
+    public void setAtivo(boolean ativo) {
+        this.ativo = ativo;
     }
 
     @Override
     public boolean equals(Object object) {
         if (this == object) return true;
         if (object == null || getClass() != object.getClass()) return false;
-        Organizador that = (Organizador) object;
-        return Objects.equals(nome, that.nome) && Objects.equals(dataNascimento, that.dataNascimento) && Objects.equals(sexo, that.sexo) && Objects.equals(email, that.email) && Objects.equals(cnpj, that.cnpj) && Objects.equals(razaoSocial, that.razaoSocial) && Objects.equals(nomeFantasia, that.nomeFantasia);
+        Organizador organizador = (Organizador) object;
+        // Agora verifica pelo ID e E-mail, tal como o utilizador
+        return Objects.equals(id, organizador.id) && 
+               Objects.equals(email, organizador.email);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(nome, dataNascimento, sexo, email, cnpj, razaoSocial, nomeFantasia);
+        return Objects.hash(id, email);
     }
 
     @Override
     public String toString() {
         return "Organizador{" +
-                "nome='" + nome + '\'' +
+                "id=" + id +
+                ", nome='" + nome + '\'' +
                 ", dataNascimento=" + dataNascimento +
                 ", sexo='" + sexo + '\'' +
                 ", email='" + email + '\'' +
-                ", cnpj='" + cnpj + '\'' +
-                ", razaoSocial='" + razaoSocial + '\'' +
-                ", nomeFantasia='" + nomeFantasia + '\'' +
+                ", empresa=" + (empresa != null ? empresa.getRazaoSocial() : "Nenhuma") +
                 '}';
     }
 }
