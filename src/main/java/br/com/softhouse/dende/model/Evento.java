@@ -1,21 +1,20 @@
 package br.com.softhouse.dende.model;
 
-import java.time.Duration;
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.util.Objects;
+import java.time.LocalDateTime;
 
 public class Evento {
 
-    private long id;
+    private Long contadorId = 1L;
+
+    private Long id;
     private Organizador organizador;
     private String nome;
     private String descricao;
     private String paginaWeb;
-    private LocalDate dataInicio;
-    private LocalDate dataFim;
+    private LocalDateTime dataInicio;
+    private LocalDateTime dataFim;
     private TipoEvento tipoEvento;
-    private String eventoPrincipal;
+    private Evento eventoPrincipal;
     private Modalidade modalidade;
     private double precoUnitarioIngresso;
     private double taxaCancelamento;
@@ -23,7 +22,6 @@ public class Evento {
     private int capacidadeMaxima;
     private String localEvento;
     private boolean eventoAtivo;
-    private Duration duracaoEvento;
 
     public enum TipoEvento {
         SOCIAL,
@@ -60,24 +58,22 @@ public class Evento {
     public Evento(){}
 
     public Evento(
-            final long id,
             final Organizador organizador,
             final String nome,
             final String descricao,
             final String paginaWeb,
-            final LocalDate dataInicio,
-            final LocalDate dataFim,
+            final LocalDateTime dataInicio,
+            final LocalDateTime dataFim,
             final TipoEvento tipoEvento,
-            final String eventoPrincipal,
+            final Evento eventoPrincipal,
             final Modalidade modalidade,
             final double precoUnitarioIngresso,
             final double taxaCancelamento,
             final boolean eventoEstorno,
             final int capacidadeMaxima,
-            final String localEvento,
-            final Duration duracaoEvento
+            final String localEvento
     ){
-            this.id = id;
+            this.id = contadorId++;
             this.organizador = organizador;
             this.nome = nome;
             this.descricao = descricao;
@@ -93,23 +89,14 @@ public class Evento {
             this.capacidadeMaxima = capacidadeMaxima;
             this.localEvento = localEvento;
             this.eventoAtivo = false;
-            this.duracaoEvento = duracaoEvento;
     }
 
     public long getId() {
         return id;
     }
 
-    public void setId(long id) {
-        this.id = id;
-    }
-
     public Organizador getOrganizador() {
         return organizador;
-    }
-
-    public void setOrganizador(Organizador organizador) {
-        this.organizador = organizador;
     }
 
     public String getNome() {
@@ -136,19 +123,19 @@ public class Evento {
         this.paginaWeb = paginaWeb;
     }
 
-    public LocalDate getDataInicio() {
+    public LocalDateTime getDataInicio() {
         return dataInicio;
     }
 
-    public void setDataInicio(LocalDate dataInicio) {
+    public void setDataInicio(LocalDateTime dataInicio) {
         this.dataInicio = dataInicio;
     }
 
-    public LocalDate getDataFim() {
+    public LocalDateTime getDataFim() {
         return dataFim;
     }
 
-    public void setDataFim(LocalDate dataFim) {
+    public void setDataFim(LocalDateTime dataFim) {
         this.dataFim = dataFim;
     }
 
@@ -160,11 +147,11 @@ public class Evento {
         this.tipoEvento = tipoEvento;
     }
 
-    public String getEventoPrincipal() {
+    public Evento getEventoPrincipal() {
         return eventoPrincipal;
     }
 
-    public void setEventoPrincipal(String eventoPrincipal) {
+    public void setEventoPrincipal(Evento eventoPrincipal) {
         this.eventoPrincipal = eventoPrincipal;
     }
 
@@ -224,24 +211,17 @@ public class Evento {
         this.eventoAtivo = eventoAtivo;
     }
 
-    public Duration getDuracaoEvento() {
-        return duracaoEvento;
-    }
-
-    public void setDuracaoEvento(Duration duracaoEvento) {
-        this.duracaoEvento = duracaoEvento;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
+
         Evento evento = (Evento) o;
-        return id == evento.id && Double.compare(precoUnitarioIngresso, evento.precoUnitarioIngresso) == 0 && Double.compare(taxaCancelamento, evento.taxaCancelamento) == 0 && eventoEstorno == evento.eventoEstorno && capacidadeMaxima == evento.capacidadeMaxima && eventoAtivo == evento.eventoAtivo && Objects.equals(organizador, evento.organizador) && Objects.equals(nome, evento.nome) && Objects.equals(descricao, evento.descricao) && Objects.equals(paginaWeb, evento.paginaWeb) && Objects.equals(dataInicio, evento.dataInicio) && Objects.equals(dataFim, evento.dataFim) && tipoEvento == evento.tipoEvento && Objects.equals(eventoPrincipal, evento.eventoPrincipal) && modalidade == evento.modalidade && Objects.equals(localEvento, evento.localEvento) && Objects.equals(duracaoEvento, evento.duracaoEvento);
+        return getId() == evento.getId();
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, organizador, nome, descricao, paginaWeb, dataInicio, dataFim, tipoEvento, eventoPrincipal, modalidade, precoUnitarioIngresso, taxaCancelamento, eventoEstorno, capacidadeMaxima, localEvento, eventoAtivo, duracaoEvento);
+        return Long.hashCode(getId());
     }
 
     @Override
@@ -263,7 +243,6 @@ public class Evento {
                 ", capacidadeMaxima=" + capacidadeMaxima +
                 ", localEvento='" + localEvento + '\'' +
                 ", eventoAtivo=" + eventoAtivo +
-                ", duracaoEvento=" + duracaoEvento +
                 '}';
     }
 }

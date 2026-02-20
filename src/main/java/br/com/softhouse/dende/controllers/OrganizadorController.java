@@ -9,14 +9,10 @@ import br.com.dende.softhouse.annotations.request.RequestBody;
 import br.com.dende.softhouse.annotations.request.RequestMapping;
 import br.com.dende.softhouse.process.route.ResponseEntity;
 import br.com.softhouse.dende.model.Evento;
-import br.com.softhouse.dende.model.Organizador;
 import br.com.softhouse.dende.repositories.Repositorio;
 
-import java.lang.reflect.Parameter;
 import java.time.Duration;
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.temporal.ChronoUnit;
+import java.time.LocalDateTime;
 
 @Controller
 @RequestMapping(path = "/organizadores")
@@ -29,74 +25,89 @@ public class OrganizadorController {
     }
 
     @PostMapping(path = "/{organizadorId}/eventos")
-    public ResponseEntity<String> cadastrarEvento(@PathVariable(parameter = "organizadorId") long id, @RequestBody Evento evento){
-        LocalDate hoje = LocalDate.now();
-        LocalDate dataInicio = evento.getDataInicio();
+    public ResponseEntity<String> cadastrarEvento(@PathVariable(parameter = "organizadorId") long organizadorId, @RequestBody Evento evento){
+        LocalDateTime hoje = LocalDateTime.now();
+        LocalDateTime dataInicio = evento.getDataInicio();
+        LocalDateTime dataFim = evento.getDataFim();
 
-        Duration duracao = Duration.ofMinutes(30);
+        long duracao = Duration.between(dataInicio,dataFim).toMinutes();
 
-        if(hoje.isAfter(dataInicio)){
+        if(dataInicio.isBefore(hoje)){
             return ResponseEntity.status(422,"A Data de inicio do Evento não é válida!");
         }
 
-        if(hoje.isAfter(evento.getDataFim()) && dataInicio.isAfter(evento.getDataFim())){
+        if(dataFim.isBefore(hoje) && dataInicio.isAfter(dataFim)){
             return ResponseEntity.status(422, "A um conflito entre a data de inicio e a data de fim do evento");
         }
 
-        if(!(evento.getDuracaoEvento().compareTo(duracao) > 0)){
+        if(duracao < 30){
             return ResponseEntity.status(422,"Os eventos devem ter no mínimo 30 minutos de duração!");
         }
 
-        repositorio.salvarEvento(evento);
+        repositorio.salvarEvento(organizadorId, evento);
 
         return ResponseEntity.status(200, "Evento criado com sucesso!");
     }
 
     @PutMapping(path = "/{organizadorId}/eventos/{eventoId}")
     public ResponseEntity<String> alterarEvento(@PathVariable(parameter = "organizadorId") long organizadorId , @PathVariable(parameter = "eventoId") long eventoId, @RequestBody Evento evento){
-        LocalDate hoje = LocalDate.now();
-        LocalDate dataInicio = evento.getDataInicio();
+        LocalDateTime hoje = LocalDateTime.now();
+        LocalDateTime dataInicio = evento.getDataInicio();
+        LocalDateTime dataFim = evento.getDataFim();
 
-        Duration duracao = Duration.ofMinutes(30);
+        long duracao = Duration.between(dataInicio,dataFim).toMinutes();
 
-        if(hoje.isAfter(dataInicio)){
+        if(dataInicio.isBefore(hoje)){
             return ResponseEntity.status(422,"A Data de inicio do Evento não é válida!");
         }
 
-        if(hoje.isAfter(evento.getDataFim()) && dataInicio.isAfter(evento.getDataFim())){
+        if(dataFim.isBefore(hoje) && dataInicio.isAfter(dataFim)){
             return ResponseEntity.status(422, "A um conflito entre a data de inicio e a data de fim do evento");
         }
 
-        if(!(evento.getDuracaoEvento().compareTo(duracao) > 0)){
+        if(duracao < 30){
             return ResponseEntity.status(422,"Os eventos devem ter no mínimo 30 minutos de duração!");
         }
 
-        if(repositorio.listarEventoOrganizador(evento.getOrganizador())){
-            return ResponseEntity.status(409,"O Evento já existe!");
+        Evento eventoExistente = repositorio.listarEventoOrganizador(organizadorId)
+                .stream()
+                .filter(e -> e.getId() == eventoId)
+                .findFirst()
+                .orElse(null);
+
+        if (eventoExistente == null) {
+            return ResponseEntity.status(404, "O Evento não existe!");
         }
 
-        if(!evento.isEventoAtivo()){
-            return ResponseEntity.status(422,"O Evento não está ativo!");
+        if (eventoExistente.isEventoAtivo()) {
+            return ResponseEntity.status(422, "O Evento já está ativo!");
         }
 
-        repositorio.atualizarEvento(evento, eventoId);
+        repositorio.atualizarEvento(organizadorId, evento, eventoId);
 
         return ResponseEntity.status(200,"Evento Atualizado com sucesso!");
     }
 
-    @PatchMapping(path = "/{organizadorId}/eventos/{status}")
-    public ResponseEntity<String> ativarEvento(@PathVariable(parameter = "organizadorId") long organizadorId, @PathVariable(parameter = "status") String status, @RequestBody Evento evento){
+    @PatchMapping(path = "/{organizadorId}/eventos/{eventoId}/{status}")
+    public ResponseEntity<String> ativarEvento(@PathVariable(parameter = "organizadorId") long organizadorId, @PathVariable(parameter = "eventoId") long eventoId, @PathVariable(parameter = "status") String status, @RequestBody Evento evento){
 
-        if(!(repositorio.listarEventoOrganizador(evento.getOrganizador()))){
-            return ResponseEntity.status(409,"O Evento não existe!");
+        Evento eventoExistente = repositorio.listarEventoOrganizador(organizadorId)
+                .stream()
+                .filter(e -> e.getId() == eventoId)
+                .findFirst()
+                .orElse(null);
+
+        if (eventoExistente == null) {
+            return ResponseEntity.status(404, "O Evento não existe!");
         }
 
-        if(evento.isEventoAtivo()){
-            return ResponseEntity.status(422,"O Evento já está ativo!");
+        if (eventoExistente.isEventoAtivo()) {
+            return ResponseEntity.status(422, "O Evento já está ativo!");
         }
+
 
         if(status.equals("ativar")){
-            repositorio.ativarEvento(evento, evento.getId());
+            repositorio.ativarEvento(evento, eventoId, organizadorId);
             return ResponseEntity.status(202,"Evento Ativado!");
         }
 

@@ -14,10 +14,8 @@ public class Repositorio {
     private static Repositorio instance = new Repositorio();
     private final Map<String, Usuario> usuariosComum;
     private final Map<String, Organizador> organizadores;
-    private final Map<Organizador, List<Evento>> eventos;
+    private final Map<Long, List<Evento>> eventos;
 
-
-    private static long proximoIdEvento = 1;
 
     private Repositorio() {
         this.usuariosComum = new HashMap<>();
@@ -29,20 +27,19 @@ public class Repositorio {
         return instance;
     }
 
-    public void salvarEvento(Evento evento) {
-        evento.setId(proximoIdEvento++);
-        eventos.computeIfAbsent(evento.getOrganizador(), o -> new ArrayList<>())
+    public void salvarEvento(Long organizadorId, Evento evento) {
+        eventos.computeIfAbsent(organizadorId, o -> new ArrayList<>())
                 .add(evento);
     }
 
-    public Evento atualizarEvento(Evento evento, long id){
-        List<Evento> lista = eventos.get(evento.getOrganizador());
+    public Evento atualizarEvento(long organizadorId ,Evento evento, long eventoId){
+        List<Evento> lista = eventos.get(organizadorId);
 
         if (lista == null) {
             throw new IllegalArgumentException("Organizador não encontrado");
         }
 
-        Evento eventoExistente = lista.stream().filter(e -> e.getId() == id).findFirst().orElseThrow();
+        Evento eventoExistente = lista.stream().filter(e -> e.getId() == eventoId).findFirst().orElseThrow();
 
         eventoExistente.setNome(evento.getNome());
         eventoExistente.setDescricao(evento.getDescricao());
@@ -57,21 +54,20 @@ public class Repositorio {
         eventoExistente.setEventoEstorno(evento.isEventoEstorno());
         eventoExistente.setCapacidadeMaxima(evento.getCapacidadeMaxima());
         eventoExistente.setLocalEvento(evento.getLocalEvento());
-        eventoExistente.setDuracaoEvento(evento.getDuracaoEvento());
 
         return eventoExistente;
     }
 
-    public void ativarEvento(Evento evento, long id){
-        List<Evento> lista = eventos.get(evento.getOrganizador());
+    public void ativarEvento(Evento evento, long eventoId, long organizadorId){
+        List<Evento> lista = eventos.get(organizadorId);
 
         if (lista == null) {
             throw new IllegalArgumentException("Organizador não encontrado");
         }
 
-        Evento eventoExistente = lista.stream().filter(e -> e.getId() == id).findFirst().orElseThrow();
+        Evento eventoExistente = lista.stream().filter(e -> e.getId() == eventoId).findFirst().orElseThrow();
 
-        eventoExistente.setEventoAtivo(evento.isEventoAtivo());
+        eventoExistente.setEventoAtivo(true);
     }
 
 }
