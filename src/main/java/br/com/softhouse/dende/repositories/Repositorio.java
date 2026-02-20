@@ -8,11 +8,11 @@ import br.com.softhouse.dende.model.Organizador;
 public class Repositorio {
 
     // 1. Padrão Singleton (A arquitetura que os seus colegas usaram)
-    private static Repositorio instance = new Repositorio();
+    private static final Repositorio instance = new Repositorio();
 
     // As listas guardam os utilizadores usando o ID numérico (Long)
-    private Map<Long, Usuario> usuariosComum;
-    private Map<Long, Organizador> organizadores;
+    private final Map<Long, Usuario> usuariosComum;
+    private final Map<Long, Organizador> organizadores;
 
     // 2. Construtor privado para o Singleton
     private Repositorio() {
@@ -42,15 +42,15 @@ public class Repositorio {
     public Organizador buscarOrganizadorPorId(Long id) {
         return organizadores.get(id);
     }
-    
+
     public boolean emailExiste(String email) {
         for (Usuario u : usuariosComum.values()) {
-            if (u.getEmail().equals(email)) return true;
+            if (email != null && email.equals(u.getEmail())) return true;
         }
         for (Organizador o : organizadores.values()) {
-            if (o.getEmail().equals(email)) return true;
+            if (email != null && email.equals(o.getEmail())) return true;
         }
-        return false; 
+        return false;
     }
 
     // --- MÉTODOS DE ATUALIZAR COMPLETOS (Pedido do Líder) ---

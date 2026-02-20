@@ -7,7 +7,7 @@ public class Usuario {
     
     private static Long contadorIds = 1L; // Para gerar IDs automáticos (1, 2, 3...)
 
-    private Long id; 
+    private Long id;
     private String nome;
     private LocalDate dataNascimento;
     private String sexo;

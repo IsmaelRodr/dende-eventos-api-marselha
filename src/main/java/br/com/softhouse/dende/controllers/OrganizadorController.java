@@ -10,6 +10,8 @@ import br.com.dende.softhouse.process.route.ResponseEntity;
 import br.com.softhouse.dende.model.Organizador;
 import br.com.softhouse.dende.repositories.Repositorio;
 
+import java.util.Objects;
+
 @Controller
 @RequestMapping(path = "/organizadores")
 public class OrganizadorController {
@@ -26,12 +28,13 @@ public class OrganizadorController {
     public ResponseEntity<String> cadastroOrganizador(@RequestBody Organizador organizador) {
         
         // 1. VALIDAÇÃO DE TEXTOS VAZIOS (Apenas os dados da Pessoa Física, a Empresa é opcional)
-        if (organizador.getNome().trim().isEmpty() || 
-            organizador.getEmail().trim().isEmpty() || 
-            organizador.getSenha().trim().isEmpty()) {
-            return ResponseEntity.status(400, "Erro: Os campos obrigatórios do organizador não podem estar vazios.");
-        }
+       if (organizador.getNome() == null || organizador.getNome().trim().isEmpty() ||
+               organizador.getEmail() == null || organizador.getEmail().trim().isEmpty() ||
+               organizador.getSenha() == null || organizador.getSenha().trim().isEmpty()) {
 
+           return ResponseEntity.status(400,
+                   "Erro: Os campos obrigatórios do organizador não podem estar vazios.");
+       }
         // 2. STATUS 409 PARA CONFLITO DE E-MAIL 
         if (repositorio.emailExiste(organizador.getEmail())) {
             return ResponseEntity.status(409, "Erro de Conflito: Já existe um organizador registado com este e-mail!");
@@ -47,7 +50,13 @@ public class OrganizadorController {
     public ResponseEntity<String> atualizarOrganizador(@PathVariable(parameter = "id") String id, @RequestBody Organizador organizadorAtualizado) {
         
         // 1. AQUI ESTÁ O TRADUTOR DE STRING PARA LONG
-        Long idNumerico = Long.parseLong(id);
+       long idNumerico;
+
+       try {
+           idNumerico = Long.parseLong(id);
+       } catch (NumberFormatException e) {
+           return ResponseEntity.status(400, "Erro: ID inválido.");
+       }
         
         // 2. Busca pelo número
         Organizador organizadorExistente = repositorio.buscarOrganizadorPorId(idNumerico);
@@ -56,9 +65,15 @@ public class OrganizadorController {
             return ResponseEntity.status(404, "Erro: Organizador não encontrado com este ID.");
         }
 
-        if (!organizadorExistente.getEmail().equals(organizadorAtualizado.getEmail())) {
+       if (!Objects.equals(organizadorExistente.getEmail(), organizadorAtualizado.getEmail())) {
             return ResponseEntity.status(400, "Erro: Não é permitido alterar o e-mail de acesso.");
-        }
+       }
+
+       if (organizadorAtualizado.getNome() == null || organizadorAtualizado.getNome().trim().isEmpty() ||
+               organizadorAtualizado.getSenha() == null || organizadorAtualizado.getSenha().trim().isEmpty()) {
+
+           return ResponseEntity.status(400, "Erro: Os dados atualizados não podem estar vazios.");
+       }
 
         // Atualiza os dados usando o método novo
         repositorio.atualizarDadosOrganizador(organizadorExistente, organizadorAtualizado);
