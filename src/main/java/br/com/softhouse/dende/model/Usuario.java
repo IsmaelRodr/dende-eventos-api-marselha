@@ -4,8 +4,6 @@ import java.time.LocalDate;
 import java.util.Objects;
 
 public class Usuario {
-    
-    private static Long contadorIds = 1L; // Para gerar IDs automáticos (1, 2, 3...)
 
     private Long id;
     private String nome;
@@ -13,25 +11,30 @@ public class Usuario {
     private String sexo;
     private String email;
     private String senha;
+    private boolean ativo;
 
     // Construtor atualizado com as exigências do líder
     public Usuario(String nome, LocalDate dataNascimento, String sexo, String email, String senha) {
-        this.id = contadorIds++;
-        
         // Validações contra valores nulos
         this.nome = Objects.requireNonNull(nome, "Nome não pode ser nulo");
         this.dataNascimento = Objects.requireNonNull(dataNascimento, "Data de nascimento não pode ser nula");
         this.sexo = Objects.requireNonNull(sexo, "Sexo não pode ser nulo");
         this.email = Objects.requireNonNull(email, "E-mail não pode ser nulo");
         this.senha = Objects.requireNonNull(senha, "Senha não pode ser nula");
+        this.ativo = true;
     }
 
     // Construtor vazio exigido pelo Jackson para receber o JSON
-    public Usuario() {
-        this.id = contadorIds++;
-    }
+    public Usuario() {}
+
+    public record Credenciais(String email, String senha) {}
     
     // Getters e Setters
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
     public Long getId() { return id; }
     
     public String getNome() { return nome; }
@@ -49,15 +52,10 @@ public class Usuario {
     
     public String getSenha() { return senha; }
     public void setSenha(String senha) { this.senha = senha; }
-    // --- SEUS MÉTODOS QUE NÃO PODEM FALTAR ---
-
-    public String getSenha() { return senha; }
-    public void setSenha(String senha) { this.senha = senha; }
 
     public void setAtivo(boolean ativo) {
         this.ativo = ativo;
     }
-
     public boolean isAtivo() {
         return ativo;
     }

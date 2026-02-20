@@ -14,39 +14,31 @@ public class Repositorio {
     private final Map<Long, Usuario> usuariosComum;
     private final Map<Long, Organizador> organizadores;
 
+    private Long contadorUsuarios = 1L;
+    private Long contadorOrganizadores = 1L;
+
     // 2. Construtor privado para o Singleton
     private Repositorio() {
         this.usuariosComum = new HashMap<>();
         this.organizadores = new HashMap<>();
     }
 
-    // 3. O famigerado método getInstance() que estava a dar erro!
+    // 3. O famigerado metodo getInstance() que estava a dar erro!
     public static Repositorio getInstance() {
         return instance;
     }
 
-}
-
-
-public Usuario buscarUsuarioPorEmail(String email) {
-    return usuariosComum.values().stream()
-            .filter(u -> u.getEmail().equals(email))
-            .findFirst()
-            .orElse(null);
-}
-
-public Organizador buscarOrganizadorPorEmail(String email) {
-    return organizadores.values().stream()
-            .filter(o -> o.getEmail().equals(email))
-            .findFirst()
-            .orElse(null);
-    // --- AS NOSSAS FUNÇÕES INTACTAS (Com Long e regra de E-mail) ---
-
     public void salvarUsuario(Usuario usuario) {
+        if (usuario.getId() == null) {
+            usuario.setId(contadorUsuarios++);
+        }
         usuariosComum.put(usuario.getId(), usuario);
     }
 
     public void salvarOrganizador(Organizador organizador) {
+        if (organizador.getId() == null) {
+            organizador.setId(contadorOrganizadores++);
+        }
         organizadores.put(organizador.getId(), organizador);
     }
 
@@ -69,23 +61,39 @@ public Organizador buscarOrganizadorPorEmail(String email) {
     }
 
     // --- MÉTODOS DE ATUALIZAR COMPLETOS (Pedido do Líder) ---
-    
+
     public void atualizarDadosUsuario(Usuario usuarioExistente, Usuario novosDados) {
-        usuarioExistente.setNome(novosDados.getNome());
-        usuarioExistente.setDataNascimento(novosDados.getDataNascimento());
-        usuarioExistente.setSexo(novosDados.getSexo());
-        usuarioExistente.setSenha(novosDados.getSenha());
-        
-        usuariosComum.put(usuarioExistente.getId(), usuarioExistente); 
+        if (novosDados.getNome() != null)
+            usuarioExistente.setNome(novosDados.getNome());
+
+        if (novosDados.getDataNascimento() != null)
+            usuarioExistente.setDataNascimento(novosDados.getDataNascimento());
+
+        if (novosDados.getSexo() != null)
+            usuarioExistente.setSexo(novosDados.getSexo());
+
+        if (novosDados.getSenha() != null)
+            usuarioExistente.setSenha(novosDados.getSenha());
+
+        usuariosComum.put(usuarioExistente.getId(), usuarioExistente);
     }
 
     public void atualizarDadosOrganizador(Organizador orgExistente, Organizador novosDados) {
-        orgExistente.setNome(novosDados.getNome());
-        orgExistente.setDataNascimento(novosDados.getDataNascimento());
-        orgExistente.setSexo(novosDados.getSexo());
-        orgExistente.setSenha(novosDados.getSenha());
-        orgExistente.setEmpresa(novosDados.getEmpresa()); // Nova classe Empresa
-        
-        organizadores.put(orgExistente.getId(), orgExistente); 
+        if (novosDados.getNome() != null)
+            orgExistente.setNome(novosDados.getNome());
+
+        if (novosDados.getDataNascimento() != null)
+            orgExistente.setDataNascimento(novosDados.getDataNascimento());
+
+        if (novosDados.getSexo() != null)
+            orgExistente.setSexo(novosDados.getSexo());
+
+        if (novosDados.getSenha() != null)
+            orgExistente.setSenha(novosDados.getSenha());
+
+        orgExistente.setEmpresa(novosDados.getEmpresa());  // Nova classe Empresa
+
+        organizadores.put(orgExistente.getId(), orgExistente);
     }
+
 }

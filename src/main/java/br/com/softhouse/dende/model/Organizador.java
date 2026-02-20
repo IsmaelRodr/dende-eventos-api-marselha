@@ -5,38 +5,38 @@ import java.util.Objects;
 
 public class Organizador {
 
-    private static Long contadorIds = 1L;
-
     private Long id;
     private String nome;
     private LocalDate dataNascimento;
     private String sexo;
     private String email;
     private String senha;
+    private boolean ativo;
     
     // A alteração de mestre: Composição usando a classe opcional Empresa
     private Empresa empresa;
 
     public Organizador(String nome, LocalDate dataNascimento, String sexo, String email, String senha, Empresa empresa) {
-        this.id = contadorIds++;
-        
         // Validações obrigatórias da Pessoa Física (Idêntico ao Usuario)
         this.nome = Objects.requireNonNull(nome, "O nome é obrigatório");
         this.dataNascimento = Objects.requireNonNull(dataNascimento, "A data de nascimento é obrigatória");
         this.sexo = Objects.requireNonNull(sexo, "O sexo é obrigatório");
         this.email = Objects.requireNonNull(email, "O e-mail é obrigatório");
         this.senha = Objects.requireNonNull(senha, "A senha é obrigatória");
+        this.ativo = true;
         
         // A empresa é opcional, logo aceita valores nulos tranquilamente
         this.empresa = empresa;
     }
 
     // Construtor vazio exigido pelo Jackson para receber o JSON
-    public Organizador() {
-        this.id = contadorIds++;
-    }
+    public Organizador() {}
+
+    public record Credenciais(String email, String senha) {}
     
     // Getters e Setters
+
+    public void setId(Long id) { this.id = id; }
     public Long getId() { return id; }
     
     public String getNome() { return nome; }
@@ -56,11 +56,6 @@ public class Organizador {
     // Get e Set da Empresa
     public Empresa getEmpresa() { return empresa; }
     public void setEmpresa(Empresa empresa) { this.empresa = empresa; }
-
-    // --- Métodos de comparação corrigidos ---
-
-    public String getSenha() { return senha; }
-    public void setSenha(String senha) { this.senha = senha; }
 
     public boolean isAtivo() {
         return ativo;
