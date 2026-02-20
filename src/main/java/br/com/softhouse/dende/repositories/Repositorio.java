@@ -4,17 +4,14 @@ import br.com.softhouse.dende.model.Evento;
 import br.com.softhouse.dende.model.Organizador;
 import br.com.softhouse.dende.model.Usuario;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class Repositorio {
 
     private static Repositorio instance = new Repositorio();
     private final Map<String, Usuario> usuariosComum;
     private final Map<String, Organizador> organizadores;
-    private final Map<Organizador, List<Evento>> eventos;
+    private final Map<Long, List<Evento>> eventos;
 
 
     private static long proximoIdEvento = 1;
@@ -29,70 +26,28 @@ public class Repositorio {
         return instance;
     }
 
-    public void salvarEvento(Evento evento) {
-        evento.setId(proximoIdEvento++);
-        eventos.computeIfAbsent(evento.getOrganizador(), o -> new ArrayList<>())
-                .add(evento);
-    }
 
-    public Evento atualizarEvento(Evento evento, long id){
-        List<Evento> lista = eventos.get(evento.getOrganizador());
+    public void desativarEvento(long eventoId, long organizadorId){
+        List<Evento> lista = eventos.get(organizadorId);
 
         if (lista == null) {
             throw new IllegalArgumentException("Organizador não encontrado");
         }
 
-        Evento eventoExistente = lista.stream().filter(e -> e.getId() == id).findFirst().orElseThrow();
+        Evento eventoExistente = lista.stream().filter(e -> e.getId() == eventoId).findFirst().orElseThrow(() -> new IllegalArgumentException("Evento não encontrado"));
 
-        eventoExistente.setNome(evento.getNome());
-        eventoExistente.setDescricao(evento.getDescricao());
-        eventoExistente.setPaginaWeb(evento.getPaginaWeb());
-        eventoExistente.setDataInicio(evento.getDataInicio());
-        eventoExistente.setDataFim(evento.getDataFim());
-        eventoExistente.setTipoEvento(evento.getTipoEvento());
-        eventoExistente.setEventoPrincipal(evento.getEventoPrincipal());
-        eventoExistente.setModalidade(evento.getModalidade());
-        eventoExistente.setPrecoUnitarioIngresso(evento.getPrecoUnitarioIngresso());
-        eventoExistente.setTaxaCancelamento(evento.getTaxaCancelamento());
-        eventoExistente.setEventoEstorno(evento.isEventoEstorno());
-        eventoExistente.setCapacidadeMaxima(evento.getCapacidadeMaxima());
-        eventoExistente.setLocalEvento(evento.getLocalEvento());
-        eventoExistente.setDuracaoEvento(evento.getDuracaoEvento());
-
-        return eventoExistente;
-    }
-
-    public void ativarEvento(Evento evento, long id){
-        List<Evento> lista = eventos.get(evento.getOrganizador());
-
-        if (lista == null) {
-            throw new IllegalArgumentException("Organizador não encontrado");
-        }
-
-        Evento eventoExistente = lista.stream().filter(e -> e.getId() == id).findFirst().orElseThrow();
-
-        eventoExistente.setEventoAtivo(evento.isEventoAtivo());
-    }
-
-    public void desativarEvento(Evento evento, long id){
-        List<Evento> lista = eventos.get(evento.getOrganizador());
-
-        if (lista == null) {
-            throw new IllegalArgumentException("Organizador não encontrado");
-        }
-
-        Evento eventoExistente = lista.stream().filter(e -> e.getId() == id).findFirst().orElseThrow();
 
         eventoExistente.setEventoAtivo(false);
-
     }
 
-    public List<Evento> listarEventoOrganizador(Organizador organizador){
-        List<Evento> listaEventos = eventos.get(organizador);
+    public List<Evento> listarEventoOrganizador(Long  organizadorId) {
+
+        List<Evento> listaEventos = eventos.getOrDefault(organizadorId, Collections.emptyList());
 
         return listaEventos;
 
     }
+
 
     public List<Evento> listarEventoAtivos(){
         List<Evento> eventosAtivos = new ArrayList<>();

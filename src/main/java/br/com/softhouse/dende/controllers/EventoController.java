@@ -12,7 +12,7 @@ import java.util.Comparator;
 import java.util.List;
 
 @Controller
-@RequestMapping(path = "/Eventos")
+@RequestMapping(path = "/eventos")
 public class EventoController {
 
     private final Repositorio repositorio;
