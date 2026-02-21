@@ -18,6 +18,7 @@ public class Evento {
     private double taxaCancelamento;
     private boolean eventoEstorno;
     private int capacidadeMaxima;
+    private int ingressosDisponiveis;
     private String localEvento;
     private boolean eventoAtivo;
 
@@ -196,6 +197,14 @@ public class Evento {
         this.capacidadeMaxima = capacidadeMaxima;
     }
 
+    public int getIngressosDisponiveis() {
+        return ingressosDisponiveis;
+    }
+
+    public void setIngressosDisponiveis(int ingressosDisponiveis) {
+        this.ingressosDisponiveis = ingressosDisponiveis;
+    }
+
     public String getLocalEvento() {
         return localEvento;
     }
@@ -210,6 +219,19 @@ public class Evento {
 
     public void setEventoAtivo(boolean eventoAtivo) {
         this.eventoAtivo = eventoAtivo;
+    }
+
+    public void disponibilizarIngressos(int quantidade) {
+
+        if (quantidade <= 0) {
+            throw new IllegalArgumentException("Quantidade inválida.");
+        }
+
+        if (quantidade > capacidadeMaxima) {
+            throw new IllegalArgumentException("Quantidade excede capacidade.");
+        }
+
+        this.ingressosDisponiveis = quantidade;
     }
 
     @Override

@@ -1,6 +1,7 @@
 package br.com.softhouse.dende.repositories;
 
 import br.com.softhouse.dende.model.Evento;
+import br.com.softhouse.dende.model.Ingresso;
 import br.com.softhouse.dende.model.Organizador;
 import br.com.softhouse.dende.model.Usuario;
 
@@ -14,17 +15,19 @@ public class Repositorio {
     private final Map<Long, Usuario> usuariosComum;
     private final Map<Long, Organizador> organizadores;
     private final Map<Long, List<Evento>> eventos;
+    private final Map<Long, List<Ingresso>> ingressosPorUsuario;
 
     private Long contadorUsuarios = 1L;
     private Long contadorOrganizadores = 1L;
     private Long contadorEventos = 1L;
-
+    private Long contadorIngressos = 1L;
 
     // 2. Construtor privado para o Singleton
     private Repositorio() {
         this.usuariosComum = new HashMap<>();
         this.organizadores = new HashMap<>();
         this.eventos = new HashMap<>();
+        this.ingressosPorUsuario = new HashMap<>();
     }
 
     // 3. O famigerado metodo getInstance() que estava a dar erro!
@@ -186,6 +189,50 @@ public class Repositorio {
             }
         }
         return eventosAtivos;
+    }
+
+    public Ingresso salvarIngresso(Long usuarioId, Ingresso ingresso) {
+
+        if (ingresso.getId() == null) {
+            ingresso.setId(contadorIngressos++);
+        }
+
+        ingressosPorUsuario
+                .computeIfAbsent(usuarioId, u -> new ArrayList<>())
+                .add(ingresso);
+
+        return ingresso;
+    }
+
+    public List<Ingresso> listarIngressosUsuario(Long usuarioId) {
+        return ingressosPorUsuario.getOrDefault(usuarioId, Collections.emptyList());
+    }
+
+    public Ingresso buscarIngressoPorId(Long ingressoId) {
+
+        for (List<Ingresso> lista : ingressosPorUsuario.values()) {
+            for (Ingresso i : lista) {
+                if (i.getId().equals(ingressoId)) {
+                    return i;
+                }
+            }
+        }
+        return null;
+    }
+
+    public List<Ingresso> buscarIngressosPorEvento(Long eventoId) {
+
+        List<Ingresso> resultado = new ArrayList<>();
+
+        for (List<Ingresso> lista : ingressosPorUsuario.values()) {
+            for (Ingresso i : lista) {
+                if (i.getEvento().getId() == eventoId) {
+                    resultado.add(i);
+                }
+            }
+        }
+
+        return resultado;
     }
 
 }
