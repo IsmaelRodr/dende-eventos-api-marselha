@@ -31,6 +31,12 @@ public class OrganizadorController {
         this.repositorio = Repositorio.getInstance();
     }
 
+    @PatchMapping(path = "/{organizadorId}/eventos/{eventoId}/{status}")
+    public ResponseEntity<String> desativarEvento(@PathVariable(parameter = "organizadorId") long organizadorId, @PathVariable(parameter = "eventoId") long eventoId, @PathVariable(parameter = "status") String status){
+
+        Evento eventoExistente = repositorio.listarEventoOrganizador(organizadorId)
+                .stream()
+                .filter(e -> e.getId() == eventoId)
     // API 02 - Cadastrar Utilizador Organizador
     @PostMapping
     public ResponseEntity<String> cadastroOrganizador(@RequestBody Organizador organizador) {
@@ -323,6 +329,36 @@ public class OrganizadorController {
             return ResponseEntity.status(404, "O Evento não existe!");
         }
 
+        if (!eventoExistente.isEventoAtivo()) {
+            return ResponseEntity.status(422, "O Evento já está desativado!");
+        }
+
+
+        if ("desativar".equalsIgnoreCase(status)){
+            repositorio.desativarEvento(eventoId, organizadorId);
+            return ResponseEntity.status(200,"Evento desativado!");
+        }
+
+        return ResponseEntity.status(404, "O " + status + " não foi encontrado!");
+
+    }
+
+
+
+    @GetMapping(path = "/{organizadorId}/eventos")
+    public ResponseEntity<?> listarEvento (@PathVariable(parameter = "organizadorId")long organizadorId){
+
+        List<Evento> listadeEventos = repositorio.listarEventoOrganizador(organizadorId);
+
+        if (listadeEventos.isEmpty()){
+
+            return ResponseEntity.status(200,"nao ha Eventos");
+        }
+
+       return ResponseEntity.ok(listadeEventos);
+
+    }
+}
         if (eventoExistente.isEventoAtivo()) {
             return ResponseEntity.status(422, "O Evento já está ativo!");
         }
