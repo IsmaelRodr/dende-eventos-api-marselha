@@ -5,59 +5,57 @@ import java.util.Objects;
 
 public class Usuario {
 
-    private Long id;
     private String nome;
     private LocalDate dataNascimento;
     private String sexo;
     private String email;
-    private String senha;
-    private boolean ativo;
 
-    // Construtor atualizado com as exigências do líder
-    public Usuario(String nome, LocalDate dataNascimento, String sexo, String email, String senha) {
-        // Validações contra valores nulos
-        this.nome = Objects.requireNonNull(nome, "Nome não pode ser nulo");
-        this.dataNascimento = Objects.requireNonNull(dataNascimento, "Data de nascimento não pode ser nula");
-        this.sexo = Objects.requireNonNull(sexo, "Sexo não pode ser nulo");
-        this.email = Objects.requireNonNull(email, "E-mail não pode ser nulo");
-        this.senha = Objects.requireNonNull(senha, "Senha não pode ser nula");
-        this.ativo = true;
+    public Usuario(
+            final String nome,
+            final LocalDate dataNascimento,
+            final String sexo,
+            final String email
+    ) {
+        this.nome = nome;
+        this.dataNascimento = dataNascimento;
+        this.sexo = sexo;
+        this.email = email;
     }
 
-    // Construtor vazio exigido pelo Jackson para receber o JSON
-    public Usuario() {}
+    public Usuario() {
 
-    public record Credenciais(String email, String senha) {}
-    
-    // Getters e Setters
-
-    public void setId(Long id) {
-        this.id = id;
     }
 
-    public Long getId() { return id; }
-    
-    public String getNome() { return nome; }
-    public void setNome(String nome) { this.nome = nome; }
-    
-    public LocalDate getDataNascimento() { return dataNascimento; }
-    // --- NOVO SETTER ADICIONADO ---
-    public void setDataNascimento(LocalDate dataNascimento) { this.dataNascimento = dataNascimento; }
-    
-    public String getSexo() { return sexo; }
-    // --- NOVO SETTER ADICIONADO ---
-    public void setSexo(String sexo) { this.sexo = sexo; }
-    
-    public String getEmail() { return email; }
-    
-    public String getSenha() { return senha; }
-    public void setSenha(String senha) { this.senha = senha; }
-
-    public void setAtivo(boolean ativo) {
-        this.ativo = ativo;
+    public String getNome() {
+        return nome;
     }
-    public boolean isAtivo() {
-        return ativo;
+
+    public void setNome(String nome) {
+        this.nome = nome;
+    }
+
+    public LocalDate getDataNascimento() {
+        return dataNascimento;
+    }
+
+    public void setDataNascimento(LocalDate dataNascimento) {
+        this.dataNascimento = dataNascimento;
+    }
+
+    public String getSexo() {
+        return sexo;
+    }
+
+    public void setSexo(String sexo) {
+        this.sexo = sexo;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     @Override
@@ -65,21 +63,18 @@ public class Usuario {
         if (this == object) return true;
         if (object == null || getClass() != object.getClass()) return false;
         Usuario usuario = (Usuario) object;
-        // Adicionei o ID na comparação também, pois agora ele é a identidade do objeto
-        return Objects.equals(id, usuario.id) && 
-               Objects.equals(email, usuario.email);
+        return Objects.equals(nome, usuario.nome) && Objects.equals(dataNascimento, usuario.dataNascimento) && Objects.equals(sexo, usuario.sexo) && Objects.equals(email, usuario.email);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, email);
+        return Objects.hash(nome, dataNascimento, sexo, email);
     }
 
     @Override
     public String toString() {
         return "Usuario{" +
-                "id=" + id +
-                ", nome='" + nome + '\'' +
+                "nome='" + nome + '\'' +
                 ", dataNascimento=" + dataNascimento +
                 ", sexo='" + sexo + '\'' +
                 ", email='" + email + '\'' +
