@@ -4,8 +4,6 @@ import java.time.LocalDateTime;
 
 public class Evento {
 
-    private Long contadorId = 1L;
-
     private Long id;
     private Organizador organizador;
     private String nome;
@@ -73,7 +71,6 @@ public class Evento {
             final int capacidadeMaxima,
             final String localEvento
     ){
-            this.id = contadorId++;
             this.organizador = organizador;
             this.nome = nome;
             this.descricao = descricao;
@@ -91,8 +88,12 @@ public class Evento {
             this.eventoAtivo = false;
     }
 
-    public long getId() {
+    public Long getId() {
         return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
     }
 
     public Organizador getOrganizador() {
