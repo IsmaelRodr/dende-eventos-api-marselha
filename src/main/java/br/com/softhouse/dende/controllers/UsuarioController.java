@@ -3,8 +3,11 @@ package br.com.softhouse.dende.controllers;
 import br.com.dende.softhouse.annotations.Controller;
 import br.com.dende.softhouse.annotations.request.*;
 import br.com.dende.softhouse.process.route.ResponseEntity;
+import br.com.softhouse.dende.model.Ingresso;
 import br.com.softhouse.dende.model.Usuario;
 import br.com.softhouse.dende.repositories.Repositorio;
+
+import java.util.List;
 import java.util.Objects;
 
 
@@ -202,5 +205,58 @@ public class UsuarioController {
         usuario.setAtivo(true);
         repositorio.salvarUsuario(usuario);
         return ResponseEntity.status(200, "Usuário reativado com sucesso!");
+    }
+
+    @PostMapping(path = "/{usuarioId}/ingressos/{ingressoId}")
+    public ResponseEntity<String> cancelarIngresso(
+            @PathVariable(parameter = "usuarioId") String usuarioIdString,
+            @PathVariable(parameter = "ingressoId") String ingressoIdString) {
+
+        try {
+            long usuarioId = Long.parseLong(usuarioIdString);
+            long ingressoId = Long.parseLong(ingressoIdString);
+
+            Usuario usuario = repositorio.buscarUsuarioPorId(usuarioId);
+            if (usuario == null || !usuario.isAtivo()) {
+                return ResponseEntity.status(404, "Usuário não encontrado");
+            }
+
+            boolean cancelado = repositorio.cancelarIngresso(usuarioId, ingressoId);
+            if (!cancelado) {
+                return ResponseEntity.status(404, "Ingresso não encontrado ou já cancelado");
+            }
+            return ResponseEntity.status(200, "Ingresso cancelado com sucesso");
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(422, e.getMessage()); // 422 Unprocessable Entity
+        } catch (NumberFormatException e) {
+            return ResponseEntity.status(400, "ID inválido");
+        }
+    }
+
+    // US 15: GET /usuarios/{usuarioId}/ingressos
+    @GetMapping(path = "/{usuarioId}/ingressos")
+    public ResponseEntity<?> listarIngressos(@PathVariable(parameter = "usuarioId") String usuarioIdString) {
+        try {
+            long usuarioId = Long.parseLong(usuarioIdString);
+            Usuario usuario = repositorio.buscarUsuarioPorId(usuarioId);
+            if (usuario == null) return ResponseEntity.status(404, "Usuário não encontrado");
+
+            List<Ingresso> ingressos = repositorio.listarIngressosUsuario(usuarioId);
+            List<Map<String, Object>> lista = ingressos.stream().map(i -> {
+                Map<String, Object> map = new HashMap<>();
+                map.put("id", i.getId());
+                map.put("eventoNome", i.getEvento().getNome());
+                map.put("dataInicio", i.getEvento().getDataInicio());
+                map.put("status", i.getStatus());
+                map.put("valorPago", i.getValorPago());
+                map.put("eventoAtivo", i.getEvento().isEventoAtivo());
+                return map;
+            }).toList();
+
+            return ResponseEntity.ok(lista);
+
+        } catch (NumberFormatException e) {
+            return ResponseEntity.status(400, "ID inválido");
+        }
     }
 }

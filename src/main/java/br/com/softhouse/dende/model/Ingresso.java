@@ -1,5 +1,6 @@
 package br.com.softhouse.dende.model;
 
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 public class Ingresso {
@@ -10,6 +11,9 @@ public class Ingresso {
     private StatusIngresso status;
     private String email;
     private Double valorPago;
+    private LocalDateTime dataCompra;
+    private Double valorEstornado;
+
 
     public enum StatusIngresso {
         ACEITO,
@@ -25,6 +29,7 @@ public class Ingresso {
         this.email = usuario.getEmail();
         this.valorPago = valorPago;
         this.status = StatusIngresso.ACEITO;
+        this.dataCompra = LocalDateTime.now();
     }
 
     public Long getId() { return id; }
@@ -38,6 +43,12 @@ public class Ingresso {
 
     public String getEmail() { return email; }
     public Double getValorPago() { return valorPago; }
+    public void setValorPago(Double valorPago) { this.valorPago = valorPago; }
+
+    public LocalDateTime getDataCompra() { return dataCompra; }
+
+    public void setValorEstornado(Double valorEstornado) { this.valorEstornado = valorEstornado; }
+    public Double getValorEstornado() { return valorEstornado; }
 
     public boolean isCancelado() {
         return status == StatusIngresso.CANCELADO;
