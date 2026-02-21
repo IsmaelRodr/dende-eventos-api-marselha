@@ -4,8 +4,6 @@ import java.time.LocalDateTime;
 
 public class Evento {
 
-    private Long contadorId = 1L;
-
     private Long id;
     private Organizador organizador;
     private String nome;
@@ -73,26 +71,29 @@ public class Evento {
             final int capacidadeMaxima,
             final String localEvento
     ){
-        this.id = contadorId++;
-        this.organizador = organizador;
-        this.nome = nome;
-        this.descricao = descricao;
-        this.paginaWeb = paginaWeb;
-        this.dataInicio = dataInicio;
-        this.dataFim = dataFim;
-        this.tipoEvento = tipoEvento;
-        this.eventoPrincipal = eventoPrincipal;
-        this.modalidade = modalidade;
-        this.precoUnitarioIngresso = precoUnitarioIngresso;
-        this.taxaCancelamento = taxaCancelamento;
-        this.eventoEstorno = eventoEstorno;
-        this.capacidadeMaxima = capacidadeMaxima;
-        this.localEvento = localEvento;
-        this.eventoAtivo = false;
+            this.organizador = organizador;
+            this.nome = nome;
+            this.descricao = descricao;
+            this.paginaWeb = paginaWeb;
+            this.dataInicio = dataInicio;
+            this.dataFim = dataFim;
+            this.tipoEvento = tipoEvento;
+            this.eventoPrincipal = eventoPrincipal;
+            this.modalidade = modalidade;
+            this.precoUnitarioIngresso = precoUnitarioIngresso;
+            this.taxaCancelamento = taxaCancelamento;
+            this.eventoEstorno = eventoEstorno;
+            this.capacidadeMaxima = capacidadeMaxima;
+            this.localEvento = localEvento;
+            this.eventoAtivo = false;
     }
 
-    public long getId() {
+    public Long getId() {
         return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
     }
 
     public Organizador getOrganizador() {
