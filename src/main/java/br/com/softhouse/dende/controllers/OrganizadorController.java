@@ -31,12 +31,6 @@ public class OrganizadorController {
         this.repositorio = Repositorio.getInstance();
     }
 
-    @PatchMapping(path = "/{organizadorId}/eventos/{eventoId}/{status}")
-    public ResponseEntity<String> desativarEvento(@PathVariable(parameter = "organizadorId") long organizadorId, @PathVariable(parameter = "eventoId") long eventoId, @PathVariable(parameter = "status") String status){
-
-        Evento eventoExistente = repositorio.listarEventoOrganizador(organizadorId)
-                .stream()
-                .filter(e -> e.getId() == eventoId)
     // API 02 - Cadastrar Utilizador Organizador
     @PostMapping
     public ResponseEntity<String> cadastroOrganizador(@RequestBody Organizador organizador) {
@@ -58,7 +52,7 @@ public class OrganizadorController {
             return ResponseEntity.status(400, "Data de nascimento inválida.");
         }
 
-        // 2. STATUS 409 PARA CONFLITO DE E-MAIL 
+        // 2. STATUS 409 PARA CONFLITO DE E-MAIL
         if (repositorio.emailExiste(organizador.getEmail())) {
             return ResponseEntity.status(409, "Erro de Conflito: Já existe um organizador registado com este e-mail!");
         }
@@ -178,7 +172,7 @@ public class OrganizadorController {
         }
 
         // Regra de negócio : só pode desativar se não tiver eventos ativos ou em execução
-        List<Evento> listaEventos = repositorio.listarEventoPorOrganizador(organizadorId); // metodo a ser implementado
+        List<Evento> listaEventos = repositorio.listarEventoPorOrganizador(idNumerico); // metodo a ser implementado
         boolean eventoEmExecucao = false;
 
         if (listaEventos != null) {
@@ -329,36 +323,6 @@ public class OrganizadorController {
             return ResponseEntity.status(404, "O Evento não existe!");
         }
 
-        if (!eventoExistente.isEventoAtivo()) {
-            return ResponseEntity.status(422, "O Evento já está desativado!");
-        }
-
-
-        if ("desativar".equalsIgnoreCase(status)){
-            repositorio.desativarEvento(eventoId, organizadorId);
-            return ResponseEntity.status(200,"Evento desativado!");
-        }
-
-        return ResponseEntity.status(404, "O " + status + " não foi encontrado!");
-
-    }
-
-
-
-    @GetMapping(path = "/{organizadorId}/eventos")
-    public ResponseEntity<?> listarEvento (@PathVariable(parameter = "organizadorId")long organizadorId){
-
-        List<Evento> listadeEventos = repositorio.listarEventoOrganizador(organizadorId);
-
-        if (listadeEventos.isEmpty()){
-
-            return ResponseEntity.status(200,"nao ha Eventos");
-        }
-
-       return ResponseEntity.ok(listadeEventos);
-
-    }
-}
         if (eventoExistente.isEventoAtivo()) {
             return ResponseEntity.status(422, "O Evento já está ativo!");
         }
@@ -402,5 +366,65 @@ public class OrganizadorController {
         repositorio.ativarEvento(idNumericoEvento, idNumericoOrganizador);
         return ResponseEntity.status(202,"Evento Ativado!");
 
+    }
+
+    @PatchMapping(path = "/{organizadorId}/eventos/{eventoId}/desativar")
+    public ResponseEntity<String> desativarEvento(@PathVariable(parameter = "organizadorId") String organizadorId, @PathVariable(parameter = "eventoId") String eventoId){
+
+        long idNumericoOrganizador;
+        long idNumericoEvento;
+
+        try {
+            idNumericoOrganizador = Long.parseLong(organizadorId);
+            idNumericoEvento = Long.parseLong(eventoId);
+        } catch (NumberFormatException e) {
+            return ResponseEntity.status(400, "ID inválido.");
+        }
+
+        Evento eventoExistente = repositorio.listarEventoPorOrganizador(idNumericoOrganizador)
+                .stream()
+                .filter(e -> e.getId() == idNumericoEvento)
+                .findFirst()
+                .orElse(null);
+
+        if (eventoExistente == null){
+            return ResponseEntity.status(404, "O Evento não existe.");
+        }
+
+        if (!eventoExistente.isEventoAtivo()) {
+            return ResponseEntity.status(422, "O Evento já está desativado!");
+        }
+
+        repositorio.desativarEvento(idNumericoEvento, idNumericoOrganizador);
+        return ResponseEntity.status(200,"Evento desativado!");
+    }
+
+    @GetMapping(path = "/{organizadorId}/eventos")
+    public ResponseEntity<?> listarEvento (@PathVariable(parameter = "organizadorId")String organizadorId){
+
+        long idNumericoOrganizador;
+
+        try {
+            idNumericoOrganizador = Long.parseLong(organizadorId);
+        } catch (NumberFormatException e) {
+            return ResponseEntity.status(400, "ID inválido.");
+        }
+
+        List<Map<String, Object>> listaEventos = repositorio.listarEventoPorOrganizador(idNumericoOrganizador)
+                .stream().map(e -> { Map<String, Object> eventoMap = new HashMap<>();
+                    eventoMap.put("nome", e.getNome());
+                    eventoMap.put("dataInicio", e.getDataInicio());
+                    eventoMap.put("dataFim", e.getDataFim());
+                    eventoMap.put("local", e.getLocalEvento());
+                    eventoMap.put("precoIngresso", e.getPrecoUnitarioIngresso());
+                    eventoMap.put("capacidadeMaxima", e.getCapacidadeMaxima());
+                    return eventoMap; })
+                .toList();
+
+        if (listaEventos.isEmpty()){
+            return ResponseEntity.status(200,"nao ha Eventos");
+        }
+
+        return ResponseEntity.ok(listaEventos);
     }
 }
