@@ -5,8 +5,10 @@ import br.com.dende.softhouse.annotations.request.PatchMapping;
 import br.com.dende.softhouse.annotations.request.PathVariable;
 import br.com.dende.softhouse.annotations.request.*;
 import br.com.dende.softhouse.process.route.ResponseEntity;
+import br.com.softhouse.dende.model.Ingresso;
 import br.com.softhouse.dende.model.Organizador;
 import br.com.softhouse.dende.model.Evento;
+import br.com.softhouse.dende.model.Usuario;
 import br.com.softhouse.dende.repositories.Repositorio;
 import br.com.dende.softhouse.annotations.request.PostMapping;
 import br.com.dende.softhouse.annotations.request.PutMapping;
@@ -426,5 +428,55 @@ public class OrganizadorController {
         }
 
         return ResponseEntity.ok(listaEventos);
+    }
+
+    @PostMapping(path = "/{organizadorId}/eventos/{eventoId}/ingressos")
+    public ResponseEntity<?> comprarIngresso(
+            @PathVariable(parameter = "organizadorId") String organizadorIdString,
+            @PathVariable(parameter = "eventoId") String eventoIdString,
+            @RequestBody Map<String, Long> request) {
+
+        try {
+            long organizadorId = Long.parseLong(organizadorIdString);
+            long eventoId = Long.parseLong(eventoIdString);
+            long usuarioId = request.get("usuarioId");
+
+            Usuario usuario = repositorio.buscarUsuarioPorId(usuarioId);
+            if (usuario == null || !usuario.isAtivo()) {
+                return ResponseEntity.status(404, "Usuário não encontrado ou inativo");
+            }
+
+            List<Evento> eventosOrganizador = repositorio.listarEventoPorOrganizador(organizadorId);
+            Evento evento = eventosOrganizador.stream().filter(e -> e.getId().equals(eventoId)).findFirst().orElse(null);
+            if (evento == null) {
+                return ResponseEntity.status(404, "Evento não encontrado");
+            }
+            if (!evento.isEventoAtivo()){
+                return ResponseEntity.status(422, "Evento inativo");
+            }
+            if (evento.getIngressosDisponiveis() <= 0){
+                return ResponseEntity.status(409, "Vagas esgotadas");
+            }
+            if (evento.getDataInicio().isBefore(LocalDateTime.now())){
+                return ResponseEntity.status(422, "Evento expirado");
+            }
+
+            Map<String, Object> resultado = repositorio.comprarIngresso(usuarioId, eventoId);
+            if (resultado == null){
+                return ResponseEntity.status(409, "Falha na compra");
+            }
+
+            Ingresso ingresso = (Ingresso) resultado.get("ingresso");
+            double valorTotal = (double) resultado.get("valorTotal");
+
+            Map<String, Object> resposta = new HashMap<>();
+            resposta.put("ingressoId", ingresso.getId());
+            resposta.put("evento", evento.getNome());
+            resposta.put("valorTotal", valorTotal);
+            return ResponseEntity.status(201, resposta);
+
+        } catch (NumberFormatException e) {
+            return ResponseEntity.status(400, "ID inválido");
+        }
     }
 }

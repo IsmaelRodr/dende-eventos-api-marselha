@@ -1,10 +1,12 @@
 package br.com.softhouse.dende.repositories;
 
 import br.com.softhouse.dende.model.Evento;
+import br.com.softhouse.dende.model.Ingresso;
 import br.com.softhouse.dende.model.Organizador;
 import br.com.softhouse.dende.model.Usuario;
 
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.*;
 
 
@@ -14,17 +16,19 @@ public class Repositorio {
     private final Map<Long, Usuario> usuariosComum;
     private final Map<Long, Organizador> organizadores;
     private final Map<Long, List<Evento>> eventos;
+    private final Map<Long, List<Ingresso>> ingressosPorUsuario;
 
     private Long contadorUsuarios = 1L;
     private Long contadorOrganizadores = 1L;
     private Long contadorEventos = 1L;
-
+    private Long contadorIngressos = 1L;
 
     // 2. Construtor privado para o Singleton
     private Repositorio() {
         this.usuariosComum = new HashMap<>();
         this.organizadores = new HashMap<>();
         this.eventos = new HashMap<>();
+        this.ingressosPorUsuario = new HashMap<>();
     }
 
     // 3. O famigerado metodo getInstance() que estava a dar erro!
@@ -151,6 +155,7 @@ public class Repositorio {
         Evento eventoExistente = lista.stream().filter(e -> e.getId() == eventoId).findFirst().orElseThrow();
 
         eventoExistente.setEventoAtivo(true);
+        liberarIngressosEvento(eventoId, organizadorId);
     }
 
     public void desativarEvento(long eventoId, long organizadorId){
@@ -162,15 +167,14 @@ public class Repositorio {
 
         Evento eventoExistente = lista.stream().filter(e -> e.getId() == eventoId).findFirst().orElseThrow(() -> new IllegalArgumentException("Evento não encontrado"));
 
-
+        cancelarTodosIngressosEvento(eventoId);
         eventoExistente.setEventoAtivo(false);
+        eventoExistente.setIngressosDisponiveis(0);
     }
 
     public List<Evento> listarEventoPorOrganizador(Long  organizadorId) {
 
-        List<Evento> listaEventos = eventos.getOrDefault(organizadorId, Collections.emptyList());
-
-        return listaEventos;
+        return eventos.getOrDefault(organizadorId, Collections.emptyList());
 
     }
 
@@ -188,4 +192,158 @@ public class Repositorio {
         return eventosAtivos;
     }
 
+    private void salvarIngresso(Ingresso ingresso) {
+        if (ingresso.getId() == null) {
+            ingresso.setId(++contadorIngressos);
+        }
+        ingressosPorUsuario.computeIfAbsent(ingresso.getUsuario().getId(), k -> new ArrayList<>()).add(ingresso);
+    }
+
+    private Evento encontrarEvento(Long eventoId) {
+        for (List<Evento> eventosOrg : eventos.values()) {
+            for (Evento e : eventosOrg) {
+                if (e.getId().equals(eventoId)) return e;
+            }
+        }
+        return null;
+    }
+
+    //Liberar ingressos do evento (chamado na ativação)
+    public void liberarIngressosEvento(Long eventoId, Long organizadorId) {
+        List<Evento> lista = eventos.get(organizadorId);
+        if (lista != null) {
+            lista.stream()
+                    .filter(e -> e.getId().equals(eventoId))
+                    .findFirst().ifPresent(evento -> evento.disponibilizarIngressos(evento.getCapacidadeMaxima()));
+        }
+    }
+
+    //Comprar ingresso US 13
+    public Map<String, Object> comprarIngresso(Long usuarioId, Long eventoId) {
+        Usuario usuario = usuariosComum.get(usuarioId);
+        if (usuario == null) return null;
+
+        Evento evento = encontrarEvento(eventoId);
+        if (evento == null) return null;
+
+        // Validações do evento solicitado
+        if (!evento.isEventoAtivo() || evento.getIngressosDisponiveis() <= 0 ||
+                evento.getDataInicio().isBefore(LocalDateTime.now())) {
+            return null;
+        }
+
+        Evento eventoPrincipal = evento.getEventoPrincipal();
+
+        // Se houver evento principal
+        if (eventoPrincipal != null) {
+            if (!eventoPrincipal.isEventoAtivo() ||
+                    eventoPrincipal.getIngressosDisponiveis() <= 0 ||
+                    eventoPrincipal.getDataInicio().isBefore(LocalDateTime.now())) {
+                return null;
+            }
+        }
+
+        // Cria ingresso do evento solicitado
+        Ingresso ingresso = new Ingresso(null, usuario, evento, evento.getPrecoUnitarioIngresso());
+        salvarIngresso(ingresso);
+        evento.setIngressosDisponiveis(evento.getIngressosDisponiveis() - 1);
+
+        double valorTotal = ingresso.getValorPago();
+
+        // Se houver principal
+        if (eventoPrincipal != null) {
+            Ingresso ingressoPrincipal = new Ingresso(null, usuario, eventoPrincipal,
+                    eventoPrincipal.getPrecoUnitarioIngresso());
+            salvarIngresso(ingressoPrincipal);
+            eventoPrincipal.setIngressosDisponiveis(eventoPrincipal.getIngressosDisponiveis() - 1);
+            valorTotal += ingressoPrincipal.getValorPago();
+        }
+
+        Map<String, Object> resultado = new HashMap<>();
+        resultado.put("ingresso", ingresso);
+        resultado.put("valorTotal", valorTotal);
+        return resultado;
+    }
+
+    //Cancelar ingresso US 14
+    public boolean cancelarIngresso(Long usuarioId, Long ingressoId) {
+        List<Ingresso> ingressos = ingressosPorUsuario.get(usuarioId);
+        if (ingressos == null) return false;
+
+        for (Ingresso ingresso : ingressos) {
+            if (ingresso.getId().equals(ingressoId) && !ingresso.isCancelado()) {
+                Evento evento = ingresso.getEvento();
+
+                //Verifica se o evento permite estorno
+                if (!evento.isEventoEstorno()) {
+                    throw new IllegalStateException("Este evento não permite cancelamento com estorno.");
+                }
+
+                //Calcula valor estornado aplicando a taxa de cancelamento
+                double taxa = evento.getTaxaCancelamento(); // considerando percentual (ex: 10.0 = 10%)
+                double valorEstorno = ingresso.getValorPago() * (1 - taxa / 100.0);
+
+                ingresso.setValorEstornado(valorEstorno);
+                ingresso.setStatus(Ingresso.StatusIngresso.CANCELADO);
+                evento.setIngressosDisponiveis(evento.getIngressosDisponiveis() + 1);
+
+                return true;
+            }
+        }
+        return false;
+    }
+
+    //Listar ingressos usuário US 15
+    public List<Ingresso> listarIngressosUsuario(Long usuarioId) {
+        List<Ingresso> ingressos = ingressosPorUsuario.getOrDefault(usuarioId, Collections.emptyList());
+
+        LocalDateTime agora = LocalDateTime.now();
+
+        List<Ingresso> ativos = new ArrayList<>();
+        List<Ingresso> inativos = new ArrayList<>();
+
+        for (Ingresso ingresso : ingressos) {
+            boolean eventoFinalizado = ingresso.getEvento().getDataFim().isBefore(agora);
+            boolean ingressoCancelado = ingresso.isCancelado();
+
+            if (!ingressoCancelado && !eventoFinalizado) {
+                ativos.add(ingresso);  // ativo e não realizado
+            } else {
+                inativos.add(ingresso); // cancelado ou evento já finalizado
+            }
+        }
+
+        //Ordenar ativos por data de início (ascendente) e depois por nome do evento
+        ativos.sort(Comparator
+                .comparing((Ingresso i) -> i.getEvento().getDataInicio())
+                .thenComparing(i -> i.getEvento().getNome()));
+
+        //Ordenar inativos da mesma forma
+        inativos.sort(Comparator
+                .comparing((Ingresso i) -> i.getEvento().getDataInicio())
+                .thenComparing(i -> i.getEvento().getNome()));
+
+        List<Ingresso> resultado = new ArrayList<>(ativos);
+        resultado.addAll(inativos);
+        return resultado;
+    }
+
+    public void cancelarTodosIngressosEvento(Long eventoId) {
+        // Percorre todos os usuários e cancela ingressos deste evento
+        for (Long usuarioId : ingressosPorUsuario.keySet()) {
+            List<Ingresso> ingressosUsuario = ingressosPorUsuario.get(usuarioId);
+            if (ingressosUsuario != null) {
+                ingressosUsuario.stream()
+                        .filter(i -> i.getEvento().getId().equals(eventoId) && !i.isCancelado())
+                        .forEach(ingresso -> {
+                            // Cancela ingresso
+                            ingresso.setStatus(Ingresso.StatusIngresso.CANCELADO);
+                            // Libera vaga (seta capacidade cheia novamente)
+                            Evento evento = ingresso.getEvento();
+                            evento.setIngressosDisponiveis(evento.getCapacidadeMaxima());
+                        });
+            }
+        }
+        System.out.println("Todos os ingressos do evento " + eventoId + " foram cancelados e estornados.");
+    }
 }
