@@ -259,8 +259,7 @@ public class UsuarioController {
                 return map;
             }).toList();
 
-            return ResponseEntity.ok(lista);
-
+            return ResponseEntity.status(200, lista);
         } catch (NumberFormatException e) {
             return ResponseEntity.status(400, "ID inválido");
         }

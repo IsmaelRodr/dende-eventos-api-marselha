@@ -370,7 +370,7 @@ public class OrganizadorController {
         }
 
         repositorio.ativarEvento(idNumericoEvento, idNumericoOrganizador);
-        return ResponseEntity.status(202,"Evento Ativado!");
+        return ResponseEntity.status(200,"Evento Ativado!");
 
     }
 
@@ -428,7 +428,7 @@ public class OrganizadorController {
                 .toList();
 
         if (listaEventos.isEmpty()){
-            return ResponseEntity.status(200,"nao ha Eventos");
+            return ResponseEntity.status(204,"nao ha Eventos");
         }
 
         return ResponseEntity.ok(listaEventos);

@@ -40,7 +40,6 @@ public class EventoController {
                     return eventoMap; })
                 .toList();
 
-        return ResponseEntity.ok(eventosFiltrados);
-
+        return ResponseEntity.status(200, eventosFiltrados);
     }
 }

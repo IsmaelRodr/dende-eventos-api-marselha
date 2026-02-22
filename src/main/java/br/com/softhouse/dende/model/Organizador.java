@@ -12,7 +12,6 @@ public class Organizador {
     private String email;
     private String senha;
     private boolean ativo = true;
-    
     // A alteração de mestre: Composição usando a classe opcional Empresa
     private Empresa empresa;
 
