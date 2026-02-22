@@ -152,7 +152,6 @@ public class OrganizadorController {
     // API 5: DESATIVAR PERFIL
     @PatchMapping(path = "/{organizadorId}/desativar")
     public ResponseEntity<?> desativarOrganizador(@PathVariable(parameter = "organizadorId") String organizadorId) {
-        // Regra de negócio: buscar organizador pelo e-mail
         long idNumerico;
 
         try {
@@ -276,7 +275,12 @@ public class OrganizadorController {
             return ResponseEntity.status(422,"Os eventos devem ter no mínimo 30 minutos de duração!");
         }
 
-        repositorio.salvarEvento(organizador.getId(), evento);
+        if (evento.isEventoAtivo()){
+            return ResponseEntity.status(409,"Nao se pode Criar um evento ativo.");
+        }
+
+        evento.setOrganizador(idNumerico);
+        repositorio.salvarEvento(idNumerico, evento);
 
         return ResponseEntity.status(201, "Evento criado com sucesso!");
     }
@@ -436,10 +440,15 @@ public class OrganizadorController {
             @PathVariable(parameter = "eventoId") String eventoIdString,
             @RequestBody Map<String, Long> request) {
 
+        // o body recebe o usuarioId
         try {
             long organizadorId = Long.parseLong(organizadorIdString);
             long eventoId = Long.parseLong(eventoIdString);
-            long usuarioId = request.get("usuarioId");
+
+            if (request == null || request.get("usuarioId") == null) {
+                return ResponseEntity.status(400, "Body inválido: usuarioId obrigatório");
+            }
+            long usuarioId = ((Number) request.get("usuarioId")).longValue();
 
             Usuario usuario = repositorio.buscarUsuarioPorId(usuarioId);
             if (usuario == null || !usuario.isAtivo()) {

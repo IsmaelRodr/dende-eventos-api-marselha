@@ -225,7 +225,7 @@ public class UsuarioController {
             if (!cancelado) {
                 return ResponseEntity.status(404, "Ingresso não encontrado ou já cancelado");
             }
-            return ResponseEntity.status(200, "Ingresso cancelado com sucesso");
+            return ResponseEntity.status(200, "Ingresso cancelado com sucesso e o valor foi estornado.");
         } catch (IllegalStateException e) {
             return ResponseEntity.status(422, e.getMessage()); // 422 Unprocessable Entity
         } catch (NumberFormatException e) {
@@ -248,8 +248,14 @@ public class UsuarioController {
                 map.put("eventoNome", i.getEvento().getNome());
                 map.put("dataInicio", i.getEvento().getDataInicio());
                 map.put("status", i.getStatus());
-                map.put("valorPago", i.getValorPago());
+                if (i.isCancelado()){
+                    map.put("valorEstornado", i.getValorEstornado());
+                }else {
+                    map.put("valorPago", i.getValorPago());
+                }
                 map.put("eventoAtivo", i.getEvento().isEventoAtivo());
+                map.put("dataCompra", i.getDataCompra());
+                map.put("email", i.getEmail());
                 return map;
             }).toList();
 

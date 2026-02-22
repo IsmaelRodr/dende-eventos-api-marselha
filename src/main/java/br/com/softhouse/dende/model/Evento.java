@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 public class Evento {
 
     private Long id;
-    private Organizador organizador;
+    private Long organizador ;
     private String nome;
     private String descricao;
     private String paginaWeb;
@@ -20,7 +20,7 @@ public class Evento {
     private int capacidadeMaxima;
     private int ingressosDisponiveis;
     private String localEvento;
-    private boolean eventoAtivo;
+    private boolean eventoAtivo = false;
 
     public enum TipoEvento {
         SOCIAL,
@@ -56,39 +56,6 @@ public class Evento {
 
     public Evento(){}
 
-    public Evento(
-            final Organizador organizador,
-            final String nome,
-            final String descricao,
-            final String paginaWeb,
-            final LocalDateTime dataInicio,
-            final LocalDateTime dataFim,
-            final TipoEvento tipoEvento,
-            final Evento eventoPrincipal,
-            final Modalidade modalidade,
-            final double precoUnitarioIngresso,
-            final double taxaCancelamento,
-            final boolean eventoEstorno,
-            final int capacidadeMaxima,
-            final String localEvento
-    ){
-            this.organizador = organizador;
-            this.nome = nome;
-            this.descricao = descricao;
-            this.paginaWeb = paginaWeb;
-            this.dataInicio = dataInicio;
-            this.dataFim = dataFim;
-            this.tipoEvento = tipoEvento;
-            this.eventoPrincipal = eventoPrincipal;
-            this.modalidade = modalidade;
-            this.precoUnitarioIngresso = precoUnitarioIngresso;
-            this.taxaCancelamento = taxaCancelamento;
-            this.eventoEstorno = eventoEstorno;
-            this.capacidadeMaxima = capacidadeMaxima;
-            this.localEvento = localEvento;
-            this.eventoAtivo = false;
-    }
-
     public Long getId() {
         return id;
     }
@@ -97,7 +64,8 @@ public class Evento {
         this.id = id;
     }
 
-    public Organizador getOrganizador() {
+    public void setOrganizador(Long organizador) { this.organizador = organizador; }
+    public Long getOrganizador() {
         return organizador;
     }
 

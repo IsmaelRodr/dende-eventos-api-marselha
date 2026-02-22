@@ -11,18 +11,7 @@ public class Usuario {
     private String sexo;
     private String email;
     private String senha;
-    private boolean ativo;
-
-    // Construtor atualizado com as exigências do líder
-    public Usuario(String nome, LocalDate dataNascimento, String sexo, String email, String senha) {
-        // Validações contra valores nulos
-        this.nome = Objects.requireNonNull(nome, "Nome não pode ser nulo");
-        this.dataNascimento = Objects.requireNonNull(dataNascimento, "Data de nascimento não pode ser nula");
-        this.sexo = Objects.requireNonNull(sexo, "Sexo não pode ser nulo");
-        this.email = Objects.requireNonNull(email, "E-mail não pode ser nulo");
-        this.senha = Objects.requireNonNull(senha, "Senha não pode ser nula");
-        this.ativo = true;
-    }
+    private boolean ativo = true;
 
     // Construtor vazio exigido pelo Jackson para receber o JSON
     public Usuario() {}
@@ -34,7 +23,6 @@ public class Usuario {
     public void setId(Long id) {
         this.id = id;
     }
-
     public Long getId() { return id; }
     
     public String getNome() { return nome; }
@@ -47,7 +35,9 @@ public class Usuario {
     public String getSexo() { return sexo; }
     // --- NOVO SETTER ADICIONADO ---
     public void setSexo(String sexo) { this.sexo = sexo; }
-    
+
+    // Exclusivo para Jackson
+    private void setEmail(String email) { this.email = email; }
     public String getEmail() { return email; }
     
     public String getSenha() { return senha; }

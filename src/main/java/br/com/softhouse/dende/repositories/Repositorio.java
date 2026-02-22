@@ -194,7 +194,7 @@ public class Repositorio {
 
     private void salvarIngresso(Ingresso ingresso) {
         if (ingresso.getId() == null) {
-            ingresso.setId(++contadorIngressos);
+            ingresso.setId(contadorIngressos++);
         }
         ingressosPorUsuario.computeIfAbsent(ingresso.getUsuario().getId(), k -> new ArrayList<>()).add(ingresso);
     }
@@ -244,7 +244,7 @@ public class Repositorio {
         }
 
         // Cria ingresso do evento solicitado
-        Ingresso ingresso = new Ingresso(null, usuario, evento, evento.getPrecoUnitarioIngresso());
+        Ingresso ingresso = new Ingresso(null, usuario, evento, evento.getPrecoUnitarioIngresso(), usuario.getEmail());
         salvarIngresso(ingresso);
         evento.setIngressosDisponiveis(evento.getIngressosDisponiveis() - 1);
 
@@ -253,7 +253,7 @@ public class Repositorio {
         // Se houver principal
         if (eventoPrincipal != null) {
             Ingresso ingressoPrincipal = new Ingresso(null, usuario, eventoPrincipal,
-                    eventoPrincipal.getPrecoUnitarioIngresso());
+                    eventoPrincipal.getPrecoUnitarioIngresso(), usuario.getEmail());
             salvarIngresso(ingressoPrincipal);
             eventoPrincipal.setIngressosDisponiveis(eventoPrincipal.getIngressosDisponiveis() - 1);
             valorTotal += ingressoPrincipal.getValorPago();

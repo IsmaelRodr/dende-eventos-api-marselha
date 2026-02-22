@@ -9,13 +9,6 @@ public class Empresa {
     // Construtor vazio exigido pelo Jackson
     public Empresa() {
     }
-    
-    // Construtor
-    public Empresa(String cnpj, String razaoSocial, String nomeFantasia) {
-        this.cnpj = cnpj;
-        this.razaoSocial = razaoSocial;
-        this.nomeFantasia = nomeFantasia;
-    }
 
     // Getters e Setters
     public String getCnpj() { return cnpj; }

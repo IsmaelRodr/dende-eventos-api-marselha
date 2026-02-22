@@ -9,10 +9,10 @@ public class Ingresso {
     private Usuario usuario;
     private Evento evento;
     private StatusIngresso status;
-    private String email;
     private Double valorPago;
-    private LocalDateTime dataCompra;
     private Double valorEstornado;
+    private LocalDateTime dataCompra;
+    private String email;
 
 
     public enum StatusIngresso {
@@ -22,14 +22,15 @@ public class Ingresso {
 
     public Ingresso() {}
 
-    public Ingresso(Long id, Usuario usuario, Evento evento, Double valorPago) {
-        this.id = Objects.requireNonNull(id);
+    public Ingresso(Long id, Usuario usuario, Evento evento, Double valorPago, String email) {
+        this.id = id;
         this.usuario = Objects.requireNonNull(usuario);
         this.evento = Objects.requireNonNull(evento);
-        this.email = usuario.getEmail();
         this.valorPago = valorPago;
+        this.email = email;
         this.status = StatusIngresso.ACEITO;
         this.dataCompra = LocalDateTime.now();
+
     }
 
     public Long getId() { return id; }
@@ -41,14 +42,14 @@ public class Ingresso {
     public StatusIngresso getStatus() { return status; }
     public void setStatus(StatusIngresso status) { this.status = status; }
 
-    public String getEmail() { return email; }
     public Double getValorPago() { return valorPago; }
-    public void setValorPago(Double valorPago) { this.valorPago = valorPago; }
-
-    public LocalDateTime getDataCompra() { return dataCompra; }
 
     public void setValorEstornado(Double valorEstornado) { this.valorEstornado = valorEstornado; }
     public Double getValorEstornado() { return valorEstornado; }
+
+    public LocalDateTime getDataCompra() {return dataCompra;}
+
+    public String getEmail(){ return email;}
 
     public boolean isCancelado() {
         return status == StatusIngresso.CANCELADO;
