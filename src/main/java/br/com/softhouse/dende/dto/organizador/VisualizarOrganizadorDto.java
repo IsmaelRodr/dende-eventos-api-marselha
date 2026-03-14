@@ -1,10 +1,9 @@
 package br.com.softhouse.dende.dto.organizador;
 
-import br.com.softhouse.dende.model.Empresa;
 
 import java.time.LocalDate;
 
-public record VizualizarOrganizadorDto(
+public record VisualizarOrganizadorDto(
         String nome,
         LocalDate dataNascimento,
         String sexo,

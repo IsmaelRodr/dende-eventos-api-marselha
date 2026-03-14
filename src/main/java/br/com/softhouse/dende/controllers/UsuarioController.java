@@ -10,7 +10,7 @@ import br.com.softhouse.dende.repositories.Repositorio;
 import br.com.softhouse.dende.mapper.UsuarioMapper;
 import br.com.softhouse.dende.dto.usuario.CadastrarUsuarioDto;
 import br.com.softhouse.dende.dto.usuario.AtualizarUsuarioDto;
-import br.com.softhouse.dende.dto.usuario.VizualizarUsuarioDto;
+import br.com.softhouse.dende.dto.usuario.VisualizarUsuarioDto;
 
 import java.time.LocalDate;
 import java.util.Objects;
@@ -127,7 +127,7 @@ public class UsuarioController {
         }
 
         // ALTERADO: Remover a montagem manual do HashMap e utilizar o DTO da sua equipe
-        VizualizarUsuarioDto response = UsuarioMapper.toVizualizarDto(usuario);
+        VisualizarUsuarioDto response = UsuarioMapper.toVisualizarDto(usuario);
         
         return ResponseEntity.ok(response);
     }

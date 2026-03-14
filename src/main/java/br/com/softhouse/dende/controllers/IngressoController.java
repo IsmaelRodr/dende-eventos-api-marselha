@@ -3,16 +3,22 @@ package br.com.softhouse.dende.controllers;
 import br.com.dende.softhouse.annotations.Controller;
 import br.com.dende.softhouse.annotations.request.*;
 import br.com.dende.softhouse.process.route.ResponseEntity;
+import br.com.softhouse.dende.model.Evento;
 import br.com.softhouse.dende.model.Ingresso;
 import br.com.softhouse.dende.model.Usuario;
 import br.com.softhouse.dende.repositories.Repositorio;
+
+// Import dos DTOs e Mappers
 import br.com.softhouse.dende.dto.usuario.ListaIngressosUsuarioDto;
+import br.com.softhouse.dende.dto.ingresso.IngressoGeradoDto;
 import br.com.softhouse.dende.mapper.IngressoMapper;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 @Controller
-@RequestMapping(path = "/usuarios")
+// Removemos o RequestMapping geral para podermos usar caminhos absolutos abaixo
 public class IngressoController {
 
     private final Repositorio repositorio;
@@ -21,8 +27,61 @@ public class IngressoController {
         this.repositorio = Repositorio.getInstance();
     }
 
-    // Rota que estava no UsuarioController
-    @PostMapping(path = "/{usuarioId}/ingressos/{ingressoId}")
+    // 1. Rota de Comprar Ingresso (Que trouxemos do OrganizadorController)
+    @PostMapping(path = "/organizadores/{organizadorId}/eventos/{eventoId}/ingressos")
+    public ResponseEntity<?> comprarIngresso(
+            @PathVariable(parameter = "organizadorId") String organizadorIdString,
+            @PathVariable(parameter = "eventoId") String eventoIdString,
+            @RequestBody Map<String, Long> request) {
+
+        try {
+            long organizadorId = Long.parseLong(organizadorIdString);
+            long eventoId = Long.parseLong(eventoIdString);
+
+            if (request == null || request.get("usuarioId") == null) {
+                return ResponseEntity.status(400, "Body inválido: usuarioId obrigatório");
+            }
+            long usuarioId = ((Number) request.get("usuarioId")).longValue();
+
+            Usuario usuario = repositorio.buscarUsuarioPorId(usuarioId);
+            if (usuario == null || !usuario.isAtivo()) {
+                return ResponseEntity.status(404, "Usuário não encontrado ou inativo");
+            }
+
+            List<Evento> eventosOrganizador = repositorio.listarEventoPorOrganizador(organizadorId);
+            Evento evento = eventosOrganizador.stream().filter(e -> e.getId().equals(eventoId)).findFirst().orElse(null);
+            if (evento == null) {
+                return ResponseEntity.status(404, "Evento não encontrado");
+            }
+            if (!evento.isEventoAtivo()){
+                return ResponseEntity.status(422, "Evento inativo");
+            }
+            if (evento.getIngressosDisponiveis() <= 0){
+                return ResponseEntity.status(409, "Vagas esgotadas");
+            }
+            if (evento.getDataInicio().isBefore(LocalDateTime.now())){
+                return ResponseEntity.status(422, "Evento expirado");
+            }
+
+            Map<String, Object> resultado = repositorio.comprarIngresso(usuarioId, eventoId);
+            if (resultado == null){
+                return ResponseEntity.status(409, "Falha na compra");
+            }
+
+            Ingresso ingresso = (Ingresso) resultado.get("ingresso");
+            
+            // ALTERADO: Utilizamos o IngressoMapper para não expor a entidade!
+            IngressoGeradoDto resposta = IngressoMapper.toGeradoDto(ingresso);
+            
+            return ResponseEntity.status(201, resposta);
+
+        } catch (NumberFormatException e) {
+            return ResponseEntity.status(400, "ID inválido");
+        }
+    }
+
+    // 2. Rota de Cancelar Ingresso (Que estava no UsuarioController)
+    @PostMapping(path = "/usuarios/{usuarioId}/ingressos/{ingressoId}")
     public ResponseEntity<String> cancelarIngresso(
             @PathVariable(parameter = "usuarioId") String usuarioIdString,
             @PathVariable(parameter = "ingressoId") String ingressoIdString) {
@@ -48,8 +107,8 @@ public class IngressoController {
         }
     }
 
-    // Rota que estava no UsuarioController - US 15
-    @GetMapping(path = "/{usuarioId}/ingressos")
+    // 3. Rota de Listar Ingressos - US 15 (Que estava no UsuarioController)
+    @GetMapping(path = "/usuarios/{usuarioId}/ingressos")
     public ResponseEntity<?> listarIngressos(@PathVariable(parameter = "usuarioId") String usuarioIdString) {
         try {
             long usuarioId = Long.parseLong(usuarioIdString);
@@ -58,7 +117,7 @@ public class IngressoController {
 
             List<Ingresso> ingressos = repositorio.listarIngressosUsuario(usuarioId);
             
-            // ALTERADO: Retorna a lista de DTOs mapeados através do IngressoMapper em vez do HashMap
+            // ALTERADO: Retorna a lista de DTOs mapeados
             List<ListaIngressosUsuarioDto> lista = ingressos.stream()
                     .map(IngressoMapper::toListaUsuarioDto)
                     .toList();

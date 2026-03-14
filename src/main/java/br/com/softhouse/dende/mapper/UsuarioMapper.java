@@ -26,9 +26,9 @@ public class UsuarioMapper {
         return usuario;
     }
 
-    public static VizualizarUsuarioDto toVizualizarDto(Usuario usuario) {
+    public static VisualizarUsuarioDto toVisualizarDto(Usuario usuario) {
         if (usuario == null) return null;
-        return new VizualizarUsuarioDto(
+        return new VisualizarUsuarioDto(
                 usuario.getNome(),
                 usuario.getDataNascimento(),
                 usuario.getSexo(),
