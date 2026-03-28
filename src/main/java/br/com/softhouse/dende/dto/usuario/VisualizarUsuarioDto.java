@@ -2,7 +2,7 @@ package br.com.softhouse.dende.dto.usuario;
 
 import java.time.LocalDate;
 
-public record VizualizarUsuarioDto(
+public record VisualizarUsuarioDto(
         String nome,
         LocalDate dataNascimento,
         String idade,
