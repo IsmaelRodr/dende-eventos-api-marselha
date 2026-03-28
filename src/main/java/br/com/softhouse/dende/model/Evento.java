@@ -56,6 +56,147 @@ public class Evento {
 
     public Evento(){}
 
+
+    public static EventoBuilder builder() {
+        return new EventoBuilder();
+    }
+
+
+    public static class EventoBuilder{
+        private Long id;
+        private Long organizador ;
+        private String nome;
+        private String descricao;
+        private String paginaWeb;
+        private LocalDateTime dataInicio;
+        private LocalDateTime dataFim;
+        private TipoEvento tipoEvento;
+        private Evento eventoPrincipal;
+        private Modalidade modalidade;
+        private double precoUnitarioIngresso;
+        private double taxaCancelamento;
+        private boolean eventoEstorno;
+        private int capacidadeMaxima;
+        private int ingressosDisponiveis;
+        private String localEvento;
+        private boolean eventoAtivo = false;
+
+
+        public EventoBuilder id(Long id) {
+            this.id = id;
+            return this;
+        }
+
+        public EventoBuilder organizador(Long organizador) {
+            this.organizador = organizador;
+            return this;
+        }
+
+        public EventoBuilder nome(String nome) {
+            this.nome = nome;
+            return this;
+        }
+
+        public EventoBuilder descricao(String descricao) {
+            this.descricao = descricao;
+            return this;
+        }
+
+        public EventoBuilder paginaWeb(String paginaWeb) {
+            this.paginaWeb = paginaWeb;
+            return this;
+        }
+
+        public EventoBuilder dataInicio(LocalDateTime dataInicio) {
+            this.dataInicio = dataInicio;
+            return this;
+        }
+
+        public EventoBuilder dataFim(LocalDateTime dataFim) {
+            this.dataFim = dataFim;
+            return this;
+        }
+
+        public EventoBuilder tipoEvento(TipoEvento tipoEvento) {
+            this.tipoEvento = tipoEvento;
+            return this;
+        }
+
+        public EventoBuilder eventoPrincipal(Evento eventoPrincipal) {
+            this.eventoPrincipal = eventoPrincipal;
+            return this;
+        }
+
+        public EventoBuilder modalidade(Modalidade modalidade) {
+            this.modalidade = modalidade;
+            return this;
+        }
+
+        public EventoBuilder precoUnitarioIngresso(double precoUnitarioIngresso) {
+            this.precoUnitarioIngresso = precoUnitarioIngresso;
+            return this;
+        }
+
+        public EventoBuilder taxaCancelamento(double taxaCancelamento) {
+            this.taxaCancelamento = taxaCancelamento;
+            return this;
+        }
+
+        public EventoBuilder eventoEstorno(boolean eventoEstorno) {
+            this.eventoEstorno = eventoEstorno;
+            return this;
+        }
+
+        public EventoBuilder capacidadeMaxima(int capacidadeMaxima) {
+            this.capacidadeMaxima = capacidadeMaxima;
+            return this;
+        }
+
+        public EventoBuilder ingressosDisponiveis(int ingressosDisponiveis) {
+            this.ingressosDisponiveis = ingressosDisponiveis;
+            return this;
+        }
+
+        public EventoBuilder localEvento(String localEvento) {
+            this.localEvento = localEvento;
+            return this;
+        }
+
+        public EventoBuilder eventoAtivo(boolean eventoAtivo) {
+            this.eventoAtivo = eventoAtivo;
+            return this;
+        }
+
+
+
+        public Evento build() {
+            Evento evento = new Evento();
+
+            evento.id = this.id;
+            evento.organizador = this.organizador;
+            evento.nome = this.nome;
+            evento.descricao = this.descricao;
+            evento.paginaWeb = this.paginaWeb;
+            evento.dataInicio = this.dataInicio;
+            evento.dataFim = this.dataFim;
+            evento.tipoEvento = this.tipoEvento;
+            evento.eventoPrincipal = this.eventoPrincipal;
+            evento.modalidade = this.modalidade;
+            evento.precoUnitarioIngresso = this.precoUnitarioIngresso;
+            evento.taxaCancelamento = this.taxaCancelamento;
+            evento.eventoEstorno = this.eventoEstorno;
+            evento.capacidadeMaxima = this.capacidadeMaxima;
+            evento.ingressosDisponiveis = this.ingressosDisponiveis;
+            evento.localEvento = this.localEvento;
+            evento.eventoAtivo = this.eventoAtivo;
+            return evento;
+
+
+        }
+
+
+        }
+
     public Long getId() {
         return id;
     }
