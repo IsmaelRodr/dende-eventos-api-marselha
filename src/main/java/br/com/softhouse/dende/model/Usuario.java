@@ -37,7 +37,7 @@ public class Usuario {
     public void setSexo(String sexo) { this.sexo = sexo; }
 
     // Exclusivo para Jackson
-    private void setEmail(String email) { this.email = email; }
+    public void setEmail(String email) { this.email = email; }
     public String getEmail() { return email; }
     
     public String getSenha() { return senha; }

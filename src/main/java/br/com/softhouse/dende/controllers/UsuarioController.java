@@ -3,18 +3,17 @@ package br.com.softhouse.dende.controllers;
 import br.com.dende.softhouse.annotations.Controller;
 import br.com.dende.softhouse.annotations.request.*;
 import br.com.dende.softhouse.process.route.ResponseEntity;
-import br.com.softhouse.dende.model.Ingresso;
 import br.com.softhouse.dende.model.Usuario;
 import br.com.softhouse.dende.repositories.Repositorio;
 
-import java.util.List;
-import java.util.Objects;
-
+// IMPORTS NOVOS DOS MAPPERS E DTOS
+import br.com.softhouse.dende.mapper.UsuarioMapper;
+import br.com.softhouse.dende.dto.usuario.CadastrarUsuarioDto;
+import br.com.softhouse.dende.dto.usuario.AtualizarUsuarioDto;
+import br.com.softhouse.dende.dto.usuario.VisualizarUsuarioDto;
 
 import java.time.LocalDate;
-import java.time.Period;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Objects;
 
 @Controller
 @RequestMapping(path = "/usuarios")
@@ -27,10 +26,14 @@ public class UsuarioController {
     }
 
     // API 01 - Cadastrar
+    // ALTERADO: Recebe o DTO em vez do Model
     @PostMapping
-    public ResponseEntity<String> cadastroUsuario(@RequestBody Usuario usuario) {
+    public ResponseEntity<String> cadastroUsuario(@RequestBody CadastrarUsuarioDto dto) {
 
-        // 1. VALIDAÇÃO DE TEXTOS VAZIOS
+        // ALTERADO: Usamos o Mapper para converter o DTO no Usuario, assim podemos manter as suas validações originais
+        Usuario usuario = UsuarioMapper.toModel(dto);
+
+        // 1. VALIDAÇÃO DE TEXTOS VAZIOS (Mantido exatamente como você fez)
         if (usuario.getNome() == null || usuario.getNome().trim().isEmpty() ||
                 usuario.getEmail() == null || usuario.getEmail().trim().isEmpty() ||
                 usuario.getSenha() == null || usuario.getSenha().trim().isEmpty()) {
@@ -59,8 +62,9 @@ public class UsuarioController {
     }
 
     // API 03 - Atualizar 
+    // ALTERADO: Recebe o DTO em vez do Model
     @PutMapping(path = "/{id}")
-    public ResponseEntity<String> atualizarUsuario(@PathVariable(parameter = "id") String id, @RequestBody Usuario usuarioAtualizado) {
+    public ResponseEntity<String> atualizarUsuario(@PathVariable(parameter = "id") String id, @RequestBody AtualizarUsuarioDto dto) {
 
         // Tradutor: Transforma a String 'id' da URL no Long 'idNumerico'
         long idNumerico;
@@ -77,6 +81,10 @@ public class UsuarioController {
             return ResponseEntity.status(404, "Erro: Utilizador não encontrado com este ID.");
         }
 
+        // ALTERADO: Usamos o Mapper para converter
+        Usuario usuarioAtualizado = UsuarioMapper.toModel(dto);
+
+        // O Restante é a sua lógica original intacta
         if (!Objects.equals(usuarioExistente.getEmail(), usuarioAtualizado.getEmail())) {
             return ResponseEntity.status(400, "Erro: Não é permitido alterar o e-mail de acesso.");
         }
@@ -118,31 +126,16 @@ public class UsuarioController {
             return ResponseEntity.status(400, "Usuário possui data de nascimento inválida.");
         }
 
-        // Regra de negócio: calcular idade em anos, meses e dias a partir da data de nascimento
-        LocalDate hoje = LocalDate.now();
-        Period periodo = Period.between(usuario.getDataNascimento(), hoje);
-        String idade = String.format("%d anos, %d meses e %d dias",
-                periodo.getYears(),
-                periodo.getMonths(),
-                periodo.getDays());
-
-        // Monta o perfil com os dados solicitados
-        Map<String, Object> perfil = new HashMap<>();
-        perfil.put("nome", usuario.getNome());
-        perfil.put("dataNascimento", usuario.getDataNascimento().toString());
-        perfil.put("idade", idade);
-        perfil.put("sexo", usuario.getSexo());
-        perfil.put("email", usuario.getEmail());
-
-        return ResponseEntity.ok(perfil);
+        // ALTERADO: Remover a montagem manual do HashMap e utilizar o DTO da sua equipe
+        VisualizarUsuarioDto response = UsuarioMapper.toVisualizarDto(usuario);
+        
+        return ResponseEntity.ok(response);
     }
 
-    // API 5: DESATIVAR PERFIL
+    // API 5: DESATIVAR PERFIL (Fica Intacto)
     @PatchMapping(path = "/{usuarioId}/desativar")
     public ResponseEntity<?> desativarUsuario(@PathVariable(parameter = "usuarioId") String usuarioId) {
-        // Regra de negócio: buscar usuário pelo e-mail
         long idNumerico;
-
         try {
             idNumerico = Long.parseLong(usuarioId);
         } catch (NumberFormatException e) {
@@ -151,34 +144,28 @@ public class UsuarioController {
 
         Usuario usuario = repositorio.buscarUsuarioPorId(idNumerico);
 
-        // Regra de negócio: se não existir, retornar 404
         if (usuario == null) {
             return ResponseEntity.status(404, "Usuário não encontrado!");
         }
 
-        // Regra de negócio: verificar se a conta já está inativa
         if (!usuario.isAtivo()) {
             return ResponseEntity.status(409, "Usuário já está inativo!");
         }
 
-        // Aplica a desativação
         usuario.setAtivo(false);
-        repositorio.salvarUsuario(usuario); // persistência pelo ID
+        repositorio.salvarUsuario(usuario); 
         return ResponseEntity.status(200, "Usuário desativado com sucesso!");
     }
 
-    // API 6: REATIVAR PERFIL
+    // API 6: REATIVAR PERFIL (Fica Intacto)
     @PatchMapping(path = "/{usuarioId}/ativar")
     public ResponseEntity<?> ativarUsuario(@PathVariable(parameter = "usuarioId") String usuarioId,
                                            @RequestBody Usuario.Credenciais credenciais) {
-        // Regra de negócio: a senha é obrigatória para reativação
         if (credenciais.senha() == null || credenciais.senha().isEmpty()) {
             return ResponseEntity.status(400, "Senha é obrigatória.");
         }
 
-        // Regra de negócio: buscar usuário pelo e-mail
         long idNumerico;
-
         try {
             idNumerico = Long.parseLong(usuarioId);
         } catch (NumberFormatException e) {
@@ -191,77 +178,16 @@ public class UsuarioController {
             return ResponseEntity.status(404, "Usuário não encontrado!");
         }
 
-        // Regra de negócio: validar a senha fornecida
         if (usuario.getSenha() == null || !usuario.getSenha().equals(credenciais.senha())) {
             return ResponseEntity.status(401, "Senha inválida.");
         }
 
-        // Regra de negócio: verificar se a conta já está ativa
         if (usuario.isAtivo()) {
             return ResponseEntity.status(409, "Usuário já está ativo!");
         }
 
-        // Aplica a reativação
         usuario.setAtivo(true);
         repositorio.salvarUsuario(usuario);
         return ResponseEntity.status(200, "Usuário reativado com sucesso!");
-    }
-
-    @PostMapping(path = "/{usuarioId}/ingressos/{ingressoId}")
-    public ResponseEntity<String> cancelarIngresso(
-            @PathVariable(parameter = "usuarioId") String usuarioIdString,
-            @PathVariable(parameter = "ingressoId") String ingressoIdString) {
-
-        try {
-            long usuarioId = Long.parseLong(usuarioIdString);
-            long ingressoId = Long.parseLong(ingressoIdString);
-
-            Usuario usuario = repositorio.buscarUsuarioPorId(usuarioId);
-            if (usuario == null || !usuario.isAtivo()) {
-                return ResponseEntity.status(404, "Usuário não encontrado");
-            }
-
-            boolean cancelado = repositorio.cancelarIngresso(usuarioId, ingressoId);
-            if (!cancelado) {
-                return ResponseEntity.status(404, "Ingresso não encontrado ou já cancelado");
-            }
-            return ResponseEntity.status(200, "Ingresso cancelado com sucesso e o valor foi estornado.");
-        } catch (IllegalStateException e) {
-            return ResponseEntity.status(422, e.getMessage()); // 422 Unprocessable Entity
-        } catch (NumberFormatException e) {
-            return ResponseEntity.status(400, "ID inválido");
-        }
-    }
-
-    // US 15: GET /usuarios/{usuarioId}/ingressos
-    @GetMapping(path = "/{usuarioId}/ingressos")
-    public ResponseEntity<?> listarIngressos(@PathVariable(parameter = "usuarioId") String usuarioIdString) {
-        try {
-            long usuarioId = Long.parseLong(usuarioIdString);
-            Usuario usuario = repositorio.buscarUsuarioPorId(usuarioId);
-            if (usuario == null) return ResponseEntity.status(404, "Usuário não encontrado");
-
-            List<Ingresso> ingressos = repositorio.listarIngressosUsuario(usuarioId);
-            List<Map<String, Object>> lista = ingressos.stream().map(i -> {
-                Map<String, Object> map = new HashMap<>();
-                map.put("id", i.getId());
-                map.put("eventoNome", i.getEvento().getNome());
-                map.put("dataInicio", i.getEvento().getDataInicio());
-                map.put("status", i.getStatus());
-                if (i.isCancelado()){
-                    map.put("valorEstornado", i.getValorEstornado());
-                }else {
-                    map.put("valorPago", i.getValorPago());
-                }
-                map.put("eventoAtivo", i.getEvento().isEventoAtivo());
-                map.put("dataCompra", i.getDataCompra());
-                map.put("email", i.getEmail());
-                return map;
-            }).toList();
-
-            return ResponseEntity.status(200, lista);
-        } catch (NumberFormatException e) {
-            return ResponseEntity.status(400, "ID inválido");
-        }
     }
 }

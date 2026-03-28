@@ -1,0 +1,7 @@
+# Use this workspace to collaborate
+workspace:
+  id: 80040fdf-9790-4389-8c3e-123ded330078
+
+localResources:
+  collections:
+    - ..\dende_softhouse.postman_collection.json
