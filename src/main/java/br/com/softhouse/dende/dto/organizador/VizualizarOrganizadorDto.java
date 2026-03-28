@@ -9,7 +9,5 @@ public record VizualizarOrganizadorDto(
         LocalDate dataNascimento,
         String sexo,
         String email,
-        String senha,
-        boolean ativo,
         EmpresaDto empresa
 ) {}
