@@ -10,6 +10,5 @@ public record CadastrarOrganizadorDto(
         String sexo,
         String email,
         String senha,
-        boolean ativo,
         Empresa empresa
 ) {}

@@ -5,6 +5,8 @@ import java.time.LocalDate;
 public record VisualizarUsuarioDto(
         String nome,
         LocalDate dataNascimento,
+        String idade,
         String sexo,
-        String email
+        String email,
+        Boolean ativo
 ) {}

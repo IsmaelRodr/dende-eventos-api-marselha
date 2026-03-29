@@ -19,6 +19,7 @@ import br.com.softhouse.dende.dto.organizador.StatusOrganizadorDto;
 import br.com.softhouse.dende.dto.organizador.VisualizarOrganizadorDto;
 import br.com.softhouse.dende.mapper.EventoMapper;
 import br.com.softhouse.dende.mapper.OrganizadorMapper;
+import br.com.softhouse.dende.model.Empresa;
 import br.com.softhouse.dende.model.Evento;
 import br.com.softhouse.dende.model.Organizador;
 import br.com.softhouse.dende.repositories.Repositorio;
@@ -40,100 +41,234 @@ public class OrganizadorController {
 
     @PostMapping
     public ResponseEntity<?> cadastroOrganizador(@RequestBody CadastrarOrganizadorDto dto) {
+        //uso do DTO de requisição
         Organizador organizador = OrganizadorMapper.toModel(dto);
 
+        //validação de ausencia de dados
         if (organizador == null) {
             return ResponseEntity.status(400, "Dados do organizador invalidos.");
         }
 
-        if (organizador.getNome() == null || organizador.getNome().trim().isEmpty()
-                || organizador.getEmail() == null || organizador.getEmail().trim().isEmpty()
-                || organizador.getSenha() == null || organizador.getSenha().trim().isEmpty()) {
-            return ResponseEntity.status(400, "Erro: Os campos obrigatorios do organizador nao podem estar vazios.");
+        //validação de valores validos nos campos
+        if (organizador.getNome() == null || organizador.getNome().isBlank() ||
+                organizador.getEmail() == null || organizador.getEmail().isBlank() ||
+                organizador.getSenha() == null || organizador.getSenha().isBlank() ||
+                organizador.getSexo() == null || organizador.getSexo().isBlank()) {
+
+            return ResponseEntity.status(400,
+                    "Erro: Os campos obrigatorios do organizador nao podem estar vazios.");
         }
 
+        //validação de data
         if (organizador.getDataNascimento() == null) {
             return ResponseEntity.status(400, "Erro: Data de nascimento e obrigatoria.");
         }
 
+        //Validação temporal simples
         if (organizador.getDataNascimento().isAfter(LocalDate.now())) {
             return ResponseEntity.status(400, "Data de nascimento invalida.");
         }
 
-        if (repositorio.emailExiste(organizador.getEmail())) {
-            return ResponseEntity.status(409, "Erro de Conflito: Ja existe um organizador registado com este e-mail!");
+        //Validação na formatação do email.
+        if (!organizador.getEmail().matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")) {
+            return ResponseEntity.status(400, "Email inválido.");
         }
 
+        //Validação de unicidade.
+        if (repositorio.emailExiste(organizador.getEmail())) {
+            return ResponseEntity.status(409,
+                    "Erro de Conflito: Ja existe um organizador registado com este e-mail!");
+        }
+
+        //Validação dos campos da empresa (se houver)
+        if (organizador.getEmpresa() != null) {
+            Empresa emp = organizador.getEmpresa();
+
+            String cnpj = emp.getCnpj();
+            String razao = emp.getRazaoSocial();
+            String fantasia = emp.getNomeFantasia();
+
+            if (cnpj == null || cnpj.isBlank() ||
+                    razao == null || razao.isBlank() ||
+                    fantasia == null || fantasia.isBlank()) {
+
+                return ResponseEntity.status(400,
+                        "Voce informou uma empresa, portanto todos os campos sao obrigatorios.");
+            }
+
+            if (cnpj.length() != 14) {
+                return ResponseEntity.status(400, "CNPJ inválido.");
+            }
+        }
+
+        //chamada do metodo no repositorio
         repositorio.salvarOrganizador(organizador);
+
+       //Uso do DTO para a resposta
         StatusOrganizadorDto response = OrganizadorMapper.toStatusDto(
                 "Organizador " + organizador.getNome() + " registado com sucesso!",
                 organizador
         );
+
+        //retorno ao usuario do estado da ação
         return ResponseEntity.status(201, response);
     }
 
     @PutMapping(path = "/{organizadorId}")
-    public ResponseEntity<?> atualizarOrganizador(@PathVariable(parameter = "organizadorId") String organizadorId,
-                                                  @RequestBody AtualizarOrganizadorDto dto) {
+    public ResponseEntity<?> atualizarOrganizador(
+            @PathVariable(parameter = "organizadorId") String organizadorId,
+            @RequestBody AtualizarOrganizadorDto dto
+            //@RequestBody Organizador.Credenciais credencial
+            ) {
+
+        /*if (    credencial.email() == null || credencial.email().isEmpty() ||
+                credencial.senha() == null || credencial.senha().isEmpty()) {
+            return ResponseEntity.status(400, "Email ou Senha ausentes.");
+        }*/
+
+        //conversão de Identificador de caractere para numerico
         Long idNumerico = parseId(organizadorId);
+
+        //validação de ausencia no campo
         if (idNumerico == null) {
             return ResponseEntity.status(400, "Erro: ID invalido.");
         }
 
+        //Busca do objeto na persistencia
         Organizador organizadorExistente = repositorio.buscarOrganizadorPorId(idNumerico);
+
+        //Validação de objeto presente
         if (organizadorExistente == null) {
             return ResponseEntity.status(404, "Erro: Organizador nao encontrado com este ID.");
         }
 
+        /*if (!credencial.email().equals(organizadorExistente.getEmail())
+                ||!credencial.senha().equals(organizadorExistente.getSenha())) {
+            return ResponseEntity.status(401, "Credenciais de acesso invalidas.");
+        }*/
+
+        //Conversão do DTO de requisição para um objeto.
         Organizador organizadorAtualizado = OrganizadorMapper.toModel(dto);
+
+        //validação de objeto de requisição presente
         if (organizadorAtualizado == null) {
             return ResponseEntity.status(400, "Dados do organizador invalidos.");
         }
 
-        if (organizadorAtualizado.getNome() == null || organizadorAtualizado.getNome().trim().isEmpty()
-                || organizadorAtualizado.getSenha() == null || organizadorAtualizado.getSenha().trim().isEmpty()) {
-            return ResponseEntity.status(400, "Erro: Os dados atualizados nao podem estar vazios.");
+        //O bloco abaixo valida os valores dos atributos do objeto de requisição
+        String nome = organizadorAtualizado.getNome();
+        if (nome != null && nome.isBlank()) {
+            return ResponseEntity.status(400, "Nome inválido.");
         }
 
+        String senha = organizadorAtualizado.getSenha();
+        if (senha != null && senha.isBlank()) {
+            return ResponseEntity.status(400, "Senha inválida.");
+        }
+
+        String sexo = organizadorAtualizado.getSexo();
+        if (sexo != null && sexo.isBlank()) {
+            return ResponseEntity.status(400, "Sexo inválido.");
+        }
+
+        LocalDate dataNascimento = organizadorAtualizado.getDataNascimento();
+        if (dataNascimento != null && dataNascimento.isAfter(LocalDate.now())) {
+            return ResponseEntity.status(400, "Data de nascimento invalida");
+        }
+
+        //Validação dos atributos da empresa (se houver) do objeto de requisição
+        if (organizadorAtualizado.getEmpresa() != null) {
+            Empresa emp = organizadorAtualizado.getEmpresa();
+
+            String cnpj = emp.getCnpj();
+            String razao = emp.getRazaoSocial();
+            String fantasia = emp.getNomeFantasia();
+
+            if (cnpj == null || cnpj.isBlank() ||
+                    razao == null || razao.isBlank() ||
+                    fantasia == null || fantasia.isBlank()) {
+
+                return ResponseEntity.status(400,
+                        "Se a empresa for informada, todos os campos sao obrigatorios.");
+            }
+
+            if (cnpj.length() != 14) {
+                return ResponseEntity.status(400, "CNPJ inválido.");
+            }
+        }
+
+        //chamada do metodo no repositorio (persistencia)
         repositorio.atualizarDadosOrganizador(organizadorExistente, organizadorAtualizado);
-        StatusOrganizadorDto response = OrganizadorMapper.toStatusDto(
+
+        //Uso de DTO para resposta
+        StatusOrganizadorDto resposta = OrganizadorMapper.toStatusDto(
                 "Perfil do organizador atualizado com sucesso!",
                 organizadorExistente
         );
-        return ResponseEntity.ok(response);
+
+        //Retorno ao cliente para ação realizada
+        return ResponseEntity.status(200, resposta);
     }
 
     @GetMapping(path = "/{organizadorId}")
-    public ResponseEntity<?> visualizarPerfilOrganizador(@PathVariable(parameter = "organizadorId") String organizadorId) {
+    public ResponseEntity<?> visualizarPerfilOrganizador(@PathVariable(parameter = "organizadorId") String organizadorId
+                                                         //@RequestBody Organizador.Credenciais credencial
+                                                         ) {
+
+        /*if (    credencial.email() == null || credencial.email().isEmpty() ||
+                credencial.senha() == null || credencial.senha().isEmpty()) {
+            return ResponseEntity.status(400, "Email ou Senha ausentes.");
+        }*/
+
         Long idNumerico = parseId(organizadorId);
         if (idNumerico == null) {
             return ResponseEntity.status(400, "ID invalido.");
         }
 
         Organizador organizador = repositorio.buscarOrganizadorPorId(idNumerico);
+
         if (organizador == null) {
             return ResponseEntity.status(404, "Organizador nao encontrado");
         }
+
+        /*if (!credencial.email().equals(organizador.getEmail())
+                ||!credencial.senha().equals(organizador.getSenha())) {
+            return ResponseEntity.status(401, "Credenciais de acesso invalidas.");
+        }*/
 
         if (organizador.getDataNascimento() == null) {
             return ResponseEntity.status(400, "Organizador possui data de nascimento invalida.");
         }
 
-        VisualizarOrganizadorDto response = OrganizadorMapper.toVisualizarDto(organizador);
-        return ResponseEntity.ok(response);
+        VisualizarOrganizadorDto resposta = OrganizadorMapper.toVisualizarDto(organizador);
+        return ResponseEntity.status(200,resposta);
     }
 
     @PatchMapping(path = "/{organizadorId}/desativar")
-    public ResponseEntity<?> desativarOrganizador(@PathVariable(parameter = "organizadorId") String organizadorId) {
+    public ResponseEntity<?> desativarOrganizador(@PathVariable(parameter = "organizadorId") String organizadorId
+                                                  //@RequestBody Organizador.Credenciais credencial
+                                                  ) {
+
+       /* if (    credencial.email() == null || credencial.email().isEmpty() ||
+                credencial.senha() == null || credencial.senha().isEmpty()) {
+            return ResponseEntity.status(400, "Email ou Senha ausentes.");
+        }*/
+
         Long idNumerico = parseId(organizadorId);
         if (idNumerico == null) {
             return ResponseEntity.status(400, "ID invalido.");
         }
 
         Organizador organizador = repositorio.buscarOrganizadorPorId(idNumerico);
+
         if (organizador == null) {
             return ResponseEntity.status(404, "Organizador nao encontrado!");
         }
+
+        /*if (!credencial.email().equals(organizador.getEmail())
+            ||!credencial.senha().equals(organizador.getSenha())) {
+            return ResponseEntity.status(401, "Senha invalida.");
+        }*/
 
         if (!organizador.isAtivo()) {
             return ResponseEntity.status(409, "Organizador ja esta inativo!");
@@ -157,19 +292,22 @@ public class OrganizadorController {
 
         organizador.setAtivo(false);
         repositorio.salvarOrganizador(organizador);
-        StatusOrganizadorDto response = OrganizadorMapper.toStatusDto(
+        StatusOrganizadorDto resposta = OrganizadorMapper.toStatusDto(
                 "Organizador desativado com sucesso!",
                 organizador
         );
-        return ResponseEntity.status(200, response);
+        return ResponseEntity.status(200, resposta);
     }
 
     @PatchMapping(path = "/{organizadorId}/ativar")
-    public ResponseEntity<?> ativarOrganizador(@PathVariable(parameter = "organizadorId") String organizadorId,
-                                               @RequestBody Organizador.Credenciais credenciais) {
-        if (credenciais.senha() == null || credenciais.senha().isEmpty()) {
-            return ResponseEntity.status(400, "Senha e obrigatoria.");
-        }
+    public ResponseEntity<?> ativarOrganizador(@PathVariable(parameter = "organizadorId") String organizadorId
+                                               //@RequestBody Organizador.Credenciais credencial
+                                               ){
+
+        /*if (    credencial.email() == null || credencial.email().isEmpty() ||
+                credencial.senha() == null || credencial.senha().isEmpty()) {
+            return ResponseEntity.status(400, "Email ou Senha ausentes.");
+        }*/
 
         Long idNumerico = parseId(organizadorId);
         if (idNumerico == null) {
@@ -177,13 +315,15 @@ public class OrganizadorController {
         }
 
         Organizador organizador = repositorio.buscarOrganizadorPorId(idNumerico);
+
         if (organizador == null) {
             return ResponseEntity.status(404, "Organizador nao encontrado!");
         }
 
-        if (organizador.getSenha() == null || !organizador.getSenha().equals(credenciais.senha())) {
+        /*if (!credencial.email().equals(organizador.getEmail())
+                ||!credencial.senha().equals(organizador.getSenha())) {
             return ResponseEntity.status(401, "Senha invalida.");
-        }
+        }*/
 
         if (organizador.isAtivo()) {
             return ResponseEntity.status(409, "Organizador ja esta ativo!");
@@ -191,11 +331,11 @@ public class OrganizadorController {
 
         organizador.setAtivo(true);
         repositorio.salvarOrganizador(organizador);
-        StatusOrganizadorDto response = OrganizadorMapper.toStatusDto(
+        StatusOrganizadorDto resposta = OrganizadorMapper.toStatusDto(
                 "Organizador reativado com sucesso!",
                 organizador
         );
-        return ResponseEntity.status(200, response);
+        return ResponseEntity.status(200, resposta);
     }
 
     @PostMapping(path = "/{organizadorId}/eventos")
@@ -211,7 +351,26 @@ public class OrganizadorController {
             return ResponseEntity.status(404, "Organizador nao encontrado!");
         }
 
+        if (    dto.nome() == null || dto.nome().isBlank() ||
+                dto.localEvento() == null || dto.localEvento().isBlank() ||
+                dto.capacidadeMaxima() == null || dto.capacidadeMaxima() <= 0 ||
+                dto.precoUnitarioIngresso() == null || dto.precoUnitarioIngresso() < 0 ){
+            return ResponseEntity.status(400, "Os campos minimos para um evento" +
+                    " estão ausentes, em branco ou invalidos");
+        }
+
         Evento evento = EventoMapper.toModel(dto);
+
+        if (dto.eventoPrincipalId() != null) {
+            Evento principal = repositorio.buscarEvento(dto.eventoPrincipalId());
+
+            if (principal == null) {
+                return ResponseEntity.status(404, "Evento principal não encontrado");
+            }
+
+            evento.setEventoPrincipal(principal);
+        }
+
         ResponseEntity<?> validacao = validarDatasEvento(evento);
         if (validacao != null) {
             return validacao;
@@ -224,8 +383,8 @@ public class OrganizadorController {
         evento.setOrganizador(idNumerico);
         repositorio.salvarEvento(idNumerico, evento);
 
-        StatusEventoDto response = EventoMapper.toStatusEventoDto("Evento criado com sucesso!", evento);
-        return ResponseEntity.status(201, response);
+        StatusEventoDto resposta = EventoMapper.toStatusEventoDto("Evento criado com sucesso!", evento);
+        return ResponseEntity.status(201, resposta);
     }
 
     @PutMapping(path = "/{organizadorId}/eventos/{eventoId}")
@@ -238,60 +397,110 @@ public class OrganizadorController {
         if (idNumericoOrganizador == null || idNumericoEvento == null) {
             return ResponseEntity.status(400, "ID invalido.");
         }
+        Evento eventoExistente = buscarEventoDoOrganizador(idNumericoOrganizador, idNumericoEvento);
+
+        if (eventoExistente == null) {
+            return ResponseEntity.status(404, "O Evento nao existe!");
+        }
+
+        if (!eventoExistente.isEventoAtivo()){
+            return ResponseEntity.status(422, "O evento não pode ser alterado pois se encontra inativo.");
+        }
 
         Evento evento = EventoMapper.toModel(dto);
+
+        if (dto.eventoEstorno() != null){
+            evento.setEventoEstorno(dto.eventoEstorno());
+        }
+
+        if (dto.precoUnitarioIngresso() != null && dto.precoUnitarioIngresso()  < 0){
+            return ResponseEntity.status(400, "O preço do ingresso não pode ser negativo");
+        }else if (dto.precoUnitarioIngresso() != null){
+            evento.setPrecoUnitarioIngresso(dto.precoUnitarioIngresso());
+        }
+
+        if (dto.taxaCancelamento() != null && dto.taxaCancelamento()  < 0){
+            return ResponseEntity.status(400, "A taxa de cancelamento não pode ser negativo");
+        }else if (dto.taxaCancelamento() != null){
+            evento.setTaxaCancelamento(dto.taxaCancelamento());
+        }
+
+        if (dto.capacidadeMaxima() != null && dto.capacidadeMaxima()  < 0){
+            return ResponseEntity.status(400, "A capacidade maxima não pode ser negativo");
+        }else if (dto.capacidadeMaxima() != null){
+            evento.setCapacidadeMaxima(dto.capacidadeMaxima());
+        }
+
+        if (dto.eventoPrincipalId() != null) {
+            Evento principal = repositorio.buscarEvento(dto.eventoPrincipalId());
+
+            if (principal == null) {
+                return ResponseEntity.status(404, "Evento principal não encontrado");
+            }
+
+            evento.setEventoPrincipal(principal);
+        }
+
         ResponseEntity<?> validacao = validarDatasEvento(evento);
         if (validacao != null) {
             return validacao;
         }
 
-        Evento eventoExistente = buscarEventoDoOrganizador(idNumericoOrganizador, idNumericoEvento);
-        if (eventoExistente == null) {
-            return ResponseEntity.status(404, "O Evento nao existe!");
-        }
-
-        if (eventoExistente.isEventoAtivo()) {
-            return ResponseEntity.status(422, "O Evento ja esta ativo!");
-        }
-
         repositorio.atualizarEvento(idNumericoOrganizador, evento, idNumericoEvento);
 
         Evento eventoAtualizado = buscarEventoDoOrganizador(idNumericoOrganizador, idNumericoEvento);
-        StatusEventoDto response = EventoMapper.toStatusEventoDto("Evento atualizado com sucesso!", eventoAtualizado);
-        return ResponseEntity.status(200, response);
+        StatusEventoDto resposta = EventoMapper.toStatusEventoDto("Evento atualizado com sucesso!", eventoAtualizado);
+        return ResponseEntity.status(200, resposta);
     }
 
     @PatchMapping(path = "/{organizadorId}/eventos/{eventoId}/ativar")
     public ResponseEntity<?> ativarEvento(@PathVariable(parameter = "organizadorId") String organizadorId,
-                                          @PathVariable(parameter = "eventoId") String eventoId) {
+                                          @PathVariable(parameter = "eventoId") String eventoId
+                                          //@RequestBody Organizador.Credenciais credencial
+                                          ) {
         Long idNumericoOrganizador = parseId(organizadorId);
         Long idNumericoEvento = parseId(eventoId);
 
         if (idNumericoOrganizador == null || idNumericoEvento == null) {
             return ResponseEntity.status(400, "ID invalido.");
         }
+
+        /*if (    credencial.email() == null || credencial.email().isEmpty() ||
+                credencial.senha() == null || credencial.senha().isEmpty()) {
+            return ResponseEntity.status(400, "Email ou Senha ausentes.");
+        }*/
 
         Evento eventoExistente = buscarEventoDoOrganizador(idNumericoOrganizador, idNumericoEvento);
         if (eventoExistente == null) {
             return ResponseEntity.status(404, "O Evento nao existe!");
         }
 
+        Organizador organizador = repositorio.buscarOrganizadorPorId(idNumericoOrganizador);
+
+        /*if (!credencial.email().equals(organizador.getEmail())
+                ||!credencial.senha().equals(organizador.getSenha())) {
+            return ResponseEntity.status(401, "Senha invalida.");
+        }*/
+
         if (eventoExistente.isEventoAtivo()) {
             return ResponseEntity.status(422, "O Evento ja esta ativo!");
         }
 
-        if (eventoExistente.getDataInicio().isBefore(LocalDateTime.now())) {
-            return ResponseEntity.status(422, "Nao e possivel ativar evento com inicio anterior a data atual.");
+        ResponseEntity<?> validacao = validarDatasEvento(eventoExistente);
+        if (validacao != null) {
+            return validacao;
         }
 
         repositorio.ativarEvento(idNumericoEvento, idNumericoOrganizador);
-        StatusEventoDto response = EventoMapper.toStatusEventoDto("Evento ativado!", eventoExistente);
-        return ResponseEntity.status(200, response);
+        StatusEventoDto resposta = EventoMapper.toStatusEventoDto("Evento ativado!", eventoExistente);
+        return ResponseEntity.status(200, resposta);
     }
 
     @PatchMapping(path = "/{organizadorId}/eventos/{eventoId}/desativar")
     public ResponseEntity<?> desativarEvento(@PathVariable(parameter = "organizadorId") String organizadorId,
-                                             @PathVariable(parameter = "eventoId") String eventoId) {
+                                             @PathVariable(parameter = "eventoId") String eventoId
+                                             //@RequestBody Organizador.Credenciais credencial
+                                             ) {
         Long idNumericoOrganizador = parseId(organizadorId);
         Long idNumericoEvento = parseId(eventoId);
 
@@ -299,25 +508,44 @@ public class OrganizadorController {
             return ResponseEntity.status(400, "ID invalido.");
         }
 
+        /*if (    credencial.email() == null || credencial.email().isEmpty() ||
+                credencial.senha() == null || credencial.senha().isEmpty()) {
+            return ResponseEntity.status(400, "Email ou Senha ausentes.");
+        }*/
+
         Evento eventoExistente = buscarEventoDoOrganizador(idNumericoOrganizador, idNumericoEvento);
+
         if (eventoExistente == null) {
             return ResponseEntity.status(404, "O Evento nao existe.");
         }
+
+        Organizador organizador = repositorio.buscarOrganizadorPorId(idNumericoOrganizador);
+
+        /*if (!credencial.email().equals(organizador.getEmail())
+                ||!credencial.senha().equals(organizador.getSenha())) {
+            return ResponseEntity.status(401, "Senha invalida.");
+        }*/
 
         if (!eventoExistente.isEventoAtivo()) {
             return ResponseEntity.status(422, "O Evento ja esta desativado!");
         }
 
         repositorio.desativarEvento(idNumericoEvento, idNumericoOrganizador);
-        StatusEventoDto response = EventoMapper.toStatusEventoDto("Evento desativado!", eventoExistente);
-        return ResponseEntity.status(200, response);
+        StatusEventoDto resposta = EventoMapper.toStatusEventoDto("Evento desativado!", eventoExistente);
+        return ResponseEntity.status(200, resposta);
     }
 
     @GetMapping(path = "/{organizadorId}/eventos")
-    public ResponseEntity<?> listarEvento(@PathVariable(parameter = "organizadorId") String organizadorId) {
+    public ResponseEntity<?> listarEventosDoOrganizador(@PathVariable(parameter = "organizadorId") String organizadorId) {
         Long idNumericoOrganizador = parseId(organizadorId);
         if (idNumericoOrganizador == null) {
             return ResponseEntity.status(400, "ID invalido.");
+        }
+
+        Organizador organizador = repositorio.buscarOrganizadorPorId(idNumericoOrganizador);
+
+        if (organizador == null){
+            return ResponseEntity.status(404, "Organizador não encontrado.");
         }
 
         List<EventosOrganizadorDto> listaEventos = repositorio.listarEventoPorOrganizador(idNumericoOrganizador)
@@ -326,10 +554,10 @@ public class OrganizadorController {
                 .toList();
 
         if (listaEventos.isEmpty()) {
-            return ResponseEntity.status(204, "nao ha Eventos");
+            return ResponseEntity.status(200, "Vocẽ não possui eventos cadastradoes.");
         }
 
-        return ResponseEntity.ok(listaEventos);
+        return ResponseEntity.status(200,listaEventos);
     }
 
     private Long parseId(String valor) {

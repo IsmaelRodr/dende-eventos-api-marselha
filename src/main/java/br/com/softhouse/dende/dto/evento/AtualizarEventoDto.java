@@ -13,7 +13,7 @@ public record AtualizarEventoDto(
         String modalidade,
         Double precoUnitarioIngresso,
         Double taxaCancelamento,
-        boolean eventoEstorno,
+        Boolean eventoEstorno,
         Integer capacidadeMaxima,
         String localEvento
 ) {}

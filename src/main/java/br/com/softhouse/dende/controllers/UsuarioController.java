@@ -1,8 +1,10 @@
 package br.com.softhouse.dende.controllers;
 
 import br.com.dende.softhouse.annotations.Controller;
+
 import br.com.dende.softhouse.annotations.request.*;
 import br.com.dende.softhouse.process.route.ResponseEntity;
+import br.com.softhouse.dende.dto.usuario.StatusUsuarioDto;
 import br.com.softhouse.dende.model.Usuario;
 import br.com.softhouse.dende.repositories.Repositorio;
 
@@ -13,7 +15,6 @@ import br.com.softhouse.dende.dto.usuario.AtualizarUsuarioDto;
 import br.com.softhouse.dende.dto.usuario.VisualizarUsuarioDto;
 
 import java.time.LocalDate;
-import java.util.Objects;
 
 @Controller
 @RequestMapping(path = "/usuarios")
@@ -28,84 +29,144 @@ public class UsuarioController {
     // API 01 - Cadastrar
     // ALTERADO: Recebe o DTO em vez do Model
     @PostMapping
-    public ResponseEntity<String> cadastroUsuario(@RequestBody CadastrarUsuarioDto dto) {
+    public ResponseEntity<?> cadastroUsuario(@RequestBody CadastrarUsuarioDto dto) {
 
-        // ALTERADO: Usamos o Mapper para converter o DTO no Usuario, assim podemos manter as suas validações originais
+        // Conversão do DTO para o modelo
         Usuario usuario = UsuarioMapper.toModel(dto);
 
-        // 1. VALIDAÇÃO DE TEXTOS VAZIOS (Mantido exatamente como você fez)
-        if (usuario.getNome() == null || usuario.getNome().trim().isEmpty() ||
-                usuario.getEmail() == null || usuario.getEmail().trim().isEmpty() ||
-                usuario.getSenha() == null || usuario.getSenha().trim().isEmpty()) {
-
-            return ResponseEntity.status(400,
-                    "Erro: Os campos obrigatórios não podem estar vazios ou em branco.");
+        // Validação de objeto nulo
+        if (usuario == null) {
+            return ResponseEntity.status(400, "Dados do utilizador invalidos.");
         }
 
+        // Validação dos campos obrigatórios
+        if (usuario.getNome() == null || usuario.getNome().isBlank() ||
+                usuario.getEmail() == null || usuario.getEmail().isBlank() ||
+                usuario.getSenha() == null || usuario.getSenha().isBlank() ||
+                usuario.getSexo() == null || usuario.getSexo().isBlank()) {
+
+            return ResponseEntity.status(400,
+                    "Erro: Os campos obrigatorios nao podem estar vazios.");
+        }
+
+        // Validação de data
         if (usuario.getDataNascimento() == null) {
-            return ResponseEntity.status(400, "Erro: Data de nascimento é obrigatória.");
+            return ResponseEntity.status(400, "Erro: Data de nascimento e obrigatoria.");
         }
 
         if (usuario.getDataNascimento().isAfter(LocalDate.now())) {
-            return ResponseEntity.status(400, "Data de nascimento inválida.");
+            return ResponseEntity.status(400, "Data de nascimento invalida.");
         }
 
-        // 2. STATUS 409 PARA CONFLITO DE E-MAIL
+        // Validação de formato de email
+        if (!usuario.getEmail().matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")) {
+            return ResponseEntity.status(400, "Email inválido.");
+        }
+
+        // Validação de unicidade
         if (repositorio.emailExiste(usuario.getEmail())) {
-            return ResponseEntity.status(409, "Erro de Conflito: Já existe um utilizador registado com este e-mail!");
+            return ResponseEntity.status(409,
+                    "Erro de Conflito: Ja existe um utilizador registado com este e-mail!");
         }
 
+        // Persistência
         repositorio.salvarUsuario(usuario);
 
-        // Status 201 (Created) para novos cadastros
-        return ResponseEntity.status(201, "Utilizador " + usuario.getNome() + " registado com sucesso! O seu ID é: " + usuario.getId());
+        StatusUsuarioDto resposta = UsuarioMapper.toStatusDto("Utilizador " + usuario.getNome() +
+                " registado com sucesso! ", usuario);
+        // Retorno
+        return ResponseEntity.status(201,resposta);
     }
 
     // API 03 - Atualizar 
     // ALTERADO: Recebe o DTO em vez do Model
     @PutMapping(path = "/{id}")
-    public ResponseEntity<String> atualizarUsuario(@PathVariable(parameter = "id") String id, @RequestBody AtualizarUsuarioDto dto) {
+    public ResponseEntity<?> atualizarUsuario(
+            @PathVariable(parameter = "id") String id,
+            @RequestBody AtualizarUsuarioDto dto
+            //@RequestBody Usuario.Credenciais credencial
+            ) {
 
-        // Tradutor: Transforma a String 'id' da URL no Long 'idNumerico'
+        /*if (    credencial.email() == null || credencial.email().isEmpty() ||
+                credencial.senha() == null || credencial.senha().isEmpty()) {
+            return ResponseEntity.status(400, "Email ou Senha ausentes.");
+        }*/
+
+        // Conversão de identificador do tipo caractere para numerico
         long idNumerico;
-
         try {
             idNumerico = Long.parseLong(id);
         } catch (NumberFormatException e) {
-            return ResponseEntity.status(400, "Erro: ID inválido.");
+            return ResponseEntity.status(400, "Erro: ID invalido.");
         }
 
+        // Busca do objeto na persistencia
         Usuario usuarioExistente = repositorio.buscarUsuarioPorId(idNumerico);
 
+        //validação da presença do objeto
         if (usuarioExistente == null) {
-            return ResponseEntity.status(404, "Erro: Utilizador não encontrado com este ID.");
+            return ResponseEntity.status(404,
+                    "Erro: Utilizador nao encontrado com este ID.");
         }
 
-        // ALTERADO: Usamos o Mapper para converter
+        // Valida o usuario e senha
+        /*if (    !credencial.email().equals(usuarioExistente.getEmail())
+                || !credencial.senha().equals(usuarioExistente.getSenha())){
+            return ResponseEntity.status(401, "Credenciais de acesso inválida.");
+        }*/
+
+        // Conversão do DTO de requisição para objeto de dominio
         Usuario usuarioAtualizado = UsuarioMapper.toModel(dto);
 
-        // O Restante é a sua lógica original intacta
-        if (!Objects.equals(usuarioExistente.getEmail(), usuarioAtualizado.getEmail())) {
-            return ResponseEntity.status(400, "Erro: Não é permitido alterar o e-mail de acesso.");
+        //Verificação da presença de valores no objeto de requisição
+        if (usuarioAtualizado == null) {
+            return ResponseEntity.status(400, "Dados do utilizador invalidos.");
         }
 
-        // --- VALIDAÇÃO DE TEXTOS VAZIOS NA ATUALIZAÇÃO (Pedido do Líder) ---
-        if (usuarioAtualizado.getNome() == null || usuarioAtualizado.getNome().trim().isEmpty() ||
-                usuarioAtualizado.getSenha() == null || usuarioAtualizado.getSenha().trim().isEmpty()) {
-
-            return ResponseEntity.status(400,
-                    "Erro: Os dados atualizados não podem estar vazios.");
+        //O bloco abaixo valida os valores nos atributos do objeto de requisição
+        String nome = usuarioAtualizado.getNome();
+        if (nome != null && nome.isBlank()) {
+            return ResponseEntity.status(400, "Nome inválido.");
         }
-        // Atualiza os dados
+
+        String senha = usuarioAtualizado.getSenha();
+        if (senha != null && senha.isBlank()) {
+            return ResponseEntity.status(400, "Senha inválida.");
+        }
+
+        String sexo = usuarioAtualizado.getSexo();
+        if (sexo != null && sexo.isBlank()) {
+            return ResponseEntity.status(400, "Sexo inválido.");
+        }
+
+        LocalDate dataNascimento = usuarioAtualizado.getDataNascimento();
+        if (dataNascimento != null && dataNascimento.isAfter(LocalDate.now())) {
+            return ResponseEntity.status(400, "Data de nascimento invalida");
+        }
+
+        //chamada do metodo para persistencia
         repositorio.atualizarDadosUsuario(usuarioExistente, usuarioAtualizado);
 
-        // Status 200 (OK) para edições bem sucedidas
-        return ResponseEntity.status(200, "Utilizador " + usuarioAtualizado.getNome() + " atualizado com sucesso!");
+        StatusUsuarioDto resposta = UsuarioMapper.toStatusDto(
+                "Perfil do usuario atualizado com sucesso!",
+                usuarioExistente
+        );
+
+        //Retorno ao Cliente da ação requerida
+        return ResponseEntity.status(200,resposta);
     }
 
     // API 4: VISUALIZAR PERFIL
     @GetMapping(path = "/{usuarioId}")
-    public ResponseEntity<?> visualizarPerfil(@PathVariable(parameter = "usuarioId") String usuarioId) {
+    public ResponseEntity<?> visualizarPerfil(@PathVariable(parameter = "usuarioId") String usuarioId
+                                              //@RequestBody Usuario.Credenciais credencial
+                                              ) {
+
+       /*if (    credencial.email() == null || credencial.email().isEmpty() ||
+                credencial.senha() == null || credencial.senha().isEmpty()) {
+            return ResponseEntity.status(400, "Email ou Senha ausentes.");
+        }*/
+
         // Regra de negócio: buscar usuário pelo e-mail (identificador único)
         long idNumerico;
 
@@ -122,6 +183,13 @@ public class UsuarioController {
             return ResponseEntity.status(404, "Usuário não encontrado");
         }
 
+        // Valida o usuario e senha
+        /*if (    !credencial.email().equals(usuario.getEmail())
+                || !credencial.senha().equals(usuario.getSenha())){
+            return ResponseEntity.status(401, "Credenciais de acesso inválida.");
+        }*/
+
+
         if (usuario.getDataNascimento() == null) {
             return ResponseEntity.status(400, "Usuário possui data de nascimento inválida.");
         }
@@ -134,7 +202,15 @@ public class UsuarioController {
 
     // API 5: DESATIVAR PERFIL (Fica Intacto)
     @PatchMapping(path = "/{usuarioId}/desativar")
-    public ResponseEntity<?> desativarUsuario(@PathVariable(parameter = "usuarioId") String usuarioId) {
+    public ResponseEntity<?> desativarUsuario(@PathVariable(parameter = "usuarioId") String usuarioId
+                                              //@RequestBody Usuario.Credenciais credencial
+                                              ) {
+
+        /*if (    credencial.email() == null || credencial.email().isEmpty() ||
+                credencial.senha() == null || credencial.senha().isEmpty()) {
+            return ResponseEntity.status(400, "Email ou Senha ausentes.");
+        }*/
+
         long idNumerico;
         try {
             idNumerico = Long.parseLong(usuarioId);
@@ -147,23 +223,34 @@ public class UsuarioController {
         if (usuario == null) {
             return ResponseEntity.status(404, "Usuário não encontrado!");
         }
+
+        // Valida o usuario e senha
+        /*if (    !credencial.email().equals(usuario.getEmail())
+                || !credencial.senha().equals(usuario.getSenha())){
+            return ResponseEntity.status(401, "Credenciais de acesso inválida.");
+        }*/
 
         if (!usuario.isAtivo()) {
             return ResponseEntity.status(409, "Usuário já está inativo!");
         }
 
+        StatusUsuarioDto resposta = UsuarioMapper.toStatusDto("Usuário desativado com sucesso!", usuario);
+
         usuario.setAtivo(false);
         repositorio.salvarUsuario(usuario); 
-        return ResponseEntity.status(200, "Usuário desativado com sucesso!");
+        return ResponseEntity.status(200, resposta);
     }
 
     // API 6: REATIVAR PERFIL (Fica Intacto)
     @PatchMapping(path = "/{usuarioId}/ativar")
-    public ResponseEntity<?> ativarUsuario(@PathVariable(parameter = "usuarioId") String usuarioId,
-                                           @RequestBody Usuario.Credenciais credenciais) {
-        if (credenciais.senha() == null || credenciais.senha().isEmpty()) {
-            return ResponseEntity.status(400, "Senha é obrigatória.");
-        }
+    public ResponseEntity<?> ativarUsuario(@PathVariable(parameter = "usuarioId") String usuarioId
+                                           //@RequestBody Usuario.Credenciais credencial
+                                           ) {
+
+        /*if (    credencial.email() == null || credencial.email().isEmpty() ||
+                credencial.senha() == null || credencial.senha().isEmpty()) {
+            return ResponseEntity.status(400, "Email ou Senha ausentes.");
+        }*/
 
         long idNumerico;
         try {
@@ -178,16 +265,20 @@ public class UsuarioController {
             return ResponseEntity.status(404, "Usuário não encontrado!");
         }
 
-        if (usuario.getSenha() == null || !usuario.getSenha().equals(credenciais.senha())) {
-            return ResponseEntity.status(401, "Senha inválida.");
-        }
+        // Valida o usuario e senha
+        /*if (    !credencial.email().equals(usuario.getEmail())
+                || !credencial.senha().equals(usuario.getSenha())){
+            return ResponseEntity.status(401, "Credenciais de acesso inválida.");
+        }*/
 
         if (usuario.isAtivo()) {
-            return ResponseEntity.status(409, "Usuário já está ativo!");
+            return ResponseEntity.status( 409, "Usuário já está ativo!");
         }
+
+        StatusUsuarioDto resposta = UsuarioMapper.toStatusDto("Usuário desativado com sucesso!", usuario);
 
         usuario.setAtivo(true);
         repositorio.salvarUsuario(usuario);
-        return ResponseEntity.status(200, "Usuário reativado com sucesso!");
+        return ResponseEntity.status(200, resposta);
     }
 }

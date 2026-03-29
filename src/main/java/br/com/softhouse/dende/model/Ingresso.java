@@ -9,8 +9,8 @@ public class Ingresso {
     private Usuario usuario;
     private Evento evento;
     private StatusIngresso status;
-    private Double valorPago;
-    private Double valorEstornado;
+    private double valorPago;
+    private double valorEstornado;
     private LocalDateTime dataCompra;
     private String email;
 
@@ -22,7 +22,7 @@ public class Ingresso {
 
     public Ingresso() {}
 
-    public Ingresso(Long id, Usuario usuario, Evento evento, Double valorPago, String email) {
+    public Ingresso(Long id, Usuario usuario, Evento evento, double valorPago, String email) {
         this.id = id;
         this.usuario = Objects.requireNonNull(usuario);
         this.evento = Objects.requireNonNull(evento);
@@ -42,10 +42,10 @@ public class Ingresso {
     public StatusIngresso getStatus() { return status; }
     public void setStatus(StatusIngresso status) { this.status = status; }
 
-    public Double getValorPago() { return valorPago; }
+    public double getValorPago() { return valorPago; }
 
-    public void setValorEstornado(Double valorEstornado) { this.valorEstornado = valorEstornado; }
-    public Double getValorEstornado() { return valorEstornado; }
+    public void setValorEstornado(double valorEstornado) { this.valorEstornado = valorEstornado; }
+    public double getValorEstornado() { return valorEstornado; }
 
     public LocalDateTime getDataCompra() {return dataCompra;}
 

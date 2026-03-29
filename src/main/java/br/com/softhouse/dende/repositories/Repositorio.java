@@ -60,10 +60,10 @@ public class Repositorio {
 
     public boolean emailExiste(String email) {
         for (Usuario u : usuariosComum.values()) {
-            if (email != null && email.equals(u.getEmail())) return true;
+            if (email != null && email.equalsIgnoreCase(u.getEmail())) return true;
         }
         for (Organizador o : organizadores.values()) {
-            if (email != null && email.equals(o.getEmail())) return true;
+            if (email != null && email.equalsIgnoreCase(o.getEmail())) return true;
         }
         return false;
     }
@@ -129,20 +129,32 @@ public class Repositorio {
             }
         }
 
-        eventoExistente.setNome(evento.getNome());
-        eventoExistente.setDescricao(evento.getDescricao());
-        eventoExistente.setPaginaWeb(evento.getPaginaWeb());
-        eventoExistente.setDataInicio(evento.getDataInicio());
-        eventoExistente.setDataFim(evento.getDataFim());
-        eventoExistente.setTipoEvento(evento.getTipoEvento());
-        eventoExistente.setEventoPrincipal(evento.getEventoPrincipal());
-        eventoExistente.setModalidade(evento.getModalidade());
+        if (evento.getNome() != null)
+            eventoExistente.setNome(evento.getNome());
+        if (evento.getDescricao() != null)
+            eventoExistente.setDescricao(evento.getDescricao());
+        if (evento.getPaginaWeb() != null)
+            eventoExistente.setPaginaWeb(evento.getPaginaWeb());
+        if (evento.getDataInicio() != null)
+            eventoExistente.setDataInicio(evento.getDataInicio());
+        if (evento.getDataFim() != null)
+            eventoExistente.setDataFim(evento.getDataFim());
+        if (evento.getTipoEvento() != null)
+            eventoExistente.setTipoEvento(evento.getTipoEvento());
+        if (evento.getEventoPrincipal() != null)
+            eventoExistente.setEventoPrincipal(evento.getEventoPrincipal());
+        if (evento.getModalidade() != null)
+            eventoExistente.setModalidade(evento.getModalidade());
+        if (evento.getLocalEvento() != null)
+            eventoExistente.setLocalEvento(evento.getLocalEvento());
         eventoExistente.setPrecoUnitarioIngresso(evento.getPrecoUnitarioIngresso());
         eventoExistente.setTaxaCancelamento(evento.getTaxaCancelamento());
         eventoExistente.setEventoEstorno(evento.isEventoEstorno());
         eventoExistente.setCapacidadeMaxima(evento.getCapacidadeMaxima());
-        eventoExistente.setLocalEvento(evento.getLocalEvento());
+    }
 
+    public Evento buscarEvento(Long id) {
+        return encontrarEvento(id);
     }
 
     public void ativarEvento(long eventoId, long organizadorId){
@@ -183,7 +195,7 @@ public class Repositorio {
         List<Evento> eventosAtivos = new ArrayList<>();
         for ( List<Evento> eventoGerais: eventos.values()){
             for(Evento evento: eventoGerais){
-                if (evento.isEventoAtivo() && evento.getCapacidadeMaxima()>0){
+                if (evento.isEventoAtivo() && evento.getIngressosDisponiveis()>0){
                     eventosAtivos.add(evento);
 
                 }
@@ -221,10 +233,7 @@ public class Repositorio {
     //Comprar ingresso US 13
     public Map<String, Object> comprarIngresso(Long usuarioId, Long eventoId) {
         Usuario usuario = usuariosComum.get(usuarioId);
-        if (usuario == null) return null;
-
         Evento evento = encontrarEvento(eventoId);
-        if (evento == null) return null;
 
         // Validações do evento solicitado
         if (!evento.isEventoAtivo() || evento.getIngressosDisponiveis() <= 0 ||
@@ -340,7 +349,16 @@ public class Repositorio {
                             ingresso.setStatus(Ingresso.StatusIngresso.CANCELADO);
                             // Libera vaga (seta capacidade cheia novamente)
                             Evento evento = ingresso.getEvento();
-                            evento.setIngressosDisponiveis(evento.getCapacidadeMaxima());
+                            //correção do estorno
+                            double valorEstorno;
+                            if (evento.isEventoEstorno()) {
+                                double taxa = evento.getTaxaCancelamento(); // percentual
+                                valorEstorno = ingresso.getValorPago() * (1 - taxa / 100.0);
+                            } else {
+                                valorEstorno = 0.0;
+                            }
+
+                            ingresso.setValorEstornado(valorEstorno);
                         });
             }
         }

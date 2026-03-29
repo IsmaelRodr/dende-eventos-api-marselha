@@ -8,5 +8,7 @@ public record FeedEventoDto(
         LocalDateTime dataFim,
         String local,
         Double precoIngresso,
-        Integer capacidadeMaxima
+        Integer capacidadeMaxima,
+        String tipoEvento,
+        String modalidade
 ) {}

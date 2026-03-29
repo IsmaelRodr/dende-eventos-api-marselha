@@ -8,6 +8,9 @@ import br.com.softhouse.dende.dto.organizador.VisualizarOrganizadorDto;
 import br.com.softhouse.dende.model.Empresa;
 import br.com.softhouse.dende.model.Organizador;
 
+import java.time.LocalDate;
+import java.time.Period;
+
 public class OrganizadorMapper {
 
     public static Organizador toModel(CadastrarOrganizadorDto dto) {
@@ -19,7 +22,6 @@ public class OrganizadorMapper {
         organizador.setSexo(dto.sexo());
         organizador.setEmail(dto.email());
         organizador.setSenha(dto.senha());
-        organizador.setAtivo(dto.ativo());
         organizador.setEmpresa(toEmpresa(dto.empresa()));
         return organizador;
     }
@@ -42,9 +44,9 @@ public class OrganizadorMapper {
         return new VisualizarOrganizadorDto(
                 organizador.getNome(),
                 organizador.getDataNascimento(),
+                calcularIdade(organizador.getDataNascimento()),
                 organizador.getSexo(),
                 organizador.getEmail(),
-                organizador.getSenha(),
                 organizador.isAtivo(),
                 toEmpresaDto(organizador.getEmpresa())
         );
@@ -78,5 +80,12 @@ public class OrganizadorMapper {
                 empresa.getRazaoSocial(),
                 empresa.getNomeFantasia()
         );
+    }
+
+    private static String calcularIdade(LocalDate nascimento) {
+        Period p = Period.between(nascimento, LocalDate.now());
+        return p.getYears() + " anos, " +
+                p.getMonths() + " meses, " +
+                p.getDays() + " dias";
     }
 }
