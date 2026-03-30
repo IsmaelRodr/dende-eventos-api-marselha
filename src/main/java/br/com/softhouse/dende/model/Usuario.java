@@ -1,6 +1,8 @@
 package br.com.softhouse.dende.model;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 public class Usuario {
@@ -12,6 +14,7 @@ public class Usuario {
     private String email;
     private String senha;
     private boolean ativo = true;
+    private final List<Ingresso> ingressos = new ArrayList<>();
 
     // Construtor vazio exigido pelo Jackson para receber o JSON
     public Usuario() {}
@@ -50,19 +53,36 @@ public class Usuario {
         return ativo;
     }
 
+    public void addIngresso(Ingresso ingresso){
+        if (ingresso == null) return;
+
+        if (!this.ingressos.contains(ingresso)){
+            this.ingressos.add(ingresso);
+        }
+    }
+
+    public void removeIngresso(Ingresso ingresso){
+        if (ingresso == null) return;
+
+        this.ingressos.remove(ingresso);
+    }
+
+    public List<Ingresso> getIngressos() {
+        return List.copyOf(ingressos);
+    }
+
     @Override
-    public boolean equals(Object object) {
-        if (this == object) return true;
-        if (object == null || getClass() != object.getClass()) return false;
-        Usuario usuario = (Usuario) object;
-        // Adicionei o ID na comparação também, pois agora ele é a identidade do objeto
-        return Objects.equals(id, usuario.id) && 
-               Objects.equals(email, usuario.email);
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+
+        Usuario that = (Usuario) obj;
+        return id != null && id.equals(that.id);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, email);
+        return Objects.hash(id);
     }
 
     @Override
@@ -70,9 +90,9 @@ public class Usuario {
         return "Usuario{" +
                 "id=" + id +
                 ", nome='" + nome + '\'' +
-                ", dataNascimento=" + dataNascimento +
-                ", sexo='" + sexo + '\'' +
                 ", email='" + email + '\'' +
+                ", ativo=" + ativo +
+                ", totalIngressos=" + ingressos.size() +
                 '}';
     }
 }

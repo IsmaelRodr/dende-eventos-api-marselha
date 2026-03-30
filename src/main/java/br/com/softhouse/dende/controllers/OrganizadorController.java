@@ -380,7 +380,7 @@ public class OrganizadorController {
             return ResponseEntity.status(409, "Nao se pode criar um evento ativo.");
         }
 
-        evento.setOrganizador(idNumerico);
+        evento.setOrganizador(organizador);
         repositorio.salvarEvento(idNumerico, evento);
 
         StatusEventoDto resposta = EventoMapper.toStatusEventoDto("Evento criado com sucesso!", evento);

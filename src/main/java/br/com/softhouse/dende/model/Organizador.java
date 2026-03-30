@@ -1,6 +1,8 @@
 package br.com.softhouse.dende.model;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 public class Organizador {
@@ -14,6 +16,7 @@ public class Organizador {
     private boolean ativo = true;
     // A alteração de mestre: Composição usando a classe opcional Empresa
     private Empresa empresa;
+    private final List<Evento> eventos = new ArrayList<>();
 
     // Construtor vazio exigido pelo Jackson para receber o JSON
     public Organizador() {}
@@ -52,19 +55,39 @@ public class Organizador {
         this.ativo = ativo;
     }
 
+    public void addEvento(Evento evento){
+        if (evento == null) return;
+
+        if (!this.eventos.contains(evento)){
+            this.eventos.add(evento);
+            evento.setOrganizador(this);
+        }
+    }
+
+    public void removeEvento(Evento evento){
+        if (evento == null) return;
+
+        if (this.eventos.remove(evento)){
+            evento.setOrganizador(null);
+        }
+    }
+
+    public List<Evento> getEventos(){
+        return List.copyOf(eventos);
+    }
+
     @Override
-    public boolean equals(Object object) {
-        if (this == object) return true;
-        if (object == null || getClass() != object.getClass()) return false;
-        Organizador organizador = (Organizador) object;
-        // Agora verifica pelo ID e E-mail, tal como o utilizador
-        return Objects.equals(id, organizador.id) && 
-               Objects.equals(email, organizador.email);
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+
+        Organizador that = (Organizador) obj;
+        return id != null && id.equals(that.id);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, email);
+        return Objects.hash(id);
     }
 
     @Override
@@ -72,10 +95,10 @@ public class Organizador {
         return "Organizador{" +
                 "id=" + id +
                 ", nome='" + nome + '\'' +
-                ", dataNascimento=" + dataNascimento +
-                ", sexo='" + sexo + '\'' +
                 ", email='" + email + '\'' +
+                ", ativo=" + ativo +
                 ", empresa=" + (empresa != null ? empresa.getRazaoSocial() : "Nenhuma") +
+                ", totalEventos=" + eventos.size() +
                 '}';
     }
 }
