@@ -105,11 +105,22 @@ public class Repositorio {
     }
 
     public void salvarEvento(Long organizadorId, Evento evento) {
+        Organizador organizador = organizadores.get(organizadorId);
+
+        if (organizador == null) {
+            throw new IllegalArgumentException("Organizador não encontrado");
+        }
+
         if (evento.getId() == null || evento.getId() == 0) {
             evento.setId(contadorEventos++);
         }
-        eventos.computeIfAbsent(organizadorId, o -> new ArrayList<>())
-                .add(evento);
+
+        organizador.addEvento(evento);
+        List<Evento> lista = eventos.computeIfAbsent(organizadorId, o -> new ArrayList<>());
+
+        if (!lista.contains(evento)) {
+            lista.add(evento);
+        }
     }
 
     public void atualizarEvento(long organizadorId , Evento evento, long eventoId){
@@ -184,23 +195,28 @@ public class Repositorio {
         eventoExistente.setIngressosDisponiveis(0);
     }
 
-    public List<Evento> listarEventoPorOrganizador(Long  organizadorId) {
+    public List<Evento> listarEventoPorOrganizador(Long organizadorId) {
+        Organizador organizador = organizadores.get(organizadorId);
 
-        return eventos.getOrDefault(organizadorId, Collections.emptyList());
+        if (organizador == null) {
+            return Collections.emptyList();
+        }
 
+        return organizador.getEventos();
     }
 
 
     public List<Evento> listarEventoAtivos(){
         List<Evento> eventosAtivos = new ArrayList<>();
-        for ( List<Evento> eventoGerais: eventos.values()){
-            for(Evento evento: eventoGerais){
-                if (evento.isEventoAtivo() && evento.getIngressosDisponiveis()>0){
-                    eventosAtivos.add(evento);
 
+        for (Organizador org : organizadores.values()) {
+            for (Evento evento : org.getEventos()) {
+                if (evento.isEventoAtivo() && evento.getIngressosDisponiveis() > 0){
+                    eventosAtivos.add(evento);
                 }
             }
         }
+
         return eventosAtivos;
     }
 
@@ -208,13 +224,30 @@ public class Repositorio {
         if (ingresso.getId() == null) {
             ingresso.setId(contadorIngressos++);
         }
-        ingressosPorUsuario.computeIfAbsent(ingresso.getUsuario().getId(), k -> new ArrayList<>()).add(ingresso);
+
+        Usuario usuario = ingresso.getUsuario();
+        Evento evento = ingresso.getEvento();
+
+        if (usuario == null || evento == null) {
+            throw new IllegalArgumentException("Ingresso inválido");
+        }
+
+        List<Ingresso> lista = ingressosPorUsuario
+                .computeIfAbsent(usuario.getId(), k -> new ArrayList<>());
+
+        if (!lista.contains(ingresso)) {
+            lista.add(ingresso);
+            usuario.addIngresso(ingresso);
+            evento.addIngresso(ingresso);
+        }
     }
 
     private Evento encontrarEvento(Long eventoId) {
-        for (List<Evento> eventosOrg : eventos.values()) {
-            for (Evento e : eventosOrg) {
-                if (e.getId().equals(eventoId)) return e;
+        for (Organizador org : organizadores.values()) {
+            for (Evento e : org.getEventos()) {
+                if (e.getId().equals(eventoId)) {
+                    return e;
+                }
             }
         }
         return null;
@@ -294,6 +327,7 @@ public class Repositorio {
 
                 ingresso.setValorEstornado(valorEstorno);
                 ingresso.setStatus(Ingresso.StatusIngresso.CANCELADO);
+
                 evento.setIngressosDisponiveis(evento.getIngressosDisponiveis() + 1);
 
                 return true;
@@ -345,14 +379,13 @@ public class Repositorio {
                 ingressosUsuario.stream()
                         .filter(i -> i.getEvento().getId().equals(eventoId) && !i.isCancelado())
                         .forEach(ingresso -> {
-                            // Cancela ingresso
                             ingresso.setStatus(Ingresso.StatusIngresso.CANCELADO);
-                            // Libera vaga (seta capacidade cheia novamente)
+
                             Evento evento = ingresso.getEvento();
-                            //correção do estorno
+
                             double valorEstorno;
                             if (evento.isEventoEstorno()) {
-                                double taxa = evento.getTaxaCancelamento(); // percentual
+                                double taxa = evento.getTaxaCancelamento();
                                 valorEstorno = ingresso.getValorPago() * (1 - taxa / 100.0);
                             } else {
                                 valorEstorno = 0.0;

@@ -1,12 +1,16 @@
     package br.com.softhouse.dende.model;
 
+    import jdk.dynalink.linker.LinkerServices;
+
     import java.time.LocalDateTime;
+    import java.util.ArrayList;
+    import java.util.List;
     import java.util.Objects;
 
     public class Evento {
 
         private Long id;
-        private Long organizador ;
+        private Organizador organizador ;
         private String nome;
         private String descricao;
         private String paginaWeb;
@@ -22,6 +26,7 @@
         private int ingressosDisponiveis;
         private String localEvento;
         private boolean eventoAtivo = false;
+        private final List<Ingresso> ingressos = new ArrayList<>();
 
         public enum TipoEvento {
             SOCIAL,
@@ -65,7 +70,7 @@
 
         public static class EventoBuilder{
             private Long id;
-            private Long organizador ;
+            private Organizador organizador ;
             private String nome;
             private String descricao;
             private String paginaWeb;
@@ -88,7 +93,7 @@
                 return this;
             }
 
-            public EventoBuilder organizador(Long organizador) {
+            public EventoBuilder organizador(Organizador organizador) {
                 this.organizador = organizador;
                 return this;
             }
@@ -206,8 +211,8 @@
             this.id = id;
         }
 
-        public void setOrganizador(Long organizador) { this.organizador = organizador; }
-        public Long getOrganizador() {
+        public void setOrganizador(Organizador organizador) { this.organizador = organizador; }
+        public Organizador getOrganizador() {
             return organizador;
         }
 
@@ -344,37 +349,50 @@
             this.ingressosDisponiveis = quantidade;
         }
 
+        public void addIngresso(Ingresso ingresso){
+            if (ingresso == null) return;
+
+            if (!this.ingressos.contains(ingresso)){
+                this.ingressos.add(ingresso);
+            }
+        }
+
+        public void removeIngresso(Ingresso ingresso){
+            if (ingresso == null) return;
+
+            this.ingressos.remove(ingresso);
+        }
+
+        public List<Ingresso> getIngressos(){
+            return List.copyOf(ingressos);
+        }
+
         @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof Evento evento)) return false;
-            return Objects.equals(id, evento.id);
+        public boolean equals(Object obj) {
+            if (this == obj) return true;
+            if (obj == null || getClass() != obj.getClass()) return false;
+
+            Evento that = (Evento) obj;
+            return id != null && id.equals(that.id);
         }
 
         @Override
         public int hashCode() {
-            return Long.hashCode(getId());
+            return Objects.hash(id);
         }
 
         @Override
         public String toString() {
             return "Evento{" +
                     "id=" + id +
-                    ", organizador=" + organizador +
                     ", nome='" + nome + '\'' +
-                    ", descricao='" + descricao + '\'' +
-                    ", paginaWeb='" + paginaWeb + '\'' +
                     ", dataInicio=" + dataInicio +
                     ", dataFim=" + dataFim +
                     ", tipoEvento=" + tipoEvento +
-                    ", eventoPrincipal='" + eventoPrincipal + '\'' +
                     ", modalidade=" + modalidade +
-                    ", precoUnitarioIngresso=" + precoUnitarioIngresso +
-                    ", taxaCancelamento=" + taxaCancelamento +
-                    ", eventoEstorno=" + eventoEstorno +
-                    ", capacidadeMaxima=" + capacidadeMaxima +
-                    ", localEvento='" + localEvento + '\'' +
-                    ", eventoAtivo=" + eventoAtivo +
+                    ", preco=" + precoUnitarioIngresso +
+                    ", ativo=" + eventoAtivo +
+                    ", ingressosDisponiveis=" + ingressosDisponiveis +
                     '}';
         }
     }
