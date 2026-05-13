@@ -54,4 +54,31 @@ public class Ingresso {
     public boolean isCancelado() {
         return status == StatusIngresso.CANCELADO;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+
+        Ingresso that = (Ingresso) obj;
+        return id != null && id.equals(that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
+
+    @Override
+    public String toString() {
+        return "Ingresso{" +
+                "id=" + id +
+                ", usuarioEmail='" + (usuario != null ? usuario.getEmail() : null) + '\'' +
+                ", eventoNome='" + (evento != null ? evento.getNome() : null) + '\'' +
+                ", status=" + status +
+                ", valorPago=" + valorPago +
+                ", valorEstornado=" + valorEstornado +
+                ", dataCompra=" + dataCompra +
+                '}';
+    }
 }
