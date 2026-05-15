@@ -14,47 +14,58 @@ public class Organizador {
     private String email;
     private String senha;
     private boolean ativo = true;
-    // A alteração de mestre: Composição usando a classe opcional Empresa
+    // atributo todo parte composição, pois a existência de uma empresa é atrelada a
+    // existência de um organizador
     private Empresa empresa;
+    // atributo todo parte composição, pois a existência de um evento é atrelado a
+    // existência de um organizador
     private final List<Evento> eventos = new ArrayList<>();
 
-    // Construtor vazio exigido pelo Jackson para receber o JSON
+    // Construtor padrão
     public Organizador() {}
 
+    // Construtor com parâmetros (argumentos)
+
+
+    public Organizador(Long id, String nome, LocalDate dataNascimento, String sexo,
+                       String email, String senha, Empresa empresa) {
+        this.id = id;
+        this.nome = nome;
+        this.dataNascimento = dataNascimento;
+        this.sexo = sexo;
+        this.email = email;
+        this.senha = senha;
+        this.empresa = empresa;
+    }
+
+    //record para armazenar login
     public record Credenciais(String email, String senha) {}
-    
-    // Getters e Setters
 
+    // Setters
     public void setId(Long id) { this.id = id; }
-    public Long getId() { return id; }
-    
-    public String getNome() { return nome; }
     public void setNome(String nome) { this.nome = nome; }
-    
-    public LocalDate getDataNascimento() { return dataNascimento; }
     public void setDataNascimento(LocalDate dataNascimento) { this.dataNascimento = dataNascimento; }
-    
-    public String getSexo() { return sexo; }
     public void setSexo(String sexo) { this.sexo = sexo; }
-    
-    public String getEmail() { return email; }
     public void setEmail(String email){this.email = email;}
-    
-    public String getSenha() { return senha; }
     public void setSenha(String senha) { this.senha = senha; }
-
-    // Get e Set da Empresa
-    public Empresa getEmpresa() { return empresa; }
     public void setEmpresa(Empresa empresa) { this.empresa = empresa; }
+    public void setAtivo(boolean ativo) { this.ativo = ativo; }
 
-    public boolean isAtivo() {
-        return ativo;
-    }
+    // Getters
+    public Long getId() { return id; }
+    public String getNome() { return nome; }
+    public LocalDate getDataNascimento() { return dataNascimento; }
+    public String getSexo() { return sexo; }
+    public String getEmail() { return email; }
+    public String getSenha() { return senha; }
+    public Empresa getEmpresa() { return empresa; }
 
-    public void setAtivo(boolean ativo) {
-        this.ativo = ativo;
-    }
+    //Booleans
+    public boolean isAtivo() { return ativo; }
 
+    //Métodos de coleção
+
+    //adiciona o evento a coleção e associa ao organizador.
     public void addEvento(Evento evento){
         if (evento == null) return;
 
@@ -64,6 +75,7 @@ public class Organizador {
         }
     }
 
+    //remove o evento da coleção e desassocia ao organziador.
     public void removeEvento(Evento evento){
         if (evento == null) return;
 
@@ -72,10 +84,12 @@ public class Organizador {
         }
     }
 
+    //busca os eventos da coleção associada ao organizador
     public List<Evento> getEventos(){
         return List.copyOf(eventos);
     }
 
+    //equals para comparação das instâncias.
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
@@ -85,11 +99,13 @@ public class Organizador {
         return id != null && id.equals(that.id);
     }
 
+    //hashcode para identificar unicamente a instância.
     @Override
     public int hashCode() {
         return Objects.hash(id);
     }
 
+    //toString para representar textualmente a instância.
     @Override
     public String toString() {
         return "Organizador{" +
