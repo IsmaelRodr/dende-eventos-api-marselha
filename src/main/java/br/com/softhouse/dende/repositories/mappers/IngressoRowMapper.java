@@ -3,7 +3,7 @@ package br.com.softhouse.dende.repositories.mappers;
 import br.com.softhouse.dende.model.Evento;
 import br.com.softhouse.dende.model.Ingresso;
 import br.com.softhouse.dende.model.Usuario;
-import br.com.dende.softhouse.repositorry.RowMapper; // Import corrigido
+import br.com.dende.softhouse.repositorry.RowMapper;
 import java.time.LocalDateTime;
 
 public class IngressoRowMapper implements RowMapper<Ingresso> {
@@ -29,11 +29,11 @@ public class IngressoRowMapper implements RowMapper<Ingresso> {
         ingresso.setValorPago(Double.parseDouble(row[3]));
         ingresso.setDataCompra(LocalDateTime.parse(row[4].replace(" ", "T")));
 
-        // 5. Converte o texto do banco para o Enum de Status do Ingresso
+        // 5. Status
         ingresso.setStatus(Ingresso.StatusIngresso.valueOf(row[5]));
 
-        // 6. QR Code
-        ingresso.setQrCode(row[6]);
+        // 6. O seu modelo usa Email em vez de QRCode
+        ingresso.setEmail(row[6]);
 
         return ingresso;
     }
