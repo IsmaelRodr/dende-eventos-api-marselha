@@ -29,80 +29,22 @@ public class EventoController {
     private final EventoService eventoService;
 
     public EventoController() {
-
-        this.eventoService =
-                new EventoService();
+        this.eventoService = new EventoService();
     }
 
     @GetMapping
     public ResponseEntity<?> feedEvento() {
-
         try {
-
-            List<FeedEventoDto> eventosFiltrados =
-
-                    eventoService
-                            .listarEventosAtivos()
-
-                            .stream()
-
-                            .filter(evento ->
-                                    evento.getDataFim()
-                                            .isAfter(
-                                                    LocalDateTime.now()
-                                            )
-                            )
-
-                            .sorted(
-                                    Comparator
-
-                                            .comparing(
-                                                    Evento::getDataInicio
-                                            )
-
-                                            .thenComparing(
-                                                    Evento::getNome
-                                            )
-                            )
-
-                            .map(
-                                    EventoMapper::toFeedEventoDto
-                            )
-
-                            .toList();
-
-            return ResponseEntity.status(
-                    200,
-                    eventosFiltrados
-            );
-
+            List<FeedEventoDto> resposta = eventoService.listarEventosAtivos();
+            return ResponseEntity.status(200, resposta);
         } catch (EventoNaoEncontradoException e) {
-
-            return ResponseEntity.status(
-                    404,
-                    e.getMessage()
-            );
-
+            return ResponseEntity.status(404, e.getMessage());
         } catch (EventoInativoException e) {
-
-            return ResponseEntity.status(
-                    422,
-                    e.getMessage()
-            );
-
+            return ResponseEntity.status(422, e.getMessage());
         } catch (OperacaoRepositorioException e) {
-
-            return ResponseEntity.status(
-                    400,
-                    e.getMessage()
-            );
-
+            return ResponseEntity.status(400, e.getMessage());
         } catch (Exception e) {
-
-            return ResponseEntity.status(
-                    500,
-                    "Erro interno do servidor."
-            );
+            return ResponseEntity.status(500, "Erro interno do servidor.");
         }
     }
 }

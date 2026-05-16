@@ -6,10 +6,7 @@ import java.util.Objects;
 public class Ingresso {
 
     private Long id;
-    //atributo de associação bidirecional, pois usuario e ingresso se conhecem, mas não
-    //dependem uns dos outros para existir.
     private Usuario usuario;
-    //atributo todo parte composição, pois o ingresso só existe atrelado a um evento.
     private Evento evento;
     private StatusIngresso status;
     private double valorPago;
@@ -17,16 +14,13 @@ public class Ingresso {
     private LocalDateTime dataCompra;
     private String email;
 
-
     public enum StatusIngresso {
         ACEITO,
         CANCELADO
     }
 
-    //construtor padrão
     public Ingresso() {}
 
-    //construtor com parâmetros (argumentos)
     public Ingresso(Long id, Usuario usuario, Evento evento, double valorPago, String email) {
         this.id = id;
         this.usuario = Objects.requireNonNull(usuario);
@@ -35,46 +29,44 @@ public class Ingresso {
         this.email = email;
         this.status = StatusIngresso.ACEITO;
         this.dataCompra = LocalDateTime.now();
-
     }
 
-    //Setters
-    public void setId(Long id) { this.id = id; }
-    public void setStatus(StatusIngresso status) { this.status = status; }
-    public void setValorEstornado(double valorEstornado) { this.valorEstornado = valorEstornado; }
-
-    //Getters
+    // Getters e Setters
     public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
     public Usuario getUsuario() { return usuario; }
+    public void setUsuario(Usuario usuario) { this.usuario = usuario; }
     public Evento getEvento() { return evento; }
+    public void setEvento(Evento evento) { this.evento = evento; }
     public StatusIngresso getStatus() { return status; }
+    public void setStatus(StatusIngresso status) { this.status = status; }
     public double getValorPago() { return valorPago; }
+    public void setValorPago(double valorPago) { this.valorPago = valorPago; }
     public double getValorEstornado() { return valorEstornado; }
-    public LocalDateTime getDataCompra() {return dataCompra;}
-    public String getEmail(){ return email;}
+    public void setValorEstornado(double valorEstornado) { this.valorEstornado = valorEstornado; }
+    public LocalDateTime getDataCompra() { return dataCompra; }
+    public void setDataCompra(LocalDateTime dataCompra) { this.dataCompra = dataCompra; }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
 
-    //Booleans
     public boolean isCancelado() {
         return status == StatusIngresso.CANCELADO;
     }
 
-    //equals para comparação de instâncias
+    // equals, hashCode, toString
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
         if (obj == null || getClass() != obj.getClass()) return false;
-
         Ingresso that = (Ingresso) obj;
         return id != null && id.equals(that.id);
     }
 
-    //hashcode para representar unicamente a instância
     @Override
     public int hashCode() {
         return Objects.hash(id);
     }
 
-    //toString para representar textualmente a instância
     @Override
     public String toString() {
         return "Ingresso{" +

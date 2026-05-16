@@ -1,295 +1,127 @@
 package br.com.softhouse.dende.services;
 
-import br.com.softhouse.dende.dto.organizador.AtualizarOrganizadorDto;
-import br.com.softhouse.dende.dto.organizador.CadastrarOrganizadorDto;
-
+import br.com.softhouse.dende.dto.LoginDto;
+import br.com.softhouse.dende.dto.organizador.*;
 import br.com.softhouse.dende.exceptions.DadosInvalidosException;
-
-import br.com.softhouse.dende.exceptions.organizador.CnpjInvalidoException;
-import br.com.softhouse.dende.exceptions.organizador.EmpresaInvalidaException;
-import br.com.softhouse.dende.exceptions.organizador.OrganizadorJaAtivoException;
-import br.com.softhouse.dende.exceptions.organizador.OrganizadorJaInativoException;
-import br.com.softhouse.dende.exceptions.organizador.OrganizadorNaoEncontradoException;
-
-import br.com.softhouse.dende.exceptions.usuario.DataNascimentoInvalidaException;
-import br.com.softhouse.dende.exceptions.usuario.EmailJaCadastradoException;
-import br.com.softhouse.dende.exceptions.usuario.EmailInvalidoException;
-
+import br.com.softhouse.dende.exceptions.organizador.*;
+import br.com.softhouse.dende.exceptions.usuario.*;
 import br.com.softhouse.dende.mapper.OrganizadorMapper;
-
 import br.com.softhouse.dende.model.Empresa;
 import br.com.softhouse.dende.model.Organizador;
-
 import br.com.softhouse.dende.repositories.Repositorio;
 
 import java.time.LocalDate;
 
 public class OrganizadorService {
 
-    private final Repositorio repositorio;
+    private final Repositorio repositorio = Repositorio.getInstance();
 
-    public OrganizadorService() {
-        this.repositorio = Repositorio.getInstance();
-    }
-
-    public Organizador cadastrar(CadastrarOrganizadorDto dto) {
-
-        if (dto == null) {
-            throw new DadosInvalidosException(
-                    "Dados do organizador inválidos."
-            );
+    public StatusOrganizadorDto cadastrar(CadastrarOrganizadorDto dto) {
+        validarCadastro(dto);
+        if (repositorio.emailExiste(dto.email())) {
+            throw new EmailJaCadastradoException("Já existe um organizador com este email.");
         }
 
         Organizador organizador = OrganizadorMapper.toModel(dto);
-
-        if (organizador == null) {
-            throw new DadosInvalidosException(
-                    "Falha ao converter dados do organizador."
-            );
-        }
-
-        if (organizador.getNome() == null ||
-                organizador.getNome().isBlank()) {
-
-            throw new DadosInvalidosException(
-                    "Nome é obrigatório."
-            );
-        }
-
-        if (organizador.getEmail() == null ||
-                organizador.getEmail().isBlank()) {
-
-            throw new DadosInvalidosException(
-                    "Email é obrigatório."
-            );
-        }
-
-        if (organizador.getSenha() == null ||
-                organizador.getSenha().isBlank()) {
-
-            throw new DadosInvalidosException(
-                    "Senha é obrigatória."
-            );
-        }
-
-        if (organizador.getSexo() == null ||
-                organizador.getSexo().isBlank()) {
-
-            throw new DadosInvalidosException(
-                    "Sexo é obrigatório."
-            );
-        }
-
-        if (organizador.getDataNascimento() == null) {
-
-            throw new DataNascimentoInvalidaException(
-                    "Data de nascimento é obrigatória."
-            );
-        }
-
-        if (organizador.getDataNascimento().isAfter(LocalDate.now())) {
-
-            throw new DataNascimentoInvalidaException(
-                    "Data de nascimento inválida."
-            );
-        }
-
-        if (!organizador.getEmail().matches(
-                "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")) {
-
-            throw new EmailInvalidoException(
-                    "Formato de email inválido."
-            );
-        }
-
-        if (repositorio.emailExiste(organizador.getEmail())) {
-
-            throw new EmailJaCadastradoException(
-                    "Já existe um organizador cadastrado com este email."
-            );
-        }
-
-        validarEmpresa(organizador.getEmpresa());
-
         repositorio.salvarOrganizador(organizador);
-
-        return organizador;
+        return OrganizadorMapper.toStatusDto("Organizador cadastrado com sucesso!", organizador);
     }
 
-    public Organizador atualizar(
-            Long id,
-            AtualizarOrganizadorDto dto
-    ) {
+    public StatusOrganizadorDto atualizar(Long id, AtualizarOrganizadorDto dto) {
+        Organizador organizador = repositorio.buscarOrganizadorPorId(id)
+                .orElseThrow(() -> new OrganizadorNaoEncontradoException("Organizador não encontrado."));
+        validarAtualizacao(dto);
 
-        if (id == null || id <= 0) {
-
-            throw new DadosInvalidosException(
-                    "ID inválido."
-            );
-        }
-
-        Organizador organizadorExistente =
-                repositorio.buscarOrganizadorPorId(id);
-
-        if (organizadorExistente == null) {
-
-            throw new OrganizadorNaoEncontradoException(
-                    "Organizador não encontrado."
-            );
-        }
-
-        if (dto == null) {
-
-            throw new DadosInvalidosException(
-                    "Dados para atualização inválidos."
-            );
-        }
-
-        Organizador organizadorAtualizado =
-                OrganizadorMapper.toModel(dto);
-
-        if (organizadorAtualizado == null) {
-
-            throw new DadosInvalidosException(
-                    "Falha ao converter dados."
-            );
-        }
-
-        if (organizadorAtualizado.getNome() != null &&
-                organizadorAtualizado.getNome().isBlank()) {
-
-            throw new DadosInvalidosException(
-                    "Nome inválido."
-            );
-        }
-
-        if (organizadorAtualizado.getSenha() != null &&
-                organizadorAtualizado.getSenha().isBlank()) {
-
-            throw new DadosInvalidosException(
-                    "Senha inválida."
-            );
-        }
-
-        if (organizadorAtualizado.getSexo() != null &&
-                organizadorAtualizado.getSexo().isBlank()) {
-
-            throw new DadosInvalidosException(
-                    "Sexo inválido."
-            );
-        }
-
-        if (organizadorAtualizado.getDataNascimento() != null &&
-                organizadorAtualizado.getDataNascimento()
-                        .isAfter(LocalDate.now())) {
-
-            throw new DataNascimentoInvalidaException(
-                    "Data de nascimento inválida."
-            );
-        }
-
-        validarEmpresa(organizadorAtualizado.getEmpresa());
-
-        repositorio.atualizarDadosOrganizador(
-                organizadorExistente,
-                organizadorAtualizado
-        );
-
-        return organizadorExistente;
+        OrganizadorMapper.updateModel(organizador, dto);
+        repositorio.salvarOrganizador(organizador);
+        return OrganizadorMapper.toStatusDto("Organizador atualizado com sucesso!", organizador);
     }
 
-    public Organizador buscarPorId(Long id) {
-
-        if (id == null || id <= 0) {
-
-            throw new DadosInvalidosException(
-                    "ID inválido."
-            );
-        }
-
-        Organizador organizador =
-                repositorio.buscarOrganizadorPorId(id);
-
-        if (organizador == null) {
-
-            throw new OrganizadorNaoEncontradoException(
-                    "Organizador não encontrado."
-            );
-        }
-
-        return organizador;
+    public VisualizarOrganizadorDto buscarPorId(Long id) {
+        Organizador organizador = repositorio.buscarOrganizadorPorId(id)
+                .orElseThrow(() -> new OrganizadorNaoEncontradoException("Organizador não encontrado."));
+        return OrganizadorMapper.toVisualizarDto(organizador);
     }
 
-    public void ativar(Long id) {
-
-        Organizador organizador = buscarPorId(id);
-
+    public StatusOrganizadorDto ativar(Long id, LoginDto dto) {
+        if (dto == null) throw new DadosInvalidosException("Credenciais são obrigatórias.");
+        Organizador organizador = repositorio.buscarOrganizadorPorId(id)
+                .orElseThrow(() -> new OrganizadorNaoEncontradoException("Organizador não encontrado."));
+        if (!organizador.getEmail().equalsIgnoreCase(dto.email())) {
+            throw new CredenciaisInvalidasException("Email não confere.");
+        }
+        if (!organizador.getSenha().equals(dto.senha())) {
+            throw new CredenciaisInvalidasException("Senha inválida.");
+        }
         if (organizador.isAtivo()) {
-
-            throw new OrganizadorJaAtivoException(
-                    "Organizador já está ativo."
-            );
+            throw new OrganizadorJaAtivoException("Organizador já está ativo.");
         }
-
         organizador.setAtivo(true);
-
         repositorio.salvarOrganizador(organizador);
+        return OrganizadorMapper.toStatusDto("Organizador reativado com sucesso!", organizador);
     }
 
-    public void desativar(Long id) {
-
-        Organizador organizador = buscarPorId(id);
-
+    public StatusOrganizadorDto desativar(Long id) {
+        Organizador organizador = repositorio.buscarOrganizadorPorId(id)
+                .orElseThrow(() -> new OrganizadorNaoEncontradoException("Organizador não encontrado."));
         if (!organizador.isAtivo()) {
-
-            throw new OrganizadorJaInativoException(
-                    "Organizador já está inativo."
-            );
+            throw new OrganizadorJaInativoException("Organizador já está inativo.");
         }
-
+        boolean temEventosAtivos = organizador.getEventos().stream().anyMatch(e -> e.isEventoAtivo());
+        if (temEventosAtivos) {
+            throw new OrganizadorComEventosAtivosException("Organizador possui eventos ativos.");
+        }
         organizador.setAtivo(false);
-
         repositorio.salvarOrganizador(organizador);
+        return OrganizadorMapper.toStatusDto("Organizador desativado com sucesso!", organizador);
+    }
+
+    private void validarCadastro(CadastrarOrganizadorDto dto) {
+        if (dto == null) throw new DadosInvalidosException("Dados inválidos.");
+        if (dto.nome() == null || dto.nome().isBlank())
+            throw new DadosInvalidosException("Nome é obrigatório.");
+        if (dto.email() == null || dto.email().isBlank())
+            throw new DadosInvalidosException("Email é obrigatório.");
+        if (dto.senha() == null || dto.senha().isBlank())
+            throw new DadosInvalidosException("Senha é obrigatória.");
+        if (dto.sexo() == null || dto.sexo().isBlank())
+            throw new DadosInvalidosException("Sexo é obrigatório.");
+        if (dto.dataNascimento() == null)
+            throw new DataNascimentoInvalidaException("Data de nascimento é obrigatória.");
+        if (dto.dataNascimento().isAfter(LocalDate.now()))
+            throw new DataNascimentoInvalidaException("Data de nascimento inválida.");
+        validarEmail(dto.email());
+        validarEmpresa(dto.empresa());
+    }
+
+    private void validarAtualizacao(AtualizarOrganizadorDto dto) {
+        if (dto == null) throw new DadosInvalidosException("Dados inválidos.");
+        if (dto.nome() != null && dto.nome().isBlank())
+            throw new DadosInvalidosException("Nome inválido.");
+        if (dto.senha() != null && dto.senha().isBlank())
+            throw new DadosInvalidosException("Senha inválida.");
+        if (dto.sexo() != null && dto.sexo().isBlank())
+            throw new DadosInvalidosException("Sexo inválido.");
+        if (dto.dataNascimento() != null && dto.dataNascimento().isAfter(LocalDate.now()))
+            throw new DataNascimentoInvalidaException("Data de nascimento inválida.");
+        if (dto.empresa() != null) validarEmpresa(dto.empresa());
     }
 
     private void validarEmpresa(Empresa empresa) {
+        if (empresa == null) return;
+        if (empresa.getCnpj() == null || empresa.getCnpj().isBlank())
+            throw new EmpresaInvalidaException("CNPJ obrigatório.");
+        if (empresa.getRazaoSocial() == null || empresa.getRazaoSocial().isBlank())
+            throw new EmpresaInvalidaException("Razão social obrigatória.");
+        if (empresa.getNomeFantasia() == null || empresa.getNomeFantasia().isBlank())
+            throw new EmpresaInvalidaException("Nome fantasia obrigatório.");
+        String cnpjNumerico = empresa.getCnpj().replaceAll("\\D", "");
+        if (cnpjNumerico.length() != 14) throw new CnpjInvalidoException("CNPJ inválido.");
+    }
 
-        if (empresa == null) {
-            return;
-        }
-
-        if (empresa.getCnpj() == null ||
-                empresa.getCnpj().isBlank()) {
-
-            throw new EmpresaInvalidaException(
-                    "CNPJ é obrigatório."
-            );
-        }
-
-        if (empresa.getRazaoSocial() == null ||
-                empresa.getRazaoSocial().isBlank()) {
-
-            throw new EmpresaInvalidaException(
-                    "Razão social é obrigatória."
-            );
-        }
-
-        if (empresa.getNomeFantasia() == null ||
-                empresa.getNomeFantasia().isBlank()) {
-
-            throw new EmpresaInvalidaException(
-                    "Nome fantasia é obrigatório."
-            );
-        }
-
-        String cnpjNumerico =
-                empresa.getCnpj().replaceAll("\\D", "");
-
-        if (cnpjNumerico.length() != 14) {
-
-            throw new CnpjInvalidoException(
-                    "CNPJ inválido."
-            );
+    private void validarEmail(String email) {
+        if (!email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")) {
+            throw new EmailInvalidoException("Formato de email inválido.");
         }
     }
 }

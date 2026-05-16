@@ -47,108 +47,35 @@ public class IngressoController {
             path = "/organizadores/{organizadorId}/eventos/{eventoId}"
     )
     public ResponseEntity<?> comprarIngresso(
-
-            @PathVariable(parameter = "organizadorId")
-            String organizadorIdString,
-
-            @PathVariable(parameter = "eventoId")
-            String eventoIdString,
-
-            @RequestBody
-            Map<String, Long> request
+            @PathVariable(parameter = "organizadorId") String organizadorIdString,
+            @PathVariable(parameter = "eventoId") String eventoIdString,
+            @RequestBody Map<String, Long> request
     ) {
-
         try {
-
-            Long.parseLong(organizadorIdString);
-
-            Long eventoId =
-                    Long.parseLong(eventoIdString);
-
-            if (request == null
-                    || request.get("usuarioId") == null) {
-
+            Long organizadorId = Long.parseLong(organizadorIdString);
+            Long eventoId = Long.parseLong(eventoIdString);
+            if (request == null || request.get("usuarioId") == null) {
                 throw new DadosInvalidosException(
                         "usuarioId é obrigatório."
                 );
             }
-
-            Long usuarioId =
-                    request.get("usuarioId");
-
-            Map<String, Object> resultado =
-                    ingressoService.comprarIngresso(
-                            usuarioId,
-                            eventoId
-                    );
-
-            Ingresso ingresso =
-                    (Ingresso) resultado.get("ingresso");
-
-            Double valorTotal =
-                    (Double) resultado.get("valorTotal");
-
-            List<IngressoGeradoDto> ingressosDto =
-                    ingressoService
-                            .listarIngressosUsuario(usuarioId)
-                            .stream()
-                            .filter(i ->
-                                    i.getDataCompra()
-                                            .equals(
-                                                    ingresso.getDataCompra()
-                                            )
-                            )
-                            .map(IngressoMapper::toGeradoDto)
-                            .toList();
-
-            ResultadoCompraIngressoDto resposta =
-                    new ResultadoCompraIngressoDto(
-                            valorTotal,
-                            ingressosDto
-                    );
-
-            return ResponseEntity.status(
-                    201,
-                    resposta
+            Long usuarioId = request.get("usuarioId");
+            ResultadoCompraIngressoDto resposta = ingressoService.comprarIngresso(
+                    usuarioId,
+                    eventoId,
+                    organizadorId
             );
-
+            return ResponseEntity.status(201, resposta);
         } catch (NumberFormatException e) {
-
-            return ResponseEntity.status(
-                    400,
-                    "ID inválido."
-            );
-
+            return ResponseEntity.status(400, "ID inválido.");
         } catch (DadosInvalidosException e) {
-
-            return ResponseEntity.status(
-                    400,
-                    e.getMessage()
-            );
-
-        } catch (UsuarioNaoEncontradoException
-                 | EventoNaoEncontradoException
-                 | IngressoNaoEncontradoException e) {
-
-            return ResponseEntity.status(
-                    404,
-                    e.getMessage()
-            );
-
-        } catch (CompraIngressoException
-                 | CancelamentoNaoPermitidoException e) {
-
-            return ResponseEntity.status(
-                    409,
-                    e.getMessage()
-            );
-
+            return ResponseEntity.status(400, e.getMessage());
+        } catch (UsuarioNaoEncontradoException | EventoNaoEncontradoException | IngressoNaoEncontradoException e) {
+            return ResponseEntity.status(404, e.getMessage());
+        } catch (CompraIngressoException | CancelamentoNaoPermitidoException e) {
+            return ResponseEntity.status(409, e.getMessage());
         } catch (Exception e) {
-
-            return ResponseEntity.status(
-                    500,
-                    "Erro interno do servidor."
-            );
+            return ResponseEntity.status(500, "Erro interno do servidor.");
         }
     }
 
@@ -156,89 +83,24 @@ public class IngressoController {
             path = "/usuarios/{usuarioId}/{ingressoId}/cancelar"
     )
     public ResponseEntity<?> cancelarIngresso(
-
-            @PathVariable(parameter = "usuarioId")
-            String usuarioIdString,
-
-            @PathVariable(parameter = "ingressoId")
-            String ingressoIdString
+            @PathVariable(parameter = "usuarioId") String usuarioIdString,
+            @PathVariable(parameter = "ingressoId") String ingressoIdString
     ) {
-
         try {
-
-            Long usuarioId =
-                    Long.parseLong(usuarioIdString);
-
-            Long ingressoId =
-                    Long.parseLong(ingressoIdString);
-
-            ingressoService.cancelarIngresso(
-                    usuarioId,
-                    ingressoId
-            );
-
-            Ingresso ingresso =
-                    ingressoService
-                            .listarIngressosUsuario(usuarioId)
-                            .stream()
-                            .filter(i ->
-                                    i.getId().equals(ingressoId)
-                            )
-                            .findFirst()
-                            .orElseThrow(
-                                    () ->
-                                            new IngressoNaoEncontradoException(
-                                                    "Ingresso não encontrado."
-                                            )
-                            );
-
-            CancelarIngressoUsuarioDto resposta =
-                    UsuarioMapper.toCancelarDTO(
-                            "Ingresso cancelado com sucesso.",
-                            ingresso
-                    );
-
-            return ResponseEntity.status(
-                    200,
-                    resposta
-            );
-
+            Long usuarioId = Long.parseLong(usuarioIdString);
+            Long ingressoId = Long.parseLong(ingressoIdString);
+            CancelarIngressoUsuarioDto resposta = ingressoService.cancelarIngresso( usuarioId, ingressoId);
+            return ResponseEntity.status(200, resposta);
         } catch (NumberFormatException e) {
-
-            return ResponseEntity.status(
-                    400,
-                    "ID inválido."
-            );
-
+            return ResponseEntity.status(400, "ID inválido.");
         } catch (DadosInvalidosException e) {
-
-            return ResponseEntity.status(
-                    400,
-                    e.getMessage()
-            );
-
-        } catch (UsuarioNaoEncontradoException
-                 | EventoNaoEncontradoException
-                 | IngressoNaoEncontradoException e) {
-
-            return ResponseEntity.status(
-                    404,
-                    e.getMessage()
-            );
-
+            return ResponseEntity.status(400, e.getMessage());
+        } catch (UsuarioNaoEncontradoException | EventoNaoEncontradoException | IngressoNaoEncontradoException e) {
+            return ResponseEntity.status(404, e.getMessage());
         } catch (CancelamentoNaoPermitidoException e) {
-
-            return ResponseEntity.status(
-                    409,
-                    e.getMessage()
-            );
-
+            return ResponseEntity.status(409, e.getMessage());
         } catch (Exception e) {
-
-            return ResponseEntity.status(
-                    500,
-                    "Erro interno do servidor."
-            );
+            return ResponseEntity.status(500, "Erro interno do servidor.");
         }
     }
 
@@ -246,54 +108,20 @@ public class IngressoController {
             path = "/usuarios/{usuarioId}"
     )
     public ResponseEntity<?> listarIngressos(
-
-            @PathVariable(parameter = "usuarioId")
-            String usuarioIdString
+            @PathVariable(parameter = "usuarioId") String usuarioIdString
     ) {
-
         try {
-
-            Long usuarioId =
-                    Long.parseLong(usuarioIdString);
-
-            List<ListaIngressosUsuarioDto> lista =
-                    ingressoService
-                            .listarIngressosUsuario(usuarioId)
-                            .stream()
-                            .map(IngressoMapper::toListaUsuarioDto)
-                            .toList();
-
-            return ResponseEntity.status(
-                    200,
-                    lista
-            );
-
+            Long usuarioId = Long.parseLong(usuarioIdString);
+            List<ListaIngressosUsuarioDto> lista = ingressoService.listarIngressosUsuario(usuarioId);
+            return ResponseEntity.status(200, lista);
         } catch (NumberFormatException e) {
-
-            return ResponseEntity.status(
-                    400,
-                    "ID inválido."
-            );
-
+            return ResponseEntity.status(400, "ID inválido.");
         } catch (DadosInvalidosException e) {
-
-            return ResponseEntity.status(
-                    400,
-                    e.getMessage()
-            );
-
+            return ResponseEntity.status(400, e.getMessage());
         } catch (UsuarioNaoEncontradoException e) {
-
-            return ResponseEntity.status(
-                    404,
-                    e.getMessage()
-            );
-
+            return ResponseEntity.status(404, e.getMessage());
         } catch (Exception e) {
-
-            return ResponseEntity.status(
-                    500,
-                    "Erro interno do servidor."
+            return ResponseEntity.status(500, "Erro interno do servidor."
             );
         }
     }
