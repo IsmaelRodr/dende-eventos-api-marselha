@@ -11,23 +11,22 @@ public class UsuarioMapper {
 
     public static Usuario toModel(CadastrarUsuarioDto dto) {
         if (dto == null) return null;
-        Usuario usuario = new Usuario();
-        usuario.setNome(dto.nome());
-        usuario.setDataNascimento(dto.dataNascimento());
-        usuario.setSexo(dto.sexo());
-        usuario.setEmail(dto.email()); 
-        usuario.setSenha(dto.senha());
-        return usuario;
+        return new Usuario(
+                null,
+                dto.nome(),
+                dto.dataNascimento(),
+                dto.sexo(),
+                dto.email(),
+                dto.senha());
     }
 
-    public static Usuario toModel(AtualizarUsuarioDto dto) {
-        if (dto == null) return null;
-        Usuario usuario = new Usuario();
-        usuario.setNome(dto.nome());
-        usuario.setDataNascimento(dto.dataNascimento());
-        usuario.setSexo(dto.sexo());
-        usuario.setSenha(dto.senha());
-        return usuario;
+    public static void updateModel(Usuario usuario, AtualizarUsuarioDto dto) {
+        if (dto == null || usuario == null) return;
+
+        if (dto.nome() != null){usuario.setNome(dto.nome());}
+        if (dto.dataNascimento()  != null) {usuario.setDataNascimento(dto.dataNascimento());}
+        if (dto.sexo() != null){usuario.setSexo(dto.sexo());}
+        if (dto.senha() != null){usuario.setSenha(dto.senha());}
     }
 
     public static VisualizarUsuarioDto toVisualizarDto(Usuario usuario) {

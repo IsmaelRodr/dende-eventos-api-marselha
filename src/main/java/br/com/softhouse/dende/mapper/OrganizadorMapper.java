@@ -16,25 +16,25 @@ public class OrganizadorMapper {
     public static Organizador toModel(CadastrarOrganizadorDto dto) {
         if (dto == null) return null;
 
-        Organizador organizador = new Organizador();
-        organizador.setNome(dto.nome());
-        organizador.setDataNascimento(dto.dataNascimento());
-        organizador.setSexo(dto.sexo());
-        organizador.setEmail(dto.email());
-        organizador.setSenha(dto.senha());
-        organizador.setEmpresa(toEmpresa(dto.empresa()));
-        return organizador;
+        return new Organizador(
+                null,
+                dto.nome(),
+                dto.dataNascimento(),
+                dto.sexo(),
+                dto.email(),
+                dto.senha(),
+                toEmpresa(dto.empresa())
+        );
     }
 
-    public static Organizador toModel(AtualizarOrganizadorDto dto) {
+    public static Organizador updateModel(Organizador organizador, AtualizarOrganizadorDto dto) {
         if (dto == null) return null;
 
-        Organizador organizador = new Organizador();
-        organizador.setNome(dto.nome());
-        organizador.setDataNascimento(dto.dataNascimento());
-        organizador.setSexo(dto.sexo());
-        organizador.setSenha(dto.senha());
-        organizador.setEmpresa(toEmpresa(dto.empresa()));
+        if (dto.nome() != null){organizador.setNome(dto.nome());}
+        if (dto.dataNascimento()  != null) {organizador.setDataNascimento(dto.dataNascimento());}
+        if (dto.sexo() != null){organizador.setSexo(dto.sexo());}
+        if (dto.senha() != null){organizador.setSenha(dto.senha());}
+        if (dto.empresa() != null){organizador.setEmpresa(toEmpresa(dto.empresa()));}
         return organizador;
     }
 

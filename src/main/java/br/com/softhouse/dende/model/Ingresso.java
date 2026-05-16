@@ -14,7 +14,6 @@ public class Ingresso {
     private LocalDateTime dataCompra;
     private String email;
 
-
     public enum StatusIngresso {
         ACEITO,
         CANCELADO
@@ -30,26 +29,25 @@ public class Ingresso {
         this.email = email;
         this.status = StatusIngresso.ACEITO;
         this.dataCompra = LocalDateTime.now();
-
     }
 
+    // Getters e Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
-
     public Usuario getUsuario() { return usuario; }
+    public void setUsuario(Usuario usuario) { this.usuario = usuario; }
     public Evento getEvento() { return evento; }
-
+    public void setEvento(Evento evento) { this.evento = evento; }
     public StatusIngresso getStatus() { return status; }
     public void setStatus(StatusIngresso status) { this.status = status; }
-
     public double getValorPago() { return valorPago; }
-
-    public void setValorEstornado(double valorEstornado) { this.valorEstornado = valorEstornado; }
+    public void setValorPago(double valorPago) { this.valorPago = valorPago; }
     public double getValorEstornado() { return valorEstornado; }
-
-    public LocalDateTime getDataCompra() {return dataCompra;}
-
-    public String getEmail(){ return email;}
+    public void setValorEstornado(double valorEstornado) { this.valorEstornado = valorEstornado; }
+    public LocalDateTime getDataCompra() { return dataCompra; }
+    public void setDataCompra(LocalDateTime dataCompra) { this.dataCompra = dataCompra; }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
 
     // --- SETTERS FALTANTES PARA O BANCO DE DADOS ---
     public void setUsuario(Usuario usuario) { this.usuario = usuario; }
@@ -62,11 +60,11 @@ public class Ingresso {
         return status == StatusIngresso.CANCELADO;
     }
 
+    // equals, hashCode, toString
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
         if (obj == null || getClass() != obj.getClass()) return false;
-
         Ingresso that = (Ingresso) obj;
         return id != null && id.equals(that.id);
     }
