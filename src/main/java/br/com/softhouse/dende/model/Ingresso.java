@@ -49,6 +49,13 @@ public class Ingresso {
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
 
+    // --- SETTERS FALTANTES PARA O BANCO DE DADOS ---
+    public void setUsuario(Usuario usuario) { this.usuario = usuario; }
+    public void setEvento(Evento evento) { this.evento = evento; }
+    public void setValorPago(double valorPago) { this.valorPago = valorPago; }
+    public void setDataCompra(LocalDateTime dataCompra) { this.dataCompra = dataCompra; }
+    public void setEmail(String email) { this.email = email; }
+    
     public boolean isCancelado() {
         return status == StatusIngresso.CANCELADO;
     }
