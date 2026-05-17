@@ -9,29 +9,41 @@ public class ConnectionPool {
 
     private static HikariDataSource dataSource;
 
-    // Inicializamos o pool de forma estática garantindo o Singleton
-    static {
-        ConfigProperties configProps = new ConfigProperties();
-        // Nota: Certifique-se de que o framework Dendê injeta os valores antes dessa chamada, 
-        // ou adapte a inicialização conforme a documentação do framework.
-        
+    private ConnectionPool() {
+        // Construtor privado – classe utilitária
+    }
+
+    private static void initializeIfNeeded() {
+        if (dataSource != null) return;
+
+        ConfigProperties props = new ConfigProperties();
+        // Se a injeção ainda não ocorreu, os campos estarão nulos
+        if (props.getUrl() == null || props.getUsername() == null) {
+            throw new IllegalStateException(
+                    "Configurações de banco de dados não foram injetadas. Verifique o framework Dendê."
+            );
+        }
+
         HikariConfig config = new HikariConfig();
-        config.setJdbcUrl(configProps.getUrl());
-        config.setUsername(configProps.getUsername());
-        config.setPassword(configProps.getPassword());
-        config.setDriverClassName(configProps.getDriverClassName());
-        config.setMaximumPoolSize(configProps.getMaximumPoolSize());
-        config.setMinimumIdle(configProps.getMinimumIdle());
-        config.setConnectionTimeout(configProps.getConnectionTimeout());
+        config.setJdbcUrl(props.getUrl());
+        config.setUsername(props.getUsername());
+        config.setPassword(props.getPassword());
+        config.setDriverClassName(props.getDriverClassName());
+        config.setMaximumPoolSize(props.getMaximumPoolSize());
+        config.setMinimumIdle(props.getMinimumIdle());
+        config.setConnectionTimeout(props.getConnectionTimeout());
 
         dataSource = new HikariDataSource(config);
     }
 
-    private ConnectionPool() {
-        // Classe utilitária, construtor privado
+    public static Connection getConnection() throws SQLException {
+        initializeIfNeeded(); // garante que o pool seja criado apenas no primeiro uso
+        return dataSource.getConnection();
     }
 
-    public static Connection getConnection() throws SQLException {
-        return dataSource.getConnection();
+    public static void shutdown() {
+        if (dataSource != null) {
+            dataSource.close();
+        }
     }
 }

@@ -7,45 +7,58 @@ import br.com.softhouse.dende.exceptions.organizador.*;
 import br.com.softhouse.dende.exceptions.usuario.*;
 import br.com.softhouse.dende.mapper.OrganizadorMapper;
 import br.com.softhouse.dende.model.Empresa;
+import br.com.softhouse.dende.model.Evento;
 import br.com.softhouse.dende.model.Organizador;
-import br.com.softhouse.dende.repositories.Repositorio;
+import br.com.softhouse.dende.repositories.EventoRepository;
+import br.com.softhouse.dende.repositories.OrganizadorRepository;
+import br.com.softhouse.dende.repositories.UsuarioRepository;
 
 import java.time.LocalDate;
+import java.util.List;
 
 public class OrganizadorService {
 
-    private final Repositorio repositorio = Repositorio.getInstance();
+    private final UsuarioRepository usuarioRepository;
+    private final OrganizadorRepository organizadorRepository;
+    private final EventoRepository eventoRepository;
+
+    public OrganizadorService() {
+        this.usuarioRepository = new UsuarioRepository();
+        this.organizadorRepository = new OrganizadorRepository();
+        this.eventoRepository = new EventoRepository();
+    }
 
     public StatusOrganizadorDto cadastrar(CadastrarOrganizadorDto dto) {
         validarCadastro(dto);
-        if (repositorio.emailExiste(dto.email())) {
+        if (organizadorRepository.findByField("email", dto.email()).isPresent() ||
+                usuarioRepository.findByField("email", dto.email()).isPresent()) {
             throw new EmailJaCadastradoException("Já existe um organizador com este email.");
         }
 
         Organizador organizador = OrganizadorMapper.toModel(dto);
-        repositorio.salvarOrganizador(organizador);
+        organizadorRepository.save(organizador);
         return OrganizadorMapper.toStatusDto("Organizador cadastrado com sucesso!", organizador);
     }
 
     public StatusOrganizadorDto atualizar(Long id, AtualizarOrganizadorDto dto) {
-        Organizador organizador = repositorio.buscarOrganizadorPorId(id)
+        Organizador organizador = organizadorRepository.findById(id)
                 .orElseThrow(() -> new OrganizadorNaoEncontradoException("Organizador não encontrado."));
         validarAtualizacao(dto);
 
         OrganizadorMapper.updateModel(organizador, dto);
-        repositorio.salvarOrganizador(organizador);
+        organizadorRepository.update(organizador);
         return OrganizadorMapper.toStatusDto("Organizador atualizado com sucesso!", organizador);
     }
 
     public VisualizarOrganizadorDto buscarPorId(Long id) {
-        Organizador organizador = repositorio.buscarOrganizadorPorId(id)
+        Organizador organizador = organizadorRepository.findById(id)
                 .orElseThrow(() -> new OrganizadorNaoEncontradoException("Organizador não encontrado."));
         return OrganizadorMapper.toVisualizarDto(organizador);
     }
 
     public StatusOrganizadorDto ativar(Long id, LoginDto dto) {
         if (dto == null) throw new DadosInvalidosException("Credenciais são obrigatórias.");
-        Organizador organizador = repositorio.buscarOrganizadorPorId(id)
+        Organizador organizador = organizadorRepository.findById(id)
                 .orElseThrow(() -> new OrganizadorNaoEncontradoException("Organizador não encontrado."));
         if (!organizador.getEmail().equalsIgnoreCase(dto.email())) {
             throw new CredenciaisInvalidasException("Email não confere.");
@@ -57,22 +70,26 @@ public class OrganizadorService {
             throw new OrganizadorJaAtivoException("Organizador já está ativo.");
         }
         organizador.setAtivo(true);
-        repositorio.salvarOrganizador(organizador);
+        organizadorRepository.update(organizador);
         return OrganizadorMapper.toStatusDto("Organizador reativado com sucesso!", organizador);
     }
 
     public StatusOrganizadorDto desativar(Long id) {
-        Organizador organizador = repositorio.buscarOrganizadorPorId(id)
+        Organizador organizador = organizadorRepository.findById(id)
                 .orElseThrow(() -> new OrganizadorNaoEncontradoException("Organizador não encontrado."));
         if (!organizador.isAtivo()) {
             throw new OrganizadorJaInativoException("Organizador já está inativo.");
         }
-        boolean temEventosAtivos = organizador.getEventos().stream().anyMatch(e -> e.isEventoAtivo());
+
+        // Verifica eventos ativos do organizador usando EventoRepository
+        List<Evento> eventosDoOrganizador = eventoRepository.findAllByOrganizadorId(id);
+        boolean temEventosAtivos = eventosDoOrganizador.stream().anyMatch(Evento::isEventoAtivo);
         if (temEventosAtivos) {
             throw new OrganizadorComEventosAtivosException("Organizador possui eventos ativos.");
         }
+
         organizador.setAtivo(false);
-        repositorio.salvarOrganizador(organizador);
+        organizadorRepository.update(organizador);
         return OrganizadorMapper.toStatusDto("Organizador desativado com sucesso!", organizador);
     }
 

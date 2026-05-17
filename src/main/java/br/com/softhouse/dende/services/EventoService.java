@@ -8,8 +8,9 @@ import br.com.softhouse.dende.mapper.EventoMapper;
 import br.com.softhouse.dende.model.Evento;
 import br.com.softhouse.dende.model.Ingresso;
 import br.com.softhouse.dende.model.Organizador;
-import br.com.softhouse.dende.model.Usuario;
-import br.com.softhouse.dende.repositories.Repositorio;
+import br.com.softhouse.dende.repositories.EventoRepository;
+import br.com.softhouse.dende.repositories.IngressoRepository;
+import br.com.softhouse.dende.repositories.OrganizadorRepository;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -18,70 +19,93 @@ import java.util.List;
 
 public class EventoService {
 
-    private final Repositorio repositorio = Repositorio.getInstance();
+    private final EventoRepository eventoRepository;
+    private final OrganizadorRepository organizadorRepository;
+    private final IngressoRepository ingressoRepository;
+
+    public EventoService() {
+        this.eventoRepository = new EventoRepository();
+        this.organizadorRepository = new OrganizadorRepository();
+        this.ingressoRepository = new IngressoRepository();
+    }
 
     public StatusEventoDto cadastrarEvento(Long organizadorId, CadastrarEventoDto dto) {
-        Organizador organizador = repositorio.buscarOrganizadorPorId(organizadorId)
+        Organizador organizador = organizadorRepository.findById(organizadorId)
                 .orElseThrow(() -> new OrganizadorNaoEncontradoException("Organizador não encontrado."));
         validarCadastro(dto);
 
         Evento evento = EventoMapper.toModel(dto);
+        evento.setOrganizador(organizador);
         if (dto.eventoPrincipalId() != null) {
-            Evento principal = repositorio.buscarEventoPorId(dto.eventoPrincipalId())
+            Evento principal = eventoRepository.findById(dto.eventoPrincipalId())
                     .orElseThrow(() -> new EventoPrincipalNaoEncontradoException("Evento principal não encontrado."));
             evento.setEventoPrincipal(principal);
         }
 
-        organizador.addEvento(evento);
-        repositorio.salvarEvento(organizador, evento);
+        eventoRepository.save(evento);
         return EventoMapper.toStatusEventoDto("Evento criado com sucesso!", evento);
     }
 
     public StatusEventoDto atualizarEvento(Long organizadorId, Long eventoId, AtualizarEventoDto dto) {
-        Organizador organizador = repositorio.buscarOrganizadorPorId(organizadorId)
+        organizadorRepository.findById(organizadorId)
                 .orElseThrow(() -> new OrganizadorNaoEncontradoException("Organizador não encontrado."));
-        Evento evento = organizador.getEventos().stream()
-                .filter(e -> e.getId().equals(eventoId))
-                .findFirst()
+        Evento evento = eventoRepository.findById(eventoId)
                 .orElseThrow(() -> new EventoNaoEncontradoException("Evento não encontrado."));
-        if (!evento.isEventoAtivo()) throw new EventoInativoException("Evento inativo não pode ser alterado.");
+        if (!evento.getOrganizador().getId().equals(organizadorId)) {
+            throw new EventoNaoEncontradoException("Evento não pertence ao organizador.");
+        }
+        if (!evento.isEventoAtivo()) {
+            throw new EventoInativoException("Evento inativo não pode ser alterado.");
+        }
 
         validarAtualizacao(dto);
         EventoMapper.updateModel(evento, dto);
         if (dto.eventoPrincipalId() != null) {
-            Evento principal = repositorio.buscarEventoPorId(dto.eventoPrincipalId())
+            if (dto.eventoPrincipalId().equals(eventoId)) {
+                throw new DadosInvalidosException("Um evento não pode ser principal de si mesmo.");
+            }
+            Evento principal = eventoRepository.findById(dto.eventoPrincipalId())
                     .orElseThrow(() -> new EventoPrincipalNaoEncontradoException("Evento principal não encontrado."));
             evento.setEventoPrincipal(principal);
         }
+        eventoRepository.update(evento);
         return EventoMapper.toStatusEventoDto("Evento atualizado com sucesso!", evento);
     }
 
     public StatusEventoDto ativarEvento(Long organizadorId, Long eventoId) {
-        Organizador organizador = repositorio.buscarOrganizadorPorId(organizadorId)
+        organizadorRepository.findById(organizadorId)
                 .orElseThrow(() -> new OrganizadorNaoEncontradoException("Organizador não encontrado."));
-        Evento evento = organizador.getEventos().stream()
-                .filter(e -> e.getId().equals(eventoId))
-                .findFirst()
+        Evento evento = eventoRepository.findById(eventoId)
                 .orElseThrow(() -> new EventoNaoEncontradoException("Evento não encontrado."));
-        if (evento.isEventoAtivo()) throw new EventoJaAtivoException("Evento já está ativo.");
+        if (!evento.getOrganizador().getId().equals(organizadorId)) {
+            throw new EventoNaoEncontradoException("Evento não pertence ao organizador.");
+        }
+        if (evento.isEventoAtivo()) {
+            throw new EventoJaAtivoException("Evento já está ativo.");
+        }
 
         validarDatasEvento(evento.getDataInicio(), evento.getDataFim());
         evento.setEventoAtivo(true);
         evento.setIngressosDisponiveis(evento.getCapacidadeMaxima());
+        eventoRepository.update(evento);
         return EventoMapper.toStatusEventoDto("Evento ativado!", evento);
     }
 
     public StatusEventoDto desativarEvento(Long organizadorId, Long eventoId) {
-        Organizador organizador = repositorio.buscarOrganizadorPorId(organizadorId)
+        organizadorRepository.findById(organizadorId)
                 .orElseThrow(() -> new OrganizadorNaoEncontradoException("Organizador não encontrado."));
-        Evento evento = organizador.getEventos().stream()
-                .filter(e -> e.getId().equals(eventoId))
-                .findFirst()
+        Evento evento = eventoRepository.findById(eventoId)
                 .orElseThrow(() -> new EventoNaoEncontradoException("Evento não encontrado."));
-        if (!evento.isEventoAtivo()) throw new EventoJaInativoException("Evento já está inativo.");
+        if (!evento.getOrganizador().getId().equals(organizadorId)) {
+            throw new EventoNaoEncontradoException("Evento não pertence ao organizador.");
+        }
+        if (!evento.isEventoAtivo()) {
+            throw new EventoJaInativoException("Evento já está inativo.");
+        }
 
-        // Cancela todos os ingressos e desvincula dos usuários
-        for (Ingresso ingresso : evento.getIngressos()) {
+        List<Ingresso> ingressos = ingressoRepository.findAllByEventoId(eventoId);
+
+        for (Ingresso ingresso : ingressos) {
             if (!ingresso.isCancelado()) {
                 ingresso.setStatus(Ingresso.StatusIngresso.CANCELADO);
                 if (evento.isEventoEstorno()) {
@@ -90,96 +114,71 @@ public class EventoService {
                 } else {
                     ingresso.setValorEstornado(0.0);
                 }
-                // Remove do usuário
-                Usuario usuario = ingresso.getUsuario();
-                if (usuario != null) {
-                    usuario.removeIngresso(ingresso);
-                }
+                ingressoRepository.update(ingresso);
             }
         }
-        evento.getIngressos().clear();  // limpa a lista do evento
+
         evento.setEventoAtivo(false);
         evento.setIngressosDisponiveis(0);
+        eventoRepository.update(evento);
         return EventoMapper.toStatusEventoDto("Evento desativado e ingressos cancelados.", evento);
     }
 
     public List<EventosOrganizadorDto> listarEventosOrganizador(Long organizadorId) {
-        Organizador organizador = repositorio.buscarOrganizadorPorId(organizadorId)
+        organizadorRepository.findById(organizadorId)
                 .orElseThrow(() -> new OrganizadorNaoEncontradoException("Organizador não encontrado."));
-        return organizador.getEventos().stream()
+        List<Evento> eventos = eventoRepository.findAllByOrganizadorId(organizadorId);
+        return eventos.stream()
                 .map(EventoMapper::toEventosOrganizadorDto)
                 .toList();
     }
 
     public List<FeedEventoDto> listarEventosAtivos() {
-        return repositorio.listarEventosAtivos().stream()
-                .filter(e -> e.getDataFim().isAfter(LocalDateTime.now()))
+        return eventoRepository.findAllAtivos().stream()
                 .sorted(Comparator.comparing(Evento::getDataInicio).thenComparing(Evento::getNome))
                 .map(EventoMapper::toFeedEventoDto)
                 .toList();
     }
 
+    // ===================== VALIDAÇÕES =====================
     private void validarCadastro(CadastrarEventoDto dto) {
-        if (dto == null) {
-            throw new DadosInvalidosException("Dados do evento inválidos.");
-        }
-        if (dto.nome() == null || dto.nome().isBlank()) {
+        if (dto == null) throw new DadosInvalidosException("Dados do evento inválidos.");
+        if (dto.nome() == null || dto.nome().isBlank())
             throw new DadosInvalidosException("Nome do evento é obrigatório.");
-        }
-        if (dto.localEvento() == null || dto.localEvento().isBlank()) {
+        if (dto.localEvento() == null || dto.localEvento().isBlank())
             throw new DadosInvalidosException("Local do evento é obrigatório.");
-        }
-        if (dto.capacidadeMaxima() <= 0) {
+        if (dto.capacidadeMaxima() <= 0)
             throw new EventoCapacidadeInvalidaException("Capacidade máxima deve ser maior que zero.");
-        }
-        if (dto.precoUnitarioIngresso() < 0) {
+        if (dto.precoUnitarioIngresso() < 0)
             throw new EventoPrecoIngressoInvalidoException("Preço do ingresso não pode ser negativo.");
-        }
         validarDatasEvento(dto.dataInicio(), dto.dataFim());
     }
 
     private void validarAtualizacao(AtualizarEventoDto dto) {
-        if (dto == null) {
-            throw new DadosInvalidosException("Dados de atualização inválidos.");
-        }
-        if (dto.precoUnitarioIngresso() != null && dto.precoUnitarioIngresso() < 0) {
+        if (dto == null) throw new DadosInvalidosException("Dados de atualização inválidos.");
+        if (dto.precoUnitarioIngresso() != null && dto.precoUnitarioIngresso() < 0)
             throw new EventoPrecoIngressoInvalidoException("Preço do ingresso não pode ser negativo.");
-        }
-        if (dto.capacidadeMaxima() != null && dto.capacidadeMaxima() < 0) {
+        if (dto.capacidadeMaxima() != null && dto.capacidadeMaxima() < 0)
             throw new EventoCapacidadeInvalidaException("Capacidade máxima não pode ser negativa.");
-        }
-        if (dto.taxaCancelamento() != null && dto.taxaCancelamento() < 0) {
+        if (dto.taxaCancelamento() != null && dto.taxaCancelamento() < 0)
             throw new EventoTaxaCancelamentoInvalidaException("Taxa de cancelamento não pode ser negativa.");
+        // Só valida datas se ambas forem fornecidas
+        if (dto.dataInicio() != null && dto.dataFim() != null) {
+            validarDatasEvento(dto.dataInicio(), dto.dataFim());
         }
     }
 
     private void validarDatasEvento(LocalDateTime dataInicio, LocalDateTime dataFim) {
-        if (dataInicio == null || dataFim == null) {
-            throw new DadosInvalidosException(
-                    "Datas do evento são obrigatórias."
-            );
-        }
+        if (dataInicio == null || dataFim == null)
+            throw new DadosInvalidosException("Datas do evento são obrigatórias.");
         LocalDateTime agora = LocalDateTime.now();
-        if (dataInicio.isBefore(agora)) {
-            throw new EventoDataInicioInvalidaException(
-                    "Data de início inválida."
-            );
-        }
-        if (dataFim.isBefore(agora)) {
-            throw new EventoDataFimInvalidaException(
-                    "Data de fim inválida."
-            );
-        }
-        if (dataFim.isBefore(dataInicio)) {
-            throw new EventoDataFimAnteriorInicioException(
-                    "Data final não pode ser anterior à inicial."
-            );
-        }
-        long duracao = Duration.between(dataInicio, dataFim).toMinutes();
-        if (duracao < 30) {
-            throw new EventoDuracaoInvalidaException(
-                    "Evento deve ter no mínimo 30 minutos."
-            );
-        }
+        if (dataInicio.isBefore(agora))
+            throw new EventoDataInicioInvalidaException("Data de início inválida.");
+        if (dataFim.isBefore(agora))
+            throw new EventoDataFimInvalidaException("Data de fim inválida.");
+        if (dataFim.isBefore(dataInicio))
+            throw new EventoDataFimAnteriorInicioException("Data final não pode ser anterior à inicial.");
+        if (Duration.between(dataInicio, dataFim).toMinutes() < 30)
+            throw new EventoDuracaoInvalidaException("Evento deve ter no mínimo 30 minutos.");
     }
 }

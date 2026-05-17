@@ -1,8 +1,13 @@
 package br.com.softhouse.dende.model;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.time.LocalDateTime;
 import java.util.Objects;
 
+@Getter
+@Setter
 public class Ingresso {
 
     private Long id;
@@ -13,6 +18,7 @@ public class Ingresso {
     private double valorEstornado;
     private LocalDateTime dataCompra;
     private String email;
+    //Aqui não temos coleções, mas poderiamos ter os métodos para lidar com a devolução porexemplo.
 
     public enum StatusIngresso {
         ACEITO,
@@ -31,31 +37,7 @@ public class Ingresso {
         this.dataCompra = LocalDateTime.now();
     }
 
-    // Getters e Setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public Usuario getUsuario() { return usuario; }
-    public void setUsuario(Usuario usuario) { this.usuario = usuario; }
-    public Evento getEvento() { return evento; }
-    public void setEvento(Evento evento) { this.evento = evento; }
-    public StatusIngresso getStatus() { return status; }
-    public void setStatus(StatusIngresso status) { this.status = status; }
-    public double getValorPago() { return valorPago; }
-    public void setValorPago(double valorPago) { this.valorPago = valorPago; }
-    public double getValorEstornado() { return valorEstornado; }
-    public void setValorEstornado(double valorEstornado) { this.valorEstornado = valorEstornado; }
-    public LocalDateTime getDataCompra() { return dataCompra; }
-    public void setDataCompra(LocalDateTime dataCompra) { this.dataCompra = dataCompra; }
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
 
-    // --- SETTERS FALTANTES PARA O BANCO DE DADOS ---
-    public void setUsuario(Usuario usuario) { this.usuario = usuario; }
-    public void setEvento(Evento evento) { this.evento = evento; }
-    public void setValorPago(double valorPago) { this.valorPago = valorPago; }
-    public void setDataCompra(LocalDateTime dataCompra) { this.dataCompra = dataCompra; }
-    public void setEmail(String email) { this.email = email; }
-    
     public boolean isCancelado() {
         return status == StatusIngresso.CANCELADO;
     }

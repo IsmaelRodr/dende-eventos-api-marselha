@@ -1,5 +1,10 @@
 package br.com.softhouse.dende.model;
 
+import lombok.Getter;
+import lombok.Setter;
+
+@Setter
+@Getter
 public class Empresa {
 
     private String cnpj;
@@ -13,16 +18,6 @@ public class Empresa {
         this.razaoSocial = razaoSocial;
         this.nomeFantasia = nomeFantasia;
     }
-
-    // Setters
-    public void setCnpj(String cnpj) { this.cnpj = cnpj; }
-    public void setRazaoSocial(String razaoSocial) { this.razaoSocial = razaoSocial; }
-    public void setNomeFantasia(String nomeFantasia) { this.nomeFantasia = nomeFantasia; }
-
-    // Getters
-    public String getCnpj() { return cnpj; }
-    public String getRazaoSocial() { return razaoSocial; }
-    public String getNomeFantasia() { return nomeFantasia; }
 
     @Override
     public boolean equals(Object obj) {

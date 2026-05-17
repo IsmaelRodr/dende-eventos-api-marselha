@@ -1,11 +1,18 @@
 package br.com.softhouse.dende.model;
 
+import lombok.Setter;
+
+import lombok.Getter;
+import lombok.Setter;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
+@Setter
+@Getter
 public class Evento {
 
     private Long id;
@@ -25,7 +32,8 @@ public class Evento {
     private int ingressosDisponiveis;
     private String localEvento;
     private boolean eventoAtivo = false;
-    private final List<Ingresso> ingressos = new ArrayList<>();
+    //Isso é um ponto a considerar.
+   // private final List<Ingresso> ingressos = new ArrayList<>();
 
     public enum TipoEvento {
         SOCIAL, CORPORATIVO, ACADEMICO, CULTURAL, ENTRETENIMENTO,
@@ -101,56 +109,29 @@ public class Evento {
         }
     }
 
-    // Getters e Setters
-    public Long getId() { return id; }
-    public void setId(long id) { this.id = id; }
-    public Organizador getOrganizador() { return organizador; }
-    public void setOrganizador(Organizador organizador) { this.organizador = organizador; }
-    public String getNome() { return nome; }
-    public void setNome(String nome) { this.nome = nome; }
-    public String getDescricao() { return descricao; }
-    public void setDescricao(String descricao) { this.descricao = descricao; }
-    public String getPaginaWeb() { return paginaWeb; }
-    public void setPaginaWeb(String paginaWeb) { this.paginaWeb = paginaWeb; }
-    public LocalDateTime getDataInicio() { return dataInicio; }
-    public void setDataInicio(LocalDateTime dataInicio) { this.dataInicio = dataInicio; }
-    public LocalDateTime getDataFim() { return dataFim; }
-    public void setDataFim(LocalDateTime dataFim) { this.dataFim = dataFim; }
-    public TipoEvento getTipoEvento() { return tipoEvento; }
-    public void setTipoEvento(TipoEvento tipoEvento) { this.tipoEvento = tipoEvento; }
-    public Evento getEventoPrincipal() { return eventoPrincipal; }
-    public void setEventoPrincipal(Evento eventoPrincipal) { this.eventoPrincipal = eventoPrincipal; }
-    public Modalidade getModalidade() { return modalidade; }
-    public void setModalidade(Modalidade modalidade) { this.modalidade = modalidade; }
-    public double getPrecoUnitarioIngresso() { return precoUnitarioIngresso; }
-    public void setPrecoUnitarioIngresso(double precoUnitarioIngresso) { this.precoUnitarioIngresso = precoUnitarioIngresso; }
-    public double getTaxaCancelamento() { return taxaCancelamento; }
-    public void setTaxaCancelamento(double taxaCancelamento) { this.taxaCancelamento = taxaCancelamento; }
-    public boolean isEventoEstorno() { return eventoEstorno; }
-    public void setEventoEstorno(boolean eventoEstorno) { this.eventoEstorno = eventoEstorno; }
-    public int getCapacidadeMaxima() { return capacidadeMaxima; }
-    public void setCapacidadeMaxima(int capacidadeMaxima) { this.capacidadeMaxima = capacidadeMaxima; }
-    public int getIngressosDisponiveis() { return ingressosDisponiveis; }
-    public void setIngressosDisponiveis(int ingressosDisponiveis) { this.ingressosDisponiveis = ingressosDisponiveis; }
-    public String getLocalEvento() { return localEvento; }
-    public void setLocalEvento(String localEvento) { this.localEvento = localEvento; }
-    public boolean isEventoAtivo() { return eventoAtivo; }
-    public void setEventoAtivo(boolean eventoAtivo) { this.eventoAtivo = eventoAtivo; }
-
-    // Métodos de coleção (sem regras)
+    /*Implementação retirada.
     public List<Ingresso> getIngressos() {
-        return Collections.unmodifiableList(ingressos);
-    }
+        A ideia era usar esse método na coleção para agilizar buscas nos services
+        através da comunicação das referências.
+        return null;
+    }*/
 
+    /*Implementação retirada.
     public void addIngresso(Ingresso ingresso) {
-        if (ingresso != null && !this.ingressos.contains(ingresso)) {
-            this.ingressos.add(ingresso);
-        }
-    }
+        A ideia era adicionar uma referência na lista apartir do ponto de vista do vendedor
+        ao vender o igresso, compartilhando a referência com o usuario (comprador).
+    }*/
 
+    /*
     public void removeIngresso(Ingresso ingresso) {
-        this.ingressos.remove(ingresso);
+        A ideia era remover uma referência na lista apartir do ponto de vista do vendedor
+        ao vender o igresso, compartilhando a referência com o usuario (comprador).
     }
+     */
+
+    //Ainda na ideia da coleção, precisaria ser adicionado 2 métodos
+    //1 para disponibilizar todos os ingressos do ponto de vista de realizar (ativar) um evento
+    //1 para cancelar todos os ingressos ao cancelar (desativar) um evento, com devolução.
 
     // equals, hashCode, toString
     @Override

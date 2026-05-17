@@ -1,11 +1,16 @@
 package br.com.softhouse.dende.model;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
+@Setter
+@Getter
 public class Usuario{
 
     private Long id;
@@ -15,7 +20,8 @@ public class Usuario{
     private String email;
     private String senha;
     private boolean ativo = true;
-    private final List<Ingresso> ingressos = new ArrayList<>();
+    //ponto a se considerar.
+    //private final List<Ingresso> ingressos = new ArrayList<>();
 
     public Usuario() {}
 
@@ -29,34 +35,22 @@ public class Usuario{
         this.senha = senha;
     }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public String getNome() { return nome; }
-    public void setNome(String nome) { this.nome = nome; }
-    public LocalDate getDataNascimento() { return dataNascimento; }
-    public void setDataNascimento(LocalDate dataNascimento) { this.dataNascimento = dataNascimento; }
-    public String getSexo() { return sexo; }
-    public void setSexo(String sexo) { this.sexo = sexo; }
-    public String getEmail() { return email; }
-    // setEmail removido intencionalmente – email não pode ser alterado
-    public String getSenha() { return senha; }
-    public void setSenha(String senha) { this.senha = senha; }
-    public boolean isAtivo() { return ativo; }
-    public void setAtivo(boolean ativo) { this.ativo = ativo; }
-
+    /*Implementação retirada.
     public List<Ingresso> getIngressos() {
-        return Collections.unmodifiableList(ingressos);
-    }
+        A ideia erá a mesma do evento.
+        return null
+    }*/
 
+    /*
     public void addIngresso(Ingresso ingresso) {
-        if (ingresso != null && !this.ingressos.contains(ingresso)) {
-            this.ingressos.add(ingresso);
-        }
-    }
+        Aqui a ideia era trabalhar pela otica do comprador,
+        associando o ingresso comprado ao evento e ao comprador.
+    }*/
 
+    /*
     public void removeIngresso(Ingresso ingresso) {
-        this.ingressos.remove(ingresso);
-    }
+        Aqui a idei era remover pela otica do comprador, desassociando a referência do comprador.
+    }*/
 
     @Override
     public boolean equals(Object obj) {
@@ -78,7 +72,6 @@ public class Usuario{
                 ", nome='" + nome + '\'' +
                 ", email='" + email + '\'' +
                 ", ativo=" + ativo +
-                ", totalIngressos=" + ingressos.size() +
                 '}';
     }
 }

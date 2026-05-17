@@ -46,7 +46,6 @@ public class UsuarioRepository implements CrudRepository<Usuario, Long> {
         String sql = "SELECT * FROM usuarios WHERE id = ?";
         try (Connection conn = ConnectionPool.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-
             stmt.setLong(1, id);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
@@ -124,6 +123,44 @@ public class UsuarioRepository implements CrudRepository<Usuario, Long> {
         }
     }
 
+    @Override
+    public <V> Optional<Usuario> findByField(String fieldName, V value) {
+        if (!"email".equals(fieldName)) {
+            throw new UnsupportedOperationException("Busca por " + fieldName + " não suportada.");
+        }
+        String sql = "SELECT * FROM usuarios WHERE email = ?";
+        try (Connection conn = ConnectionPool.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, value.toString());
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    String[] row = {
+                            rs.getString("id"), rs.getString("nome"), rs.getString("data_nascimento"),
+                            rs.getString("sexo"), rs.getString("email"), rs.getString("senha"), rs.getString("ativo")
+                    };
+                    return Optional.of(mapper.mapRow(row));
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao buscar usuário por email.", e);
+        }
+        return Optional.empty();
+    }
+
+    @Override
+    public boolean existsById(Long id) {
+        String sql = "SELECT 1 FROM usuarios WHERE id = ?";
+        try (Connection conn = ConnectionPool.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setLong(1, id);
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next();
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao verificar existência de usuário.", e);
+        }
+    }
+
     // ==============================================================================
     // MÉTODOS OBRIGATÓRIOS DA INTERFACE (Ainda não implementados na regra de negócio)
     // ==============================================================================
@@ -132,13 +169,7 @@ public class UsuarioRepository implements CrudRepository<Usuario, Long> {
     public long count() { throw new UnsupportedOperationException("Método não implementado"); }
 
     @Override
-    public boolean existsById(Long id) { throw new UnsupportedOperationException("Método não implementado"); }
-
-    @Override
     public Iterable<Usuario> findAllById(Iterable<Long> ids) { throw new UnsupportedOperationException("Método não implementado"); }
-
-    @Override
-    public <V> Optional<Usuario> findByField(String fieldName, V value) { throw new UnsupportedOperationException("Método não implementado"); }
 
     @Override
     public void deleteAll(Iterable<? extends Usuario> entities) { throw new UnsupportedOperationException("Método não implementado"); }

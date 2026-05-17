@@ -1,11 +1,16 @@
 package br.com.softhouse.dende.model;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
+@Getter
+@Setter
 public class Organizador {
 
     private Long id;
@@ -16,7 +21,8 @@ public class Organizador {
     private String senha;
     private boolean ativo = true;
     private Empresa empresa;
-    private final List<Evento> eventos = new ArrayList<>();
+    //Ponto a ser revisto
+    //private final List<Evento> eventos = new ArrayList<>();
 
     public Organizador() {}
 
@@ -31,40 +37,20 @@ public class Organizador {
         this.empresa = empresa;
     }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public String getNome() { return nome; }
-    public void setNome(String nome) { this.nome = nome; }
-    public LocalDate getDataNascimento() { return dataNascimento; }
-    public void setDataNascimento(LocalDate dataNascimento) { this.dataNascimento = dataNascimento; }
-    public String getSexo() { return sexo; }
-    public void setSexo(String sexo) { this.sexo = sexo; }
-    public String getEmail() { return email; }
-    // setEmail removido – email não pode ser alterado
-    public String getSenha() { return senha; }
-    public void setSenha(String senha) { this.senha = senha; }
-    public Empresa getEmpresa() { return empresa; }
-    public void setEmpresa(Empresa empresa) { this.empresa = empresa; }
-    public boolean isAtivo() { return ativo; }
-    public void setAtivo(boolean ativo) { this.ativo = ativo; }
-
+    /*
     public List<Evento> getEventos() {
-        return Collections.unmodifiableList(eventos);
-    }
+        associar referencias de eventos pertecentes ao organizador
+    }*/
 
+    /*
     public void addEvento(Evento evento) {
-        if (evento != null && !this.eventos.contains(evento)) {
-            this.eventos.add(evento);
-            evento.setOrganizador(this);
-        }
-    }
+        associar uma nova referência ao organizador.
+    }*/
 
+    /*
     public void removeEvento(Evento evento) {
-        this.eventos.remove(evento);
-        if (evento != null) {
-            evento.setOrganizador(null);
-        }
-    }
+        remover uma referência do organizador.
+    }*/
 
     @Override
     public boolean equals(Object obj) {
@@ -87,7 +73,6 @@ public class Organizador {
                 ", email='" + email + '\'' +
                 ", ativo=" + ativo +
                 ", empresa=" + (empresa != null ? empresa.getRazaoSocial() : "Nenhuma") +
-                ", totalEventos=" + eventos.size() +
                 '}';
     }
 }

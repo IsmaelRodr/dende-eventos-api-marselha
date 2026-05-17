@@ -6,44 +6,51 @@ import br.com.softhouse.dende.exceptions.DadosInvalidosException;
 import br.com.softhouse.dende.exceptions.usuario.*;
 import br.com.softhouse.dende.mapper.UsuarioMapper;
 import br.com.softhouse.dende.model.Usuario;
-import br.com.softhouse.dende.repositories.Repositorio;
+import br.com.softhouse.dende.repositories.OrganizadorRepository;
+import br.com.softhouse.dende.repositories.UsuarioRepository;
 
 import java.time.LocalDate;
 
 public class UsuarioService {
 
-    private final Repositorio repositorio = Repositorio.getInstance();
+    private final UsuarioRepository usuarioRepository;
+    private final OrganizadorRepository organizadorRepository;
+
+    public UsuarioService() {
+        this.usuarioRepository = new UsuarioRepository();
+        this.organizadorRepository = new OrganizadorRepository();
+    }
 
     public StatusUsuarioDto cadastrar(CadastrarUsuarioDto dto) {
         validarCadastro(dto);
-        if (repositorio.emailExiste(dto.email())) {
+        if (emailExiste(dto.email())) {
             throw new EmailJaCadastradoException("Já existe um usuário com este email.");
         }
 
         Usuario usuario = UsuarioMapper.toModel(dto);
-        repositorio.salvarUsuario(usuario);
+        usuarioRepository.save(usuario);
         return UsuarioMapper.toStatusDto("Usuário registrado com sucesso!", usuario);
     }
 
     public StatusUsuarioDto atualizar(Long id, AtualizarUsuarioDto dto) {
-        Usuario usuario = repositorio.buscarUsuarioPorId(id)
+        Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new UsuarioNaoEncontradoException("Usuário não encontrado."));
         validarAtualizacao(dto);
 
         UsuarioMapper.updateModel(usuario, dto);
-        repositorio.salvarUsuario(usuario);
+        usuarioRepository.update(usuario);
         return UsuarioMapper.toStatusDto("Perfil atualizado com sucesso!", usuario);
     }
 
     public VisualizarUsuarioDto buscarPorId(Long id) {
-        Usuario usuario = repositorio.buscarUsuarioPorId(id)
+        Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new UsuarioNaoEncontradoException("Usuário não encontrado."));
         return UsuarioMapper.toVisualizarDto(usuario);
     }
 
     public StatusUsuarioDto ativar(Long id, LoginDto dto) {
         if (dto == null) throw new DadosInvalidosException("Credenciais são obrigatórias.");
-        Usuario usuario = repositorio.buscarUsuarioPorId(id)
+        Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new UsuarioNaoEncontradoException("Usuário não encontrado."));
         if (!usuario.getEmail().equalsIgnoreCase(dto.email())) {
             throw new CredenciaisInvalidasException("Email não confere.");
@@ -55,19 +62,25 @@ public class UsuarioService {
             throw new UsuarioJaAtivoException("Usuário já está ativo.");
         }
         usuario.setAtivo(true);
-        repositorio.salvarUsuario(usuario);
+        usuarioRepository.update(usuario);
         return UsuarioMapper.toStatusDto("Usuário reativado com sucesso!", usuario);
     }
 
     public StatusUsuarioDto desativar(Long id) {
-        Usuario usuario = repositorio.buscarUsuarioPorId(id)
+        Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new UsuarioNaoEncontradoException("Usuário não encontrado."));
         if (!usuario.isAtivo()) {
             throw new UsuarioJaInativoException("Usuário já está inativo.");
         }
         usuario.setAtivo(false);
-        repositorio.salvarUsuario(usuario);
+        usuarioRepository.update(usuario);
         return UsuarioMapper.toStatusDto("Usuário desativado com sucesso!", usuario);
+    }
+
+    // ===================== MÉTODOS AUXILIARES =====================
+    private boolean emailExiste(String email) {
+        return usuarioRepository.findByField("email", email).isPresent() ||
+                organizadorRepository.findByField("email", email).isPresent();
     }
 
     private void validarCadastro(CadastrarUsuarioDto dto) {

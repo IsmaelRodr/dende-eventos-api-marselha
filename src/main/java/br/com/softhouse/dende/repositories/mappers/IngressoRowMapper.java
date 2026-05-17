@@ -8,32 +8,34 @@ import java.time.LocalDateTime;
 
 public class IngressoRowMapper implements RowMapper<Ingresso> {
 
-    @Override
     public Ingresso mapRow(String[] row) {
         Ingresso ingresso = new Ingresso();
 
-        // 1. ID do Ingresso
+        // row[0] = id, row[1] = usuario_id, row[2] = evento_id
         ingresso.setId(Long.parseLong(row[0]));
 
-        // 2. Monta a referência do Usuário que comprou
         Usuario usuario = new Usuario();
         usuario.setId(Long.parseLong(row[1]));
         ingresso.setUsuario(usuario);
 
-        // 3. Monta a referência do Evento
         Evento evento = new Evento();
         evento.setId(Long.parseLong(row[2]));
         ingresso.setEvento(evento);
 
-        // 4. Dados da compra
+        // row[3] = valor_pago
         ingresso.setValorPago(Double.parseDouble(row[3]));
-        ingresso.setDataCompra(LocalDateTime.parse(row[4].replace(" ", "T")));
 
-        // 5. Status
-        ingresso.setStatus(Ingresso.StatusIngresso.valueOf(row[5]));
+        // row[4] = valor_estornado (faltava no mapper antigo)
+        ingresso.setValorEstornado(Double.parseDouble(row[4]));
 
-        // 6. O seu modelo usa Email em vez de QRCode
-        ingresso.setEmail(row[6]);
+        // row[5] = data_compra
+        ingresso.setDataCompra(LocalDateTime.parse(row[5].replace(" ", "T")));
+
+        // row[6] = status
+        ingresso.setStatus(Ingresso.StatusIngresso.valueOf(row[6]));
+
+        // row[7] = email
+        ingresso.setEmail(row[7]);
 
         return ingresso;
     }

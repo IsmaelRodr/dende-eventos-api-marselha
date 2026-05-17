@@ -35,7 +35,6 @@ import java.util.List;
 public class OrganizadorController {
 
     private final OrganizadorService organizadorService;
-
     private final EventoService eventoService;
 
     public OrganizadorController() {
