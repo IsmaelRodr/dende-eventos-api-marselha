@@ -20,8 +20,7 @@ public class Usuario{
     private String email;
     private String senha;
     private boolean ativo = true;
-    //ponto a se considerar.
-    //private final List<Ingresso> ingressos = new ArrayList<>();
+    private final List<Ingresso> ingressos = new ArrayList<>();
 
     public Usuario() {}
 
@@ -35,22 +34,26 @@ public class Usuario{
         this.senha = senha;
     }
 
-    /*Implementação retirada.
+
     public List<Ingresso> getIngressos() {
-        A ideia erá a mesma do evento.
-        return null
-    }*/
+        return List.copyOf(ingressos);
+    }
 
-    /*
-    public void addIngresso(Ingresso ingresso) {
-        Aqui a ideia era trabalhar pela otica do comprador,
-        associando o ingresso comprado ao evento e ao comprador.
-    }*/
 
-    /*
-    public void removeIngresso(Ingresso ingresso) {
-        Aqui a idei era remover pela otica do comprador, desassociando a referência do comprador.
-    }*/
+    public void adicionarIngresso(Ingresso ingresso) {
+        if (!ingressos.contains(ingresso)){
+            ingressos.add(ingresso);
+            ingresso.setUsuario(this);
+        }
+    }
+
+
+    public void cancelarIngresso(Ingresso ingresso) {
+        if(ingressos.contains(ingresso)){
+            ingressos.remove(ingresso);
+            ingresso.cancelar();
+        }
+    }
 
     @Override
     public boolean equals(Object obj) {

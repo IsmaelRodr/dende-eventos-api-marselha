@@ -36,16 +36,11 @@ public class IngressoService {
         Usuario usuario = usuarioRepository.findById(usuarioId)
                 .orElseThrow(() -> new UsuarioNaoEncontradoException("Usuário não encontrado."));
         if (!usuario.isAtivo()) throw new UsuarioInativoException("Usuário inativo.");
-
         Evento evento = eventoRepository.findById(eventoId)
                 .orElseThrow(() -> new EventoNaoEncontradoException("Evento não encontrado."));
         if (!evento.isEventoAtivo()) throw new EventoInativoException("Evento inativo.");
-        if (evento.getIngressosDisponiveis() <= 0)
-            throw new EventoSemIngressosDisponiveisException("Ingressos esgotados.");
         if (evento.getDataInicio().isBefore(LocalDateTime.now()))
             throw new EventoExpiradoException("Evento já iniciado.");
-
-        // Verifica se o evento pertence ao organizador informado
         if (!evento.getOrganizador().getId().equals(organizadorId)) {
             throw new EventoNaoEncontradoException("Evento não pertence ao organizador.");
         }
@@ -53,7 +48,6 @@ public class IngressoService {
         List<Ingresso> ingressosGerados = new ArrayList<>();
         double valorTotal = 0.0;
 
-        // Se houver evento principal, gera ingresso para ele também
         if (evento.getEventoPrincipal() != null) {
             Evento principal = eventoRepository.findById(evento.getEventoPrincipal().getId())
                     .orElseThrow(() -> new EventoNaoEncontradoException("Evento principal não encontrado."));
@@ -64,8 +58,10 @@ public class IngressoService {
 
             Ingresso ingressoPrincipal = new Ingresso(null, usuario, principal,
                     principal.getPrecoUnitarioIngresso(), usuario.getEmail());
+
+            principal.adicionarIngresso(ingressoPrincipal);
+            usuario.adicionarIngresso(ingressoPrincipal);
             ingressoRepository.save(ingressoPrincipal);
-            principal.setIngressosDisponiveis(principal.getIngressosDisponiveis() - 1);
             eventoRepository.update(principal);
             valorTotal += principal.getPrecoUnitarioIngresso();
             ingressosGerados.add(ingressoPrincipal);
@@ -74,8 +70,9 @@ public class IngressoService {
         // Ingresso do evento escolhido
         Ingresso ingressoEvento = new Ingresso(null, usuario, evento,
                 evento.getPrecoUnitarioIngresso(), usuario.getEmail());
+        evento.adicionarIngresso(ingressoEvento);
+        usuario.adicionarIngresso(ingressoEvento);
         ingressoRepository.save(ingressoEvento);
-        evento.setIngressosDisponiveis(evento.getIngressosDisponiveis() - 1);
         eventoRepository.update(evento);
         valorTotal += evento.getPrecoUnitarioIngresso();
         ingressosGerados.add(ingressoEvento);
@@ -90,29 +87,16 @@ public class IngressoService {
     public CancelarIngressoUsuarioDto cancelarIngresso(Long usuarioId, Long ingressoId) {
         usuarioRepository.findById(usuarioId)
                 .orElseThrow(() -> new UsuarioNaoEncontradoException("Usuário não encontrado."));
-
         Ingresso ingresso = ingressoRepository.findById(ingressoId)
                 .orElseThrow(() -> new IngressoNaoEncontradoException("Ingresso não encontrado."));
-        if (ingresso.isCancelado()) throw new IngressoJaCanceladoException("Ingresso já cancelado.");
         if (!ingresso.getUsuario().getId().equals(usuarioId)) {
             throw new CancelamentoNaoPermitidoException("Ingresso não pertence ao usuário.");
         }
-
         Evento evento = eventoRepository.findById(ingresso.getEvento().getId())
                 .orElseThrow(() -> new EventoNaoEncontradoException("Evento não encontrado."));
-        if (!evento.isEventoEstorno()) {
-            throw new CancelamentoNaoPermitidoException("Evento não permite estorno.");
-        }
-
-        double taxa = evento.getTaxaCancelamento();
-        double valorEstorno = ingresso.getValorPago() * (1 - taxa / 100.0);
-        ingresso.setValorEstornado(valorEstorno);
-        ingresso.setStatus(Ingresso.StatusIngresso.CANCELADO);
+        evento.cancelarIngressoIndividual(ingresso);
         ingressoRepository.update(ingresso);
-
-        evento.setIngressosDisponiveis(evento.getIngressosDisponiveis() + 1);
         eventoRepository.update(evento);
-
         return UsuarioMapper.toCancelarDTO("Ingresso cancelado com sucesso.", ingresso);
     }
 
@@ -120,24 +104,11 @@ public class IngressoService {
         usuarioRepository.findById(usuarioId)
                 .orElseThrow(() -> new UsuarioNaoEncontradoException("Usuário não encontrado."));
 
-        List<Ingresso> ingressos = ingressoRepository.findAllByUsuarioId(usuarioId);
+        List<Ingresso> ingressos = ingressoRepository.findAllByUsuarioIdWithEvento(usuarioId);
 
-        // Carrega os dados completos dos eventos para ordenação (evita proxies vazios)
-        for (Ingresso ingresso : ingressos) {
-            Long eventoId = ingresso.getEvento().getId();
-            eventoRepository.findById(eventoId)
-                    .ifPresent(ingresso::setEvento);
-        }
-
+        Comparator<Ingresso> groupComparator = Comparator.comparing(Ingresso::isAtivoParaListagem).reversed();
         Comparator<Ingresso> byStartDate = Comparator.comparing(i -> i.getEvento().getDataInicio());
         Comparator<Ingresso> byNomeEvento = Comparator.comparing(i -> i.getEvento().getNome());
-        Comparator<Ingresso> groupComparator = (i1, i2) -> {
-            boolean i1Active = !i1.isCancelado() && i1.getEvento().isEventoAtivo() && i1.getEvento().getDataInicio().isAfter(LocalDateTime.now());
-            boolean i2Active = !i2.isCancelado() && i2.getEvento().isEventoAtivo() && i2.getEvento().getDataInicio().isAfter(LocalDateTime.now());
-            if (i1Active && !i2Active) return -1;
-            if (!i1Active && i2Active) return 1;
-            return 0;
-        };
 
         return ingressos.stream()
                 .sorted(groupComparator.thenComparing(byStartDate).thenComparing(byNomeEvento))

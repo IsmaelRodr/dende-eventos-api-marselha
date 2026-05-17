@@ -33,22 +33,21 @@ public class EventoService {
         Organizador organizador = organizadorRepository.findById(organizadorId)
                 .orElseThrow(() -> new OrganizadorNaoEncontradoException("Organizador não encontrado."));
         validarCadastro(dto);
-
         Evento evento = EventoMapper.toModel(dto);
-        evento.setOrganizador(organizador);
         if (dto.eventoPrincipalId() != null) {
             Evento principal = eventoRepository.findById(dto.eventoPrincipalId())
                     .orElseThrow(() -> new EventoPrincipalNaoEncontradoException("Evento principal não encontrado."));
             evento.setEventoPrincipal(principal);
         }
-
+        organizador.adicionarEvento(evento);
         eventoRepository.save(evento);
         return EventoMapper.toStatusEventoDto("Evento criado com sucesso!", evento);
     }
 
     public StatusEventoDto atualizarEvento(Long organizadorId, Long eventoId, AtualizarEventoDto dto) {
-        organizadorRepository.findById(organizadorId)
-                .orElseThrow(() -> new OrganizadorNaoEncontradoException("Organizador não encontrado."));
+        if (!organizadorRepository.existsById(organizadorId)){
+                throw  new OrganizadorNaoEncontradoException("Organizador não encontrado.");
+        }
         Evento evento = eventoRepository.findById(eventoId)
                 .orElseThrow(() -> new EventoNaoEncontradoException("Evento não encontrado."));
         if (!evento.getOrganizador().getId().equals(organizadorId)) {
@@ -66,6 +65,9 @@ public class EventoService {
             }
             Evento principal = eventoRepository.findById(dto.eventoPrincipalId())
                     .orElseThrow(() -> new EventoPrincipalNaoEncontradoException("Evento principal não encontrado."));
+            if (!principal.getOrganizador().getId().equals(organizadorId)) {
+                throw new DadosInvalidosException("O evento principal deve pertencer ao mesmo organizador.");
+            }
             evento.setEventoPrincipal(principal);
         }
         eventoRepository.update(evento);
@@ -73,62 +75,44 @@ public class EventoService {
     }
 
     public StatusEventoDto ativarEvento(Long organizadorId, Long eventoId) {
-        organizadorRepository.findById(organizadorId)
-                .orElseThrow(() -> new OrganizadorNaoEncontradoException("Organizador não encontrado."));
+        if (!organizadorRepository.existsById(organizadorId)){
+            throw  new OrganizadorNaoEncontradoException("Organizador não encontrado.");
+        }
         Evento evento = eventoRepository.findById(eventoId)
                 .orElseThrow(() -> new EventoNaoEncontradoException("Evento não encontrado."));
         if (!evento.getOrganizador().getId().equals(organizadorId)) {
             throw new EventoNaoEncontradoException("Evento não pertence ao organizador.");
         }
-        if (evento.isEventoAtivo()) {
-            throw new EventoJaAtivoException("Evento já está ativo.");
-        }
 
         validarDatasEvento(evento.getDataInicio(), evento.getDataFim());
-        evento.setEventoAtivo(true);
-        evento.setIngressosDisponiveis(evento.getCapacidadeMaxima());
+        evento.ativar();
         eventoRepository.update(evento);
         return EventoMapper.toStatusEventoDto("Evento ativado!", evento);
     }
 
     public StatusEventoDto desativarEvento(Long organizadorId, Long eventoId) {
-        organizadorRepository.findById(organizadorId)
-                .orElseThrow(() -> new OrganizadorNaoEncontradoException("Organizador não encontrado."));
-        Evento evento = eventoRepository.findById(eventoId)
+        if (!organizadorRepository.existsById(organizadorId)){
+            throw  new OrganizadorNaoEncontradoException("Organizador não encontrado.");
+        }
+        Evento evento = eventoRepository.findByIdWithIngressos(eventoId)
                 .orElseThrow(() -> new EventoNaoEncontradoException("Evento não encontrado."));
         if (!evento.getOrganizador().getId().equals(organizadorId)) {
             throw new EventoNaoEncontradoException("Evento não pertence ao organizador.");
         }
-        if (!evento.isEventoAtivo()) {
-            throw new EventoJaInativoException("Evento já está inativo.");
-        }
 
-        List<Ingresso> ingressos = ingressoRepository.findAllByEventoId(eventoId);
+        List<Ingresso> ingressosCancelados = evento.desativar();
 
-        for (Ingresso ingresso : ingressos) {
-            if (!ingresso.isCancelado()) {
-                ingresso.setStatus(Ingresso.StatusIngresso.CANCELADO);
-                if (evento.isEventoEstorno()) {
-                    double valorEstorno = ingresso.getValorPago() * (1 - evento.getTaxaCancelamento() / 100.0);
-                    ingresso.setValorEstornado(valorEstorno);
-                } else {
-                    ingresso.setValorEstornado(0.0);
-                }
-                ingressoRepository.update(ingresso);
-            }
-        }
-
-        evento.setEventoAtivo(false);
-        evento.setIngressosDisponiveis(0);
         eventoRepository.update(evento);
+        for (Ingresso ingresso : ingressosCancelados) {
+            ingressoRepository.update(ingresso);
+        }
         return EventoMapper.toStatusEventoDto("Evento desativado e ingressos cancelados.", evento);
     }
 
     public List<EventosOrganizadorDto> listarEventosOrganizador(Long organizadorId) {
-        organizadorRepository.findById(organizadorId)
+        Organizador organizador = organizadorRepository.findByIdWithEventos(organizadorId)
                 .orElseThrow(() -> new OrganizadorNaoEncontradoException("Organizador não encontrado."));
-        List<Evento> eventos = eventoRepository.findAllByOrganizadorId(organizadorId);
-        return eventos.stream()
+        return organizador.getEventos().stream()
                 .map(EventoMapper::toEventosOrganizadorDto)
                 .toList();
     }

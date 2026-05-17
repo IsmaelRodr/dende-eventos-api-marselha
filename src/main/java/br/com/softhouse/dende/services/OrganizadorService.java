@@ -75,20 +75,9 @@ public class OrganizadorService {
     }
 
     public StatusOrganizadorDto desativar(Long id) {
-        Organizador organizador = organizadorRepository.findById(id)
+        Organizador organizador = organizadorRepository.findByIdWithEventos(id)
                 .orElseThrow(() -> new OrganizadorNaoEncontradoException("Organizador não encontrado."));
-        if (!organizador.isAtivo()) {
-            throw new OrganizadorJaInativoException("Organizador já está inativo.");
-        }
-
-        // Verifica eventos ativos do organizador usando EventoRepository
-        List<Evento> eventosDoOrganizador = eventoRepository.findAllByOrganizadorId(id);
-        boolean temEventosAtivos = eventosDoOrganizador.stream().anyMatch(Evento::isEventoAtivo);
-        if (temEventosAtivos) {
-            throw new OrganizadorComEventosAtivosException("Organizador possui eventos ativos.");
-        }
-
-        organizador.setAtivo(false);
+        organizador.desativar();
         organizadorRepository.update(organizador);
         return OrganizadorMapper.toStatusDto("Organizador desativado com sucesso!", organizador);
     }

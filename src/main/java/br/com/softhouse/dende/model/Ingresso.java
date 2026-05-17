@@ -1,5 +1,6 @@
 package br.com.softhouse.dende.model;
 
+import br.com.softhouse.dende.exceptions.ingresso.IngressoJaCanceladoException;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -40,6 +41,24 @@ public class Ingresso {
 
     public boolean isCancelado() {
         return status == StatusIngresso.CANCELADO;
+    }
+
+    public void cancelar() {
+        if (this.status == StatusIngresso.CANCELADO) {
+            throw new IngressoJaCanceladoException("Ingresso já cancelado.");
+        }
+        this.status = StatusIngresso.CANCELADO;
+        if (evento.isEventoEstorno()) {
+            this.valorEstornado = this.valorPago * (1 - evento.getTaxaCancelamento() / 100.0);
+        } else {
+            this.valorEstornado = 0.0;
+        }
+    }
+
+    public boolean isAtivoParaListagem() {
+        return !this.isCancelado()
+                && this.evento.isEventoAtivo()
+                && this.evento.getDataInicio().isAfter(LocalDateTime.now());
     }
 
     // equals, hashCode, toString

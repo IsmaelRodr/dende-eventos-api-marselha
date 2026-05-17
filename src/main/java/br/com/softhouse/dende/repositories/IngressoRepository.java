@@ -136,6 +136,46 @@ public class IngressoRepository implements CrudRepository<Ingresso, Long> {
         return ingressos;
     }
 
+    public List<Ingresso> findAllByUsuarioIdWithEvento(Long usuarioId) {
+        String sql = """
+        SELECT i.id, i.usuario_id, i.evento_id, i.valor_pago, i.valor_estornado,
+               i.data_compra, i.status, i.email,
+               e.id AS ev_id, e.organizador_id, e.nome, e.descricao, e.pagina_web,
+               e.data_inicio, e.data_fim, e.tipo_evento, e.modalidade,
+               e.preco_unitario, e.taxa_cancelamento, e.evento_estorno,
+               e.capacidade_maxima, e.ingressos_disponiveis, e.local_evento,
+               e.evento_ativo, e.evento_principal_id
+        FROM ingressos i
+        JOIN eventos e ON i.evento_id = e.id
+        WHERE i.usuario_id = ?
+        """;
+
+        List<Ingresso> ingressos = new ArrayList<>();
+        try (Connection conn = ConnectionPool.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setLong(1, usuarioId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    // Mapeia o ingresso
+                    Ingresso ingresso = mapper.mapRow(new String[]{
+                            rs.getString("id"), rs.getString("usuario_id"), rs.getString("evento_id"),
+                            rs.getString("valor_pago"), rs.getString("valor_estornado"),
+                            rs.getString("data_compra"), rs.getString("status"), rs.getString("email")
+                    });
+                    // Mapeia o evento completo
+                    Evento evento = mapEventoBasico(rs); // usa o mesmo método auxiliar do EventoRepository
+                    ingresso.setEvento(evento);
+                    ingressos.add(ingresso);
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao buscar ingressos do usuário com eventos.", e);
+        }
+        return ingressos;
+    }
+
+
+
     // ===================== AUXILIARES =====================
     private void carregarRelacionamentosBasicos(Ingresso ingresso, Long usuarioId, Long eventoId) {
         Usuario usuario = new Usuario();
@@ -145,6 +185,26 @@ public class IngressoRepository implements CrudRepository<Ingresso, Long> {
         Evento evento = new Evento();
         evento.setId(eventoId);
         ingresso.setEvento(evento);
+    }
+
+    private Evento mapEventoBasico(ResultSet rs) throws SQLException {
+        Evento evento = new Evento();
+        evento.setId(rs.getLong("ev_id"));
+        evento.setNome(rs.getString("nome"));
+        evento.setDescricao(rs.getString("descricao"));
+        evento.setPaginaWeb(rs.getString("pagina_web"));
+        evento.setDataInicio(rs.getTimestamp("data_inicio").toLocalDateTime());
+        evento.setDataFim(rs.getTimestamp("data_fim").toLocalDateTime());
+        evento.setTipoEvento(Evento.TipoEvento.valueOf(rs.getString("tipo_evento")));
+        evento.setModalidade(Evento.Modalidade.valueOf(rs.getString("modalidade")));
+        evento.setPrecoUnitarioIngresso(rs.getDouble("preco_unitario"));
+        evento.setTaxaCancelamento(rs.getDouble("taxa_cancelamento"));
+        evento.setEventoEstorno(rs.getBoolean("evento_estorno"));
+        evento.setCapacidadeMaxima(rs.getInt("capacidade_maxima"));
+        evento.setIngressosDisponiveis(rs.getInt("ingressos_disponiveis"));
+        evento.setLocalEvento(rs.getString("local_evento"));
+        evento.setEventoAtivo(rs.getBoolean("evento_ativo"));
+        return evento;
     }
 
     // ===================== STUBS (não utilizados) =====================

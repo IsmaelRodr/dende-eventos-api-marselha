@@ -1,5 +1,11 @@
 package br.com.softhouse.dende.model;
 
+import br.com.softhouse.dende.exceptions.DadosInvalidosException;
+import br.com.softhouse.dende.exceptions.evento.EventoJaAtivoException;
+import br.com.softhouse.dende.exceptions.evento.EventoJaInativoException;
+import br.com.softhouse.dende.exceptions.evento.EventoSemIngressosDisponiveisException;
+import br.com.softhouse.dende.exceptions.ingresso.CancelamentoNaoPermitidoException;
+import br.com.softhouse.dende.exceptions.ingresso.IngressoJaCanceladoException;
 import lombok.Setter;
 
 import lombok.Getter;
@@ -32,8 +38,7 @@ public class Evento {
     private int ingressosDisponiveis;
     private String localEvento;
     private boolean eventoAtivo = false;
-    //Isso é um ponto a considerar.
-   // private final List<Ingresso> ingressos = new ArrayList<>();
+    private final List<Ingresso> ingressos = new ArrayList<>();
 
     public enum TipoEvento {
         SOCIAL, CORPORATIVO, ACADEMICO, CULTURAL, ENTRETENIMENTO,
@@ -109,25 +114,66 @@ public class Evento {
         }
     }
 
-    /*Implementação retirada.
     public List<Ingresso> getIngressos() {
-        A ideia era usar esse método na coleção para agilizar buscas nos services
-        através da comunicação das referências.
-        return null;
-    }*/
-
-    /*Implementação retirada.
-    public void addIngresso(Ingresso ingresso) {
-        A ideia era adicionar uma referência na lista apartir do ponto de vista do vendedor
-        ao vender o igresso, compartilhando a referência com o usuario (comprador).
-    }*/
-
-    /*
-    public void removeIngresso(Ingresso ingresso) {
-        A ideia era remover uma referência na lista apartir do ponto de vista do vendedor
-        ao vender o igresso, compartilhando a referência com o usuario (comprador).
+        return List.copyOf(ingressos);
     }
-     */
+
+    public void setIngressos(List<Ingresso> ingressos) {
+        this.ingressos.clear();
+        if (ingressos != null) {
+            this.ingressos.addAll(ingressos);
+        }
+    }
+
+    public void ativar() {
+        if (this.isEventoAtivo()) {
+            throw new EventoJaAtivoException("Evento já está ativo.");
+        }
+        setEventoAtivo(true);
+        ingressosDisponiveis = capacidadeMaxima;
+    }
+
+    public List<Ingresso> desativar() {
+        if (!this.isEventoAtivo()) {
+            throw new EventoJaInativoException("Evento já está inativo.");
+        }
+        List<Ingresso> cancelados = cancelarIngressos();
+        setEventoAtivo(false);
+        ingressosDisponiveis = 0;
+        return cancelados;
+    }
+
+    private List<Ingresso> cancelarIngressos() {
+        List<Ingresso> cancelados = new ArrayList<>();
+        for (Ingresso ingresso : ingressos) {
+            if (!ingresso.isCancelado()) {
+                ingresso.cancelar();
+                cancelados.add(ingresso);
+            }
+        }
+        return cancelados;
+    }
+
+
+    public void adicionarIngresso(Ingresso ingresso) {
+        if (ingressosDisponiveis<= 0){
+            throw new EventoSemIngressosDisponiveisException("Ingressos esgotados.");
+        }
+        if (!ingressos.contains(ingresso)){
+            ingressos.add(ingresso);
+            ingressosDisponiveis--;
+            ingresso.setEvento(this);
+        }
+    }
+
+    public void cancelarIngressoIndividual(Ingresso ingresso) {
+        if (!this.eventoEstorno) {
+            throw new CancelamentoNaoPermitidoException("Evento não permite estorno.");
+        }
+        ingresso.cancelar();
+        this.ingressosDisponiveis++;
+    }
+
 
     //Ainda na ideia da coleção, precisaria ser adicionado 2 métodos
     //1 para disponibilizar todos os ingressos do ponto de vista de realizar (ativar) um evento

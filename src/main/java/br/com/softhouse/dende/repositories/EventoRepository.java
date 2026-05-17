@@ -1,8 +1,10 @@
 package br.com.softhouse.dende.repositories;
 
 import br.com.softhouse.dende.model.Evento;
+import br.com.softhouse.dende.model.Ingresso;
 import br.com.softhouse.dende.model.Organizador;
 import br.com.softhouse.dende.repositories.mappers.EventoRowMapper;
+import br.com.softhouse.dende.repositories.mappers.IngressoRowMapper;
 import br.com.softhouse.dende.repositories.util.ConnectionPool;
 import br.com.dende.softhouse.repositorry.CrudRepository;
 
@@ -14,6 +16,8 @@ import java.util.Optional;
 public class EventoRepository implements CrudRepository<Evento, Long> {
 
     private final EventoRowMapper mapper = new EventoRowMapper();
+    private final IngressoRowMapper ingressoMapper = new IngressoRowMapper();
+
 
     // ===================== SALVAR =====================
     @Override
@@ -176,6 +180,86 @@ public class EventoRepository implements CrudRepository<Evento, Long> {
             throw new RuntimeException("Erro ao listar eventos do organizador.", e);
         }
         return eventos;
+    }
+
+    public Optional<Evento> findByIdWithIngressos(Long id) {
+        String sql = """
+            SELECT e.id, e.organizador_id, e.nome, e.descricao, e.pagina_web,
+                   e.data_inicio, e.data_fim, e.tipo_evento, e.modalidade,
+                   e.preco_unitario, e.taxa_cancelamento, e.evento_estorno,
+                   e.capacidade_maxima, e.ingressos_disponiveis, e.local_evento,
+                   e.evento_ativo, e.evento_principal_id,
+                   i.id AS ingresso_id, i.usuario_id, i.valor_pago, i.valor_estornado,
+                   i.data_compra, i.status, i.email
+            FROM eventos e
+            LEFT JOIN ingressos i ON e.id = i.evento_id
+            WHERE e.id = ?
+            """;
+
+        try (Connection conn = ConnectionPool.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setLong(1, id);
+            try (ResultSet rs = stmt.executeQuery()) {
+                Evento evento = null;
+                List<Ingresso> ingressos = new ArrayList<>();
+
+                while (rs.next()) {
+                    if (evento == null) {
+                        evento = mapEventoBasico(rs);
+                        carregarOrganizadorBasico(evento, rs.getLong("organizador_id"));
+                        long idPrincipal = rs.getLong("evento_principal_id");
+                        if (!rs.wasNull()) {
+                            carregarEventoPrincipalBasico(evento, idPrincipal);
+                        }
+                    }
+
+                    long ingressoId = rs.getLong("ingresso_id");
+                    if (!rs.wasNull()) {
+                        String[] rowIngresso = {
+                                rs.getString("ingresso_id"),
+                                rs.getString("usuario_id"),
+                                rs.getString("id"), // evento_id = e.id
+                                rs.getString("valor_pago"),
+                                rs.getString("valor_estornado"),
+                                rs.getString("data_compra"),
+                                rs.getString("status"),
+                                rs.getString("email")
+                        };
+                        Ingresso ingresso = ingressoMapper.mapRow(rowIngresso);
+                        ingresso.setEvento(evento);
+                        ingressos.add(ingresso);
+                    }
+                }
+
+                if (evento != null) {
+                    evento.setIngressos(ingressos);
+                    return Optional.of(evento);
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao buscar evento com ingressos.", e);
+        }
+        return Optional.empty();
+    }
+
+    private Evento mapEventoBasico(ResultSet rs) throws SQLException {
+        Evento evento = new Evento();
+        evento.setId(rs.getLong("id"));
+        evento.setNome(rs.getString("nome"));
+        evento.setDescricao(rs.getString("descricao"));
+        evento.setPaginaWeb(rs.getString("pagina_web"));
+        evento.setDataInicio(rs.getTimestamp("data_inicio").toLocalDateTime());
+        evento.setDataFim(rs.getTimestamp("data_fim").toLocalDateTime());
+        evento.setTipoEvento(Evento.TipoEvento.valueOf(rs.getString("tipo_evento")));
+        evento.setModalidade(Evento.Modalidade.valueOf(rs.getString("modalidade")));
+        evento.setPrecoUnitarioIngresso(rs.getDouble("preco_unitario"));
+        evento.setTaxaCancelamento(rs.getDouble("taxa_cancelamento"));
+        evento.setEventoEstorno(rs.getBoolean("evento_estorno"));
+        evento.setCapacidadeMaxima(rs.getInt("capacidade_maxima"));
+        evento.setIngressosDisponiveis(rs.getInt("ingressos_disponiveis"));
+        evento.setLocalEvento(rs.getString("local_evento"));
+        evento.setEventoAtivo(rs.getBoolean("evento_ativo"));
+        return evento;
     }
 
     // ===================== AUXILIARES =====================

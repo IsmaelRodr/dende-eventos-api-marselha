@@ -1,4 +1,4 @@
-package br.com.softhouse.dende.repositories;
+/* br.com.softhouse.dende.repositories;
 
 import br.com.softhouse.dende.model.Evento;
 import br.com.softhouse.dende.model.Ingresso;
@@ -125,4 +125,4 @@ public class Repositorio {
         if (eventos == null) return false;
         return eventos.stream().anyMatch(e -> e.getId().equals(eventoId));
     }
-}
+}*/
