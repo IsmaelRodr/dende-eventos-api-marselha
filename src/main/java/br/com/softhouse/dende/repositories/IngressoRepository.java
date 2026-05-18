@@ -15,19 +15,20 @@ import java.util.Optional;
 public class IngressoRepository implements CrudRepository<Ingresso, Long> {
 
     private final IngressoRowMapper mapper = new IngressoRowMapper();
+    private final ConnectionPool connectionPool = ConnectionPool.getInstance(); // instância Singleton
 
     // ===================== SALVAR =====================
     @Override
     public Ingresso save(Ingresso ingresso) {
         String sql = "INSERT INTO ingressos (usuario_id, evento_id, valor_pago, valor_estornado, data_compra, status, email) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?)";
-        try (Connection conn = ConnectionPool.getConnection();
+        try (Connection conn = connectionPool.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             stmt.setLong(1, ingresso.getUsuario().getId());
             stmt.setLong(2, ingresso.getEvento().getId());
             stmt.setDouble(3, ingresso.getValorPago());
-            stmt.setDouble(4, ingresso.getValorEstornado()); // sempre 0.0 no momento da compra
+            stmt.setDouble(4, ingresso.getValorEstornado());
             stmt.setTimestamp(5, Timestamp.valueOf(ingresso.getDataCompra()));
             stmt.setString(6, ingresso.getStatus().name());
             stmt.setString(7, ingresso.getEmail());
@@ -48,7 +49,7 @@ public class IngressoRepository implements CrudRepository<Ingresso, Long> {
     @Override
     public Optional<Ingresso> findById(Long id) {
         String sql = "SELECT * FROM ingressos WHERE id = ?";
-        try (Connection conn = ConnectionPool.getConnection();
+        try (Connection conn = connectionPool.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setLong(1, id);
             try (ResultSet rs = stmt.executeQuery()) {
@@ -71,7 +72,7 @@ public class IngressoRepository implements CrudRepository<Ingresso, Long> {
     @Override
     public Ingresso update(Ingresso ingresso) {
         String sql = "UPDATE ingressos SET status = ?, valor_estornado = ?, email = ? WHERE id = ?";
-        try (Connection conn = ConnectionPool.getConnection();
+        try (Connection conn = connectionPool.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, ingresso.getStatus().name());
@@ -90,7 +91,7 @@ public class IngressoRepository implements CrudRepository<Ingresso, Long> {
     public List<Ingresso> findAllByUsuarioId(Long usuarioId) {
         String sql = "SELECT * FROM ingressos WHERE usuario_id = ?";
         List<Ingresso> ingressos = new ArrayList<>();
-        try (Connection conn = ConnectionPool.getConnection();
+        try (Connection conn = connectionPool.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setLong(1, usuarioId);
             try (ResultSet rs = stmt.executeQuery()) {
@@ -115,7 +116,7 @@ public class IngressoRepository implements CrudRepository<Ingresso, Long> {
     public List<Ingresso> findAllByEventoId(Long eventoId) {
         String sql = "SELECT * FROM ingressos WHERE evento_id = ?";
         List<Ingresso> ingressos = new ArrayList<>();
-        try (Connection conn = ConnectionPool.getConnection();
+        try (Connection conn = connectionPool.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setLong(1, eventoId);
             try (ResultSet rs = stmt.executeQuery()) {
@@ -151,19 +152,17 @@ public class IngressoRepository implements CrudRepository<Ingresso, Long> {
         """;
 
         List<Ingresso> ingressos = new ArrayList<>();
-        try (Connection conn = ConnectionPool.getConnection();
+        try (Connection conn = connectionPool.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setLong(1, usuarioId);
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    // Mapeia o ingresso
                     Ingresso ingresso = mapper.mapRow(new String[]{
                             rs.getString("id"), rs.getString("usuario_id"), rs.getString("evento_id"),
                             rs.getString("valor_pago"), rs.getString("valor_estornado"),
                             rs.getString("data_compra"), rs.getString("status"), rs.getString("email")
                     });
-                    // Mapeia o evento completo
-                    Evento evento = mapEventoBasico(rs); // usa o mesmo método auxiliar do EventoRepository
+                    Evento evento = mapEventoBasico(rs);
                     ingresso.setEvento(evento);
                     ingressos.add(ingresso);
                 }
@@ -173,8 +172,6 @@ public class IngressoRepository implements CrudRepository<Ingresso, Long> {
         }
         return ingressos;
     }
-
-
 
     // ===================== AUXILIARES =====================
     private void carregarRelacionamentosBasicos(Ingresso ingresso, Long usuarioId, Long eventoId) {

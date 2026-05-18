@@ -1,11 +1,7 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Interface.java to edit this template
- */
-
 package br.com.softhouse.dende.repositories.mappers;
+//package br.com.dende.softhouse.repositorry;
 
-
-interface RowMapper<T> {
-
+@FunctionalInterface
+public interface RowMapper<T> {
+    T mapRow(String[] row);
 }

@@ -5,7 +5,7 @@ import br.com.softhouse.dende.model.Organizador;
 import br.com.softhouse.dende.repositories.mappers.EventoRowMapper;
 import br.com.softhouse.dende.repositories.mappers.OrganizadorRowMapper;
 import br.com.softhouse.dende.repositories.util.ConnectionPool;
-import br.com.dende.softhouse.repositorry.CrudRepository; // O import com dois R's!
+import br.com.dende.softhouse.repositorry.CrudRepository;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -16,11 +16,12 @@ public class OrganizadorRepository implements CrudRepository<Organizador, Long> 
 
     private final OrganizadorRowMapper mapper = new OrganizadorRowMapper();
     private final EventoRowMapper eventoMapper = new EventoRowMapper();
+    private final ConnectionPool connectionPool = ConnectionPool.getInstance();
 
     @Override
     public Organizador save(Organizador org) {
-        String sql = "INSERT INTO organizadores (nome, data_nascimento, sexo, email, senha, ativo, cnpj, razao_social, nome_fantasia) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        try (Connection conn = ConnectionPool.getConnection();
+        String sql = "INSERT INTO organizador (nome, data_nascimento, sexo, email, senha, ativo, cnpj, razao_social, nome_fantasia) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        try (Connection conn = connectionPool.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             stmt.setString(1, org.getNome());
@@ -49,8 +50,8 @@ public class OrganizadorRepository implements CrudRepository<Organizador, Long> 
 
     @Override
     public Optional<Organizador> findById(Long id) {
-        String sql = "SELECT * FROM organizadores WHERE id = ?";
-        try (Connection conn = ConnectionPool.getConnection();
+        String sql = "SELECT * FROM organizador WHERE id = ?";
+        try (Connection conn = connectionPool.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setLong(1, id);
             try (ResultSet rs = stmt.executeQuery()) {
@@ -80,12 +81,12 @@ public class OrganizadorRepository implements CrudRepository<Organizador, Long> 
                    e.taxa_cancelamento, e.evento_estorno, e.capacidade_maxima,
                    e.ingressos_disponiveis, e.local_evento, e.evento_ativo,
                    e.evento_principal_id
-            FROM organizadores o
+            FROM organizador o
             LEFT JOIN eventos e ON o.id = e.organizador_id
             WHERE o.id = ?
             """;
 
-        try (Connection conn = ConnectionPool.getConnection();
+        try (Connection conn = connectionPool.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setLong(1, id);
             try (ResultSet rs = stmt.executeQuery()) {
@@ -94,7 +95,6 @@ public class OrganizadorRepository implements CrudRepository<Organizador, Long> 
 
                 while (rs.next()) {
                     if (organizador == null) {
-                        // Mapeia o organizador apenas uma vez
                         String[] rowOrg = {
                                 rs.getString("id"), rs.getString("nome"), rs.getString("data_nascimento"),
                                 rs.getString("sexo"), rs.getString("email"), rs.getString("senha"),
@@ -104,13 +104,12 @@ public class OrganizadorRepository implements CrudRepository<Organizador, Long> 
                         organizador = mapper.mapRow(rowOrg);
                     }
 
-                    // Se houver evento (pode ser nulo no LEFT JOIN)
                     long eventoId = rs.getLong("evento_id");
                     if (!rs.wasNull()) {
                         String[] rowEvento = {
-                                rs.getString("evento_id"),          // id
-                                rs.getString("organizador_id"),     // organizador_id
-                                rs.getString("evento_nome"),        // nome
+                                rs.getString("evento_id"),
+                                rs.getString("organizador_id"),
+                                rs.getString("evento_nome"),
                                 rs.getString("descricao"),
                                 rs.getString("pagina_web"),
                                 rs.getString("data_inicio"),
@@ -139,7 +138,7 @@ public class OrganizadorRepository implements CrudRepository<Organizador, Long> 
                 }
 
                 if (organizador != null) {
-                    organizador.setEventos(eventos);  // popula a lista interna
+                    organizador.setEventos(eventos);
                     return Optional.of(organizador);
                 }
             }
@@ -149,12 +148,11 @@ public class OrganizadorRepository implements CrudRepository<Organizador, Long> 
         return Optional.empty();
     }
 
-
     @Override
     public Iterable<Organizador> findAll() {
-        String sql = "SELECT * FROM organizadores";
+        String sql = "SELECT * FROM organizador";
         List<Organizador> organizadores = new ArrayList<>();
-        try (Connection conn = ConnectionPool.getConnection();
+        try (Connection conn = connectionPool.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
 
@@ -175,8 +173,8 @@ public class OrganizadorRepository implements CrudRepository<Organizador, Long> 
 
     @Override
     public Organizador update(Organizador org) {
-        String sql = "UPDATE organizadores SET nome = ?, data_nascimento = ?, sexo = ?, email = ?, senha = ?, ativo = ?, cnpj = ?, razao_social = ?, nome_fantasia = ? WHERE id = ?";
-        try (Connection conn = ConnectionPool.getConnection();
+        String sql = "UPDATE organizador SET nome = ?, data_nascimento = ?, sexo = ?, email = ?, senha = ?, ativo = ?, cnpj = ?, razao_social = ?, nome_fantasia = ? WHERE id = ?";
+        try (Connection conn = connectionPool.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, org.getNome());
@@ -199,8 +197,8 @@ public class OrganizadorRepository implements CrudRepository<Organizador, Long> 
 
     @Override
     public void deleteById(Long id) {
-        String sql = "DELETE FROM organizadores WHERE id = ?";
-        try (Connection conn = ConnectionPool.getConnection();
+        String sql = "DELETE FROM organizador WHERE id = ?";
+        try (Connection conn = connectionPool.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setLong(1, id);
             stmt.executeUpdate();
@@ -221,8 +219,8 @@ public class OrganizadorRepository implements CrudRepository<Organizador, Long> 
         if (!"email".equals(fieldName)) {
             throw new UnsupportedOperationException("Busca por " + fieldName + " não suportada.");
         }
-        String sql = "SELECT * FROM organizadores WHERE email = ?";
-        try (Connection conn = ConnectionPool.getConnection();
+        String sql = "SELECT * FROM organizador WHERE email = ?";
+        try (Connection conn = connectionPool.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, value.toString());
             try (ResultSet rs = stmt.executeQuery()) {
@@ -244,8 +242,8 @@ public class OrganizadorRepository implements CrudRepository<Organizador, Long> 
 
     @Override
     public boolean existsById(Long id) {
-        String sql = "SELECT 1 FROM organizadores WHERE id = ?";
-        try (Connection conn = ConnectionPool.getConnection();
+        String sql = "SELECT 1 FROM organizador WHERE id = ?";
+        try (Connection conn = connectionPool.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setLong(1, id);
             try (ResultSet rs = stmt.executeQuery()) {
@@ -258,19 +256,11 @@ public class OrganizadorRepository implements CrudRepository<Organizador, Long> 
 
     // Métodos não implementados
     @Override
-    public long count() {
-        throw new UnsupportedOperationException("Método não implementado");
-    }
+    public long count() { throw new UnsupportedOperationException(); }
     @Override
-    public Iterable<Organizador> findAllById(Iterable<Long> ids) {
-        throw new UnsupportedOperationException("Método não implementado");
-    }
+    public Iterable<Organizador> findAllById(Iterable<Long> ids) { throw new UnsupportedOperationException(); }
     @Override
-    public void deleteAll(Iterable<? extends Organizador> entities) {
-        throw new UnsupportedOperationException("Método não implementado");
-    }
+    public void deleteAll(Iterable<? extends Organizador> entities) { throw new UnsupportedOperationException(); }
     @Override
-    public void deleteAll() {
-        throw new UnsupportedOperationException("Método não implementado");
-    }
+    public void deleteAll() { throw new UnsupportedOperationException(); }
 }

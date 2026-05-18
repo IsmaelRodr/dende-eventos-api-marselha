@@ -7,7 +7,6 @@ import br.com.softhouse.dende.repositories.mappers.EventoRowMapper;
 import br.com.softhouse.dende.repositories.mappers.IngressoRowMapper;
 import br.com.softhouse.dende.repositories.util.ConnectionPool;
 import br.com.dende.softhouse.repositorry.CrudRepository;
-
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,7 +16,7 @@ public class EventoRepository implements CrudRepository<Evento, Long> {
 
     private final EventoRowMapper mapper = new EventoRowMapper();
     private final IngressoRowMapper ingressoMapper = new IngressoRowMapper();
-
+    private final ConnectionPool connectionPool = ConnectionPool.getInstance(); // obtém a instância Singleton
 
     // ===================== SALVAR =====================
     @Override
@@ -26,7 +25,7 @@ public class EventoRepository implements CrudRepository<Evento, Long> {
                 "tipo_evento, modalidade, preco_unitario, taxa_cancelamento, evento_estorno, " +
                 "capacidade_maxima, ingressos_disponiveis, local_evento, evento_ativo, evento_principal_id) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        try (Connection conn = ConnectionPool.getConnection();
+        try (Connection conn = connectionPool.getConnection();  // método de instância
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             stmt.setLong(1, evento.getOrganizador().getId());
@@ -64,7 +63,7 @@ public class EventoRepository implements CrudRepository<Evento, Long> {
     @Override
     public Optional<Evento> findById(Long id) {
         String sql = "SELECT * FROM eventos WHERE id = ?";
-        try (Connection conn = ConnectionPool.getConnection();
+        try (Connection conn = connectionPool.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setLong(1, id);
             try (ResultSet rs = stmt.executeQuery()) {
@@ -99,7 +98,7 @@ public class EventoRepository implements CrudRepository<Evento, Long> {
                 "tipo_evento = ?, modalidade = ?, preco_unitario = ?, taxa_cancelamento = ?, evento_estorno = ?, " +
                 "capacidade_maxima = ?, ingressos_disponiveis = ?, local_evento = ?, evento_ativo = ?, evento_principal_id = ? " +
                 "WHERE id = ?";
-        try (Connection conn = ConnectionPool.getConnection();
+        try (Connection conn = connectionPool.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, evento.getNome());
@@ -131,7 +130,7 @@ public class EventoRepository implements CrudRepository<Evento, Long> {
         String sql = "SELECT * FROM eventos WHERE evento_ativo = TRUE AND data_fim > NOW() AND ingressos_disponiveis > 0 " +
                 "ORDER BY data_inicio, nome";
         List<Evento> eventos = new ArrayList<>();
-        try (Connection conn = ConnectionPool.getConnection();
+        try (Connection conn = connectionPool.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
 
@@ -158,7 +157,7 @@ public class EventoRepository implements CrudRepository<Evento, Long> {
     public List<Evento> findAllByOrganizadorId(Long organizadorId) {
         String sql = "SELECT * FROM eventos WHERE organizador_id = ?";
         List<Evento> eventos = new ArrayList<>();
-        try (Connection conn = ConnectionPool.getConnection();
+        try (Connection conn = connectionPool.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setLong(1, organizadorId);
             try (ResultSet rs = stmt.executeQuery()) {
@@ -196,7 +195,7 @@ public class EventoRepository implements CrudRepository<Evento, Long> {
             WHERE e.id = ?
             """;
 
-        try (Connection conn = ConnectionPool.getConnection();
+        try (Connection conn = connectionPool.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setLong(1, id);
             try (ResultSet rs = stmt.executeQuery()) {

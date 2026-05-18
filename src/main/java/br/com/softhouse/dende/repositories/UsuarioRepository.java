@@ -13,11 +13,12 @@ import java.util.Optional;
 public class UsuarioRepository implements CrudRepository<Usuario, Long> {
 
     private final UsuarioRowMapper mapper = new UsuarioRowMapper();
+    private final ConnectionPool connectionPool = ConnectionPool.getInstance();
 
     @Override
     public Usuario save(Usuario usuario) {
-        String sql = "INSERT INTO usuarios (nome, data_nascimento, sexo, email, senha, ativo) VALUES (?, ?, ?, ?, ?, ?)";
-        try (Connection conn = ConnectionPool.getConnection();
+        String sql = "INSERT INTO usuario (nome, data_nascimento, sexo, email, senha, ativo) VALUES (?, ?, ?, ?, ?, ?)";
+        try (Connection conn = connectionPool.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             stmt.setString(1, usuario.getNome());
@@ -43,8 +44,8 @@ public class UsuarioRepository implements CrudRepository<Usuario, Long> {
 
     @Override
     public Optional<Usuario> findById(Long id) {
-        String sql = "SELECT * FROM usuarios WHERE id = ?";
-        try (Connection conn = ConnectionPool.getConnection();
+        String sql = "SELECT * FROM usuario WHERE id = ?";
+        try (Connection conn = connectionPool.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setLong(1, id);
             try (ResultSet rs = stmt.executeQuery()) {
@@ -59,14 +60,14 @@ public class UsuarioRepository implements CrudRepository<Usuario, Long> {
         } catch (SQLException e) {
             throw new RuntimeException("Erro ao buscar o usuário pelo ID.", e);
         }
-        return Optional.empty(); // Retorna vazio se não achar, exatamente como o professor pediu
+        return Optional.empty();
     }
 
     @Override
     public Iterable<Usuario> findAll() {
-        String sql = "SELECT * FROM usuarios";
+        String sql = "SELECT * FROM usuario";
         List<Usuario> usuarios = new ArrayList<>();
-        try (Connection conn = ConnectionPool.getConnection();
+        try (Connection conn = connectionPool.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
 
@@ -85,8 +86,8 @@ public class UsuarioRepository implements CrudRepository<Usuario, Long> {
 
     @Override
     public Usuario update(Usuario usuario) {
-        String sql = "UPDATE usuarios SET nome = ?, data_nascimento = ?, sexo = ?, email = ?, senha = ?, ativo = ? WHERE id = ?";
-        try (Connection conn = ConnectionPool.getConnection();
+        String sql = "UPDATE usuario SET nome = ?, data_nascimento = ?, sexo = ?, email = ?, senha = ?, ativo = ? WHERE id = ?";
+        try (Connection conn = connectionPool.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, usuario.getNome());
@@ -106,8 +107,8 @@ public class UsuarioRepository implements CrudRepository<Usuario, Long> {
 
     @Override
     public void deleteById(Long id) {
-        String sql = "DELETE FROM usuarios WHERE id = ?";
-        try (Connection conn = ConnectionPool.getConnection();
+        String sql = "DELETE FROM usuario WHERE id = ?";
+        try (Connection conn = connectionPool.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setLong(1, id);
             stmt.executeUpdate();
@@ -128,8 +129,8 @@ public class UsuarioRepository implements CrudRepository<Usuario, Long> {
         if (!"email".equals(fieldName)) {
             throw new UnsupportedOperationException("Busca por " + fieldName + " não suportada.");
         }
-        String sql = "SELECT * FROM usuarios WHERE email = ?";
-        try (Connection conn = ConnectionPool.getConnection();
+        String sql = "SELECT * FROM usuario WHERE email = ?";
+        try (Connection conn = connectionPool.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, value.toString());
             try (ResultSet rs = stmt.executeQuery()) {
@@ -149,8 +150,8 @@ public class UsuarioRepository implements CrudRepository<Usuario, Long> {
 
     @Override
     public boolean existsById(Long id) {
-        String sql = "SELECT 1 FROM usuarios WHERE id = ?";
-        try (Connection conn = ConnectionPool.getConnection();
+        String sql = "SELECT 1 FROM usuario WHERE id = ?";
+        try (Connection conn = connectionPool.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setLong(1, id);
             try (ResultSet rs = stmt.executeQuery()) {
@@ -161,19 +162,13 @@ public class UsuarioRepository implements CrudRepository<Usuario, Long> {
         }
     }
 
-    // ==============================================================================
-    // MÉTODOS OBRIGATÓRIOS DA INTERFACE (Ainda não implementados na regra de negócio)
-    // ==============================================================================
-
+    // Métodos não implementados
     @Override
-    public long count() { throw new UnsupportedOperationException("Método não implementado"); }
-
+    public long count() { throw new UnsupportedOperationException(); }
     @Override
-    public Iterable<Usuario> findAllById(Iterable<Long> ids) { throw new UnsupportedOperationException("Método não implementado"); }
-
+    public Iterable<Usuario> findAllById(Iterable<Long> ids) { throw new UnsupportedOperationException(); }
     @Override
-    public void deleteAll(Iterable<? extends Usuario> entities) { throw new UnsupportedOperationException("Método não implementado"); }
-
+    public void deleteAll(Iterable<? extends Usuario> entities) { throw new UnsupportedOperationException(); }
     @Override
-    public void deleteAll() { throw new UnsupportedOperationException("Método não implementado"); }
+    public void deleteAll() { throw new UnsupportedOperationException(); }
 }
