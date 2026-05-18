@@ -3,13 +3,14 @@ package br.com.softhouse.dende.model;
 import lombok.Getter;
 import lombok.Setter;
 
-@Setter
 @Getter
+@Setter
 public class Empresa {
 
     private String cnpj;
     private String razaoSocial;
     private String nomeFantasia;
+    private Long organizadorId;    // chave estrangeira para organizador
 
     public Empresa() {}
 
@@ -17,6 +18,11 @@ public class Empresa {
         this.cnpj = cnpj;
         this.razaoSocial = razaoSocial;
         this.nomeFantasia = nomeFantasia;
+    }
+
+    public Empresa(String cnpj, String razaoSocial, String nomeFantasia, Long organizadorId) {
+        this(cnpj, razaoSocial, nomeFantasia);
+        this.organizadorId = organizadorId;
     }
 
     @Override
@@ -38,6 +44,7 @@ public class Empresa {
                 "cnpj='" + cnpj + '\'' +
                 ", razaoSocial='" + razaoSocial + '\'' +
                 ", nomeFantasia='" + nomeFantasia + '\'' +
+                ", organizadorId=" + organizadorId +
                 '}';
     }
 }

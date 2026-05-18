@@ -77,7 +77,7 @@ public class UsuarioService {
         return UsuarioMapper.toStatusDto("Usuário desativado com sucesso!", usuario);
     }
 
-    // ===================== MÉTODOS AUXILIARES =====================
+    //auxiliares
     private boolean emailExiste(String email) {
         return usuarioRepository.findByField("email", email).isPresent() ||
                 organizadorRepository.findByField("email", email).isPresent();

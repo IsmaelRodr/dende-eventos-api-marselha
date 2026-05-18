@@ -5,14 +5,18 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="de873ed2-eeb6-4ad1-9d97-2903a9f7e0fc" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/src/main/java/br/com/softhouse/dende/repositories/mappers/EmpresaRowMapper.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/br/com/softhouse/dende/controllers/EventoController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/br/com/softhouse/dende/controllers/EventoController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/br/com/softhouse/dende/controllers/IngressoController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/br/com/softhouse/dende/controllers/IngressoController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/br/com/softhouse/dende/controllers/OrganizadorController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/br/com/softhouse/dende/controllers/OrganizadorController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/br/com/softhouse/dende/controllers/UsuarioController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/br/com/softhouse/dende/controllers/UsuarioController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/br/com/softhouse/dende/model/Usuario.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/br/com/softhouse/dende/model/Usuario.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/br/com/softhouse/dende/repositories/EventoRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/br/com/softhouse/dende/repositories/EventoRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/br/com/softhouse/dende/repositories/IngressoRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/br/com/softhouse/dende/repositories/IngressoRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/br/com/softhouse/dende/model/Empresa.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/br/com/softhouse/dende/model/Empresa.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/br/com/softhouse/dende/model/Evento.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/br/com/softhouse/dende/model/Evento.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/br/com/softhouse/dende/model/Ingresso.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/br/com/softhouse/dende/model/Ingresso.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/br/com/softhouse/dende/repositories/OrganizadorRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/br/com/softhouse/dende/repositories/OrganizadorRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/br/com/softhouse/dende/repositories/mappers/IngressoRowMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/br/com/softhouse/dende/repositories/mappers/IngressoRowMapper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/br/com/softhouse/dende/repositories/mappers/OrganizadorRowMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/br/com/softhouse/dende/repositories/mappers/OrganizadorRowMapper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/br/com/softhouse/dende/repositories/mappers/UsuarioRowMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/br/com/softhouse/dende/repositories/mappers/UsuarioRowMapper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/br/com/softhouse/dende/services/EventoService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/br/com/softhouse/dende/services/EventoService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/br/com/softhouse/dende/services/UsuarioService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/br/com/softhouse/dende/services/UsuarioService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/application.properties" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -126,35 +130,44 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Gradle.Download Sources.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.dende-eventos-api-marselha [compileJava].executor&quot;: &quot;Run&quot;,
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
-    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;feat/backup&quot;,
-    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/hellen.magalhaes/Documents/PROJETOS/dende-eventos-api-marselha&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;project.structure.last.edited&quot;: &quot;Project&quot;,
-    &quot;project.structure.proportion&quot;: &quot;0.0&quot;,
-    &quot;project.structure.side.proportion&quot;: &quot;0.0&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;reference.settingsdialog.project.gradle&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Gradle.Download Sources.executor": "Run",
+    "Gradle.dende-eventos-api-marselha [compileJava].executor": "Run",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "codeWithMe.voiceChat.enabledByDefault": "false",
+    "git-widget-placeholder": "feat/backup",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "/home/deivid/IdeaProjects/dende-eventos-api-marselha/src/main/java/br/com/softhouse/dende",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "project.structure.last.edited": "Project",
+    "project.structure.proportion": "0.0",
+    "project.structure.side.proportion": "0.0",
+    "settings.editor.selected.configurable": "reference.settingsdialog.project.gradle"
   },
-  &quot;keyToStringList&quot;: {
-    &quot;DatabaseDriversLRU&quot;: [
-      &quot;mysql&quot;
+  "keyToStringList": {
+    "DatabaseDriversLRU": [
+      "mysql"
     ]
   }
-}</component>
+}]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/src/main/java/br/com/softhouse/dende" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/src/main/java" />
+    </key>
+  </component>
   <component name="RunManager">
     <configuration default="true" type="PythonConfigurationType" factoryName="Python">
       <module name="dende-eventos-api-marselha" />

@@ -124,7 +124,8 @@ public class EventoService {
                 .toList();
     }
 
-    // ===================== VALIDAÇÕES =====================
+    //validações
+
     private void validarCadastro(CadastrarEventoDto dto) {
         if (dto == null) throw new DadosInvalidosException("Dados do evento inválidos.");
         if (dto.nome() == null || dto.nome().isBlank())

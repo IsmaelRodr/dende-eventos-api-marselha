@@ -54,7 +54,7 @@ public class Evento {
 
     public Evento() {}
 
-    // Builder manual (sem lógica de negócio, apenas construção)
+    // Builder manual
     public static EventoBuilder builder() {
         return new EventoBuilder();
     }
@@ -175,11 +175,6 @@ public class Evento {
     }
 
 
-    //Ainda na ideia da coleção, precisaria ser adicionado 2 métodos
-    //1 para disponibilizar todos os ingressos do ponto de vista de realizar (ativar) um evento
-    //1 para cancelar todos os ingressos ao cancelar (desativar) um evento, com devolução.
-
-    // equals, hashCode, toString
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;

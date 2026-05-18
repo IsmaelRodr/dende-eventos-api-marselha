@@ -9,7 +9,7 @@ public class UsuarioRowMapper implements RowMapper<Usuario> {
 
     @Override
     public Usuario mapRow(String[] row) {
-        // O array de Strings representa as colunas do seu SELECT na ordem em que foram chamadas
+
         Usuario usuario = new Usuario();
         
         usuario.setId(Long.parseLong(row[0]));

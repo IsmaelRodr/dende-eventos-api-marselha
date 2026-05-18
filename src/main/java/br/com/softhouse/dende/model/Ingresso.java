@@ -19,7 +19,6 @@ public class Ingresso {
     private double valorEstornado;
     private LocalDateTime dataCompra;
     private String email;
-    //Aqui não temos coleções, mas poderiamos ter os métodos para lidar com a devolução porexemplo.
 
     public enum StatusIngresso {
         ACEITO,
@@ -61,7 +60,7 @@ public class Ingresso {
                 && this.evento.getDataInicio().isAfter(LocalDateTime.now());
     }
 
-    // equals, hashCode, toString
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
