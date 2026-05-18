@@ -1,10 +1,20 @@
 package br.com.softhouse.dende.model;
 
+import br.com.softhouse.dende.exceptions.DadosInvalidosException;
+import br.com.softhouse.dende.exceptions.evento.EventoNaoEncontradoException;
+import br.com.softhouse.dende.exceptions.organizador.OrganizadorComEventosAtivosException;
+import br.com.softhouse.dende.exceptions.organizador.OrganizadorJaInativoException;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
+@Getter
+@Setter
 public class Organizador {
 
     private Long id;
@@ -14,73 +24,88 @@ public class Organizador {
     private String email;
     private String senha;
     private boolean ativo = true;
-    // A alteração de mestre: Composição usando a classe opcional Empresa
     private Empresa empresa;
     private final List<Evento> eventos = new ArrayList<>();
 
-    // Construtor vazio exigido pelo Jackson para receber o JSON
     public Organizador() {}
 
-    public record Credenciais(String email, String senha) {}
-    
-    // Getters e Setters
-
-    public void setId(Long id) { this.id = id; }
-    public Long getId() { return id; }
-    
-    public String getNome() { return nome; }
-    public void setNome(String nome) { this.nome = nome; }
-    
-    public LocalDate getDataNascimento() { return dataNascimento; }
-    public void setDataNascimento(LocalDate dataNascimento) { this.dataNascimento = dataNascimento; }
-    
-    public String getSexo() { return sexo; }
-    public void setSexo(String sexo) { this.sexo = sexo; }
-    
-    public String getEmail() { return email; }
-    public void setEmail(String email){this.email = email;}
-    
-    public String getSenha() { return senha; }
-    public void setSenha(String senha) { this.senha = senha; }
-
-    // Get e Set da Empresa
-    public Empresa getEmpresa() { return empresa; }
-    public void setEmpresa(Empresa empresa) { this.empresa = empresa; }
-
-    public boolean isAtivo() {
-        return ativo;
+    public Organizador(Long id, String nome, LocalDate dataNascimento, String sexo,
+                       String email, String senha, Empresa empresa) {
+        this.id = id;
+        this.nome = nome;
+        this.dataNascimento = dataNascimento;
+        this.sexo = sexo;
+        this.email = email;
+        this.senha = senha;
+        this.empresa = empresa;
     }
 
-    public void setAtivo(boolean ativo) {
-        this.ativo = ativo;
+    public void desativar(){
+        if (!this.isAtivo()) {
+            throw new OrganizadorJaInativoException("Organizador já está inativo.");
+        }
+        boolean temEventosAtivos = eventos.stream().anyMatch(Evento::isEventoAtivo);
+        if (temEventosAtivos) {
+            throw new OrganizadorComEventosAtivosException("Organizador possui eventos ativos.");
+        }
+        this.ativo = false;
     }
 
-    public void addEvento(Evento evento){
-        if (evento == null) return;
+    public List<Evento> getEventos() {
+        return List.copyOf(eventos);
+    }
 
-        if (!this.eventos.contains(evento)){
-            this.eventos.add(evento);
+    public void setEventos(List<Evento> eventos) {
+        this.eventos.clear();
+        if (eventos != null) {
+            this.eventos.addAll(eventos);
+        }
+    }
+
+
+    /*
+    private Evento buscarEvento(Long id){
+        return eventos.stream()
+                .filter(e -> e.getId().equals(id))
+                .findFirst()
+                .orElseThrow(() ->
+                        new EventoNaoEncontradoException(
+                                "Evento não encontrado."
+                        )
+                );
+    } retirado apos a analise de custo
+    */
+
+
+    public void adicionarEvento(Evento evento) {
+        if (evento == null){
+            throw new DadosInvalidosException("O evento não pode ser nulo.");
+        }
+
+        if (!eventos.contains(evento)){
+            eventos.add(evento);
             evento.setOrganizador(this);
         }
     }
 
-    public void removeEvento(Evento evento){
-        if (evento == null) return;
+    /*public void ativarEvento(Long id){
+        buscarEvento(id).ativar(); retirado após a analise de custo.
+    }*/
 
-        if (this.eventos.remove(evento)){
-            evento.setOrganizador(null);
-        }
-    }
+    /*
+    public void desativarEvento(long id){
+        buscarEvento(id).desativar(); retirado após a analise de custo.
+    }*/
 
-    public List<Evento> getEventos(){
-        return List.copyOf(eventos);
-    }
+    /*
+    public void removeEvento(Evento evento) {
+        remover uma referência do organizador.
+    }*/
 
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
         if (obj == null || getClass() != obj.getClass()) return false;
-
         Organizador that = (Organizador) obj;
         return id != null && id.equals(that.id);
     }
@@ -98,7 +123,6 @@ public class Organizador {
                 ", email='" + email + '\'' +
                 ", ativo=" + ativo +
                 ", empresa=" + (empresa != null ? empresa.getRazaoSocial() : "Nenhuma") +
-                ", totalEventos=" + eventos.size() +
                 '}';
     }
 }

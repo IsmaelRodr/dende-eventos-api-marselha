@@ -4,35 +4,33 @@ import br.com.dende.softhouse.annotations.Controller;
 import br.com.dende.softhouse.annotations.request.GetMapping;
 import br.com.dende.softhouse.annotations.request.RequestMapping;
 import br.com.dende.softhouse.process.route.ResponseEntity;
-import br.com.softhouse.dende.dto.evento.FeedEventoDto;
-import br.com.softhouse.dende.mapper.EventoMapper;
-import br.com.softhouse.dende.model.Evento;
-import br.com.softhouse.dende.repositories.Repositorio;
 
-import java.time.LocalDateTime;
-import java.util.Comparator;
+import br.com.softhouse.dende.dto.evento.FeedEventoDto;
+import br.com.softhouse.dende.exceptions.repository.OperacaoRepositorioException;
+import br.com.softhouse.dende.exceptions.repository.PersistenciaException;
+import br.com.softhouse.dende.services.EventoService;
+
 import java.util.List;
 
 @Controller
 @RequestMapping(path = "/eventos")
 public class EventoController {
 
-    private final Repositorio repositorio;
+    private final EventoService eventoService;
 
-    public EventoController(){
-        this.repositorio = Repositorio.getInstance();
+    public EventoController() {
+        this.eventoService = new EventoService();
     }
 
     @GetMapping
-    public ResponseEntity<?> feedEvento(){
-        List<FeedEventoDto> eventosFiltrados = repositorio.listarEventoAtivos().stream()
-                .filter(e -> e.getDataFim().isAfter(LocalDateTime.now()))
-                .sorted(Comparator
-                        .comparing(Evento::getDataInicio)
-                        .thenComparing(Evento::getNome))
-                .map(EventoMapper::toFeedEventoDto)
-                .toList();
-
-        return ResponseEntity.status(200, eventosFiltrados);
+    public ResponseEntity<?> feedEvento() {
+        try {
+            List<FeedEventoDto> resposta = eventoService.listarEventosAtivos();
+            return ResponseEntity.status(200, resposta);
+        } catch (OperacaoRepositorioException | PersistenciaException e) {
+            return ResponseEntity.status(500, "Erro ao buscar eventos ativos.");
+        } catch (Exception e) {
+            return ResponseEntity.status(500, "Erro interno no servidor.");
+        }
     }
 }

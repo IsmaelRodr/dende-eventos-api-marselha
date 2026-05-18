@@ -1,32 +1,35 @@
 package br.com.softhouse.dende.model;
 
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
 public class Empresa {
-    
+
     private String cnpj;
     private String razaoSocial;
     private String nomeFantasia;
+    private Long organizadorId;    // chave estrangeira para organizador
 
-    // Construtor vazio exigido pelo Jackson
-    public Empresa() {
+    public Empresa() {}
+
+    public Empresa(String cnpj, String razaoSocial, String nomeFantasia) {
+        this.cnpj = cnpj;
+        this.razaoSocial = razaoSocial;
+        this.nomeFantasia = nomeFantasia;
     }
 
-    // Getters e Setters
-    public String getCnpj() { return cnpj; }
-    public void setCnpj(String cnpj) { this.cnpj = cnpj; }
-
-    public String getRazaoSocial() { return razaoSocial; }
-    public void setRazaoSocial(String razaoSocial) { this.razaoSocial = razaoSocial; }
-
-    public String getNomeFantasia() { return nomeFantasia; }
-    public void setNomeFantasia(String nomeFantasia) { this.nomeFantasia = nomeFantasia; }
+    public Empresa(String cnpj, String razaoSocial, String nomeFantasia, Long organizadorId) {
+        this(cnpj, razaoSocial, nomeFantasia);
+        this.organizadorId = organizadorId;
+    }
 
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
         if (obj == null || getClass() != obj.getClass()) return false;
-
         Empresa empresa = (Empresa) obj;
-
         return cnpj != null && cnpj.equals(empresa.cnpj);
     }
 
@@ -41,6 +44,7 @@ public class Empresa {
                 "cnpj='" + cnpj + '\'' +
                 ", razaoSocial='" + razaoSocial + '\'' +
                 ", nomeFantasia='" + nomeFantasia + '\'' +
+                ", organizadorId=" + organizadorId +
                 '}';
     }
 }

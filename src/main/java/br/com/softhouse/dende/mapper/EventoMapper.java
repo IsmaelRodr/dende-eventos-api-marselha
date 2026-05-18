@@ -38,8 +38,8 @@ public class EventoMapper {
                 .build();
     }
 
-    public static Evento toModel(AtualizarEventoDto dto) {
-        if (dto == null) return null;
+    public static Evento updateModel(Evento evento, AtualizarEventoDto dto) {
+        if (evento == null || dto == null) return null;
 
         return Evento.builder()
                 .nome(dto.nome())

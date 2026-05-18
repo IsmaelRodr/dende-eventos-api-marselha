@@ -1,8 +1,14 @@
 package br.com.softhouse.dende.model;
 
+import br.com.softhouse.dende.exceptions.ingresso.IngressoJaCanceladoException;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.time.LocalDateTime;
 import java.util.Objects;
 
+@Getter
+@Setter
 public class Ingresso {
 
     private Long id;
@@ -13,7 +19,6 @@ public class Ingresso {
     private double valorEstornado;
     private LocalDateTime dataCompra;
     private String email;
-
 
     public enum StatusIngresso {
         ACEITO,
@@ -30,36 +35,36 @@ public class Ingresso {
         this.email = email;
         this.status = StatusIngresso.ACEITO;
         this.dataCompra = LocalDateTime.now();
-
     }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-
-    public Usuario getUsuario() { return usuario; }
-    public Evento getEvento() { return evento; }
-
-    public StatusIngresso getStatus() { return status; }
-    public void setStatus(StatusIngresso status) { this.status = status; }
-
-    public double getValorPago() { return valorPago; }
-
-    public void setValorEstornado(double valorEstornado) { this.valorEstornado = valorEstornado; }
-    public double getValorEstornado() { return valorEstornado; }
-
-    public LocalDateTime getDataCompra() {return dataCompra;}
-
-    public String getEmail(){ return email;}
 
     public boolean isCancelado() {
         return status == StatusIngresso.CANCELADO;
     }
 
+    public void cancelar() {
+        if (this.status == StatusIngresso.CANCELADO) {
+            throw new IngressoJaCanceladoException("Ingresso já cancelado.");
+        }
+        this.status = StatusIngresso.CANCELADO;
+        if (evento.isEventoEstorno()) {
+            this.valorEstornado = this.valorPago * (1 - evento.getTaxaCancelamento() / 100.0);
+        } else {
+            this.valorEstornado = 0.0;
+        }
+    }
+
+    public boolean isAtivoParaListagem() {
+        return !this.isCancelado()
+                && this.evento.isEventoAtivo()
+                && this.evento.getDataInicio().isAfter(LocalDateTime.now());
+    }
+
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
         if (obj == null || getClass() != obj.getClass()) return false;
-
         Ingresso that = (Ingresso) obj;
         return id != null && id.equals(that.id);
     }

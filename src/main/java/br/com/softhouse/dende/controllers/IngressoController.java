@@ -1,158 +1,118 @@
 package br.com.softhouse.dende.controllers;
 
 import br.com.dende.softhouse.annotations.Controller;
-import br.com.dende.softhouse.annotations.request.*;
+import br.com.dende.softhouse.annotations.request.GetMapping;
+import br.com.dende.softhouse.annotations.request.PathVariable;
+import br.com.dende.softhouse.annotations.request.PostMapping;
+import br.com.dende.softhouse.annotations.request.RequestBody;
+import br.com.dende.softhouse.annotations.request.RequestMapping;
 import br.com.dende.softhouse.process.route.ResponseEntity;
+
 import br.com.softhouse.dende.dto.ingresso.ResultadoCompraIngressoDto;
 import br.com.softhouse.dende.dto.usuario.CancelarIngressoUsuarioDto;
-import br.com.softhouse.dende.mapper.UsuarioMapper;
-import br.com.softhouse.dende.model.Evento;
-import br.com.softhouse.dende.model.Ingresso;
-import br.com.softhouse.dende.model.Usuario;
-import br.com.softhouse.dende.repositories.Repositorio;
-
-// Import dos DTOs e Mappers
 import br.com.softhouse.dende.dto.usuario.ListaIngressosUsuarioDto;
-import br.com.softhouse.dende.dto.ingresso.IngressoGeradoDto;
-import br.com.softhouse.dende.mapper.IngressoMapper;
 
-import java.time.LocalDateTime;
+import br.com.softhouse.dende.exceptions.DadosInvalidosException;
+import br.com.softhouse.dende.exceptions.evento.EventoExpiradoException;
+import br.com.softhouse.dende.exceptions.evento.EventoInativoException;
+import br.com.softhouse.dende.exceptions.evento.EventoNaoEncontradoException;
+import br.com.softhouse.dende.exceptions.evento.EventoSemIngressosDisponiveisException;
+import br.com.softhouse.dende.exceptions.ingresso.CancelamentoNaoPermitidoException;
+import br.com.softhouse.dende.exceptions.ingresso.CompraIngressoException;
+import br.com.softhouse.dende.exceptions.ingresso.IngressoJaCanceladoException;
+import br.com.softhouse.dende.exceptions.ingresso.IngressoNaoEncontradoException;
+import br.com.softhouse.dende.exceptions.usuario.UsuarioInativoException;
+import br.com.softhouse.dende.exceptions.usuario.UsuarioNaoEncontradoException;
+
+import br.com.softhouse.dende.services.IngressoService;
+
 import java.util.List;
 import java.util.Map;
 
 @Controller
-// Removemos o RequestMapping geral para podermos usar caminhos absolutos abaixo
 public class IngressoController {
 
-    private final Repositorio repositorio;
+    private final IngressoService ingressoService;
 
     public IngressoController() {
-        this.repositorio = Repositorio.getInstance();
+        this.ingressoService = new IngressoService();
     }
 
-    // 1. Rota de Comprar Ingresso (Que trouxemos do OrganizadorController)
     @PostMapping(path = "/organizadores/{organizadorId}/eventos/{eventoId}/ingressos")
     public ResponseEntity<?> comprarIngresso(
             @PathVariable(parameter = "organizadorId") String organizadorIdString,
             @PathVariable(parameter = "eventoId") String eventoIdString,
-            @RequestBody Map<String, Long> request) {
-
+            @RequestBody Map<String, Long> request
+    ) {
         try {
-            long organizadorId = Long.parseLong(organizadorIdString);
-            long eventoId = Long.parseLong(eventoIdString);
-
+            Long organizadorId = Long.parseLong(organizadorIdString);
+            Long eventoId = Long.parseLong(eventoIdString);
             if (request == null || request.get("usuarioId") == null) {
-                return ResponseEntity.status(400, "Body inválido: usuarioId obrigatório");
+                throw new DadosInvalidosException("usuarioId é obrigatório.");
             }
-            long usuarioId = ((Number) request.get("usuarioId")).longValue();
-
-            Usuario usuario = repositorio.buscarUsuarioPorId(usuarioId);
-            if (usuario == null || !usuario.isAtivo()) {
-                return ResponseEntity.status(404, "Usuário não encontrado ou inativo");
-            }
-
-            List<Evento> eventosOrganizador = repositorio.listarEventoPorOrganizador(organizadorId);
-            Evento evento = eventosOrganizador.stream().filter(e -> e.getId().equals(eventoId)).findFirst().orElse(null);
-            if (evento == null) {
-                return ResponseEntity.status(404, "Evento não encontrado");
-            }
-            if (!evento.isEventoAtivo()) {
-                return ResponseEntity.status(422, "Evento inativo");
-            }
-            if (evento.getIngressosDisponiveis() <= 0) {
-                return ResponseEntity.status(409, "Vagas esgotadas");
-            }
-            if (evento.getDataInicio().isBefore(LocalDateTime.now())) {
-                return ResponseEntity.status(422, "Evento expirado");
-            }
-
-            Map<String, Object> resultado = repositorio.comprarIngresso(usuarioId, eventoId);
-            if (resultado == null) {
-                return ResponseEntity.status(409, "Falha na compra");
-            }
-
-            Ingresso ingresso = (Ingresso) resultado.get("ingresso");
-            double valorTotal = (Double) resultado.get("valorTotal");
-
-            List<IngressoGeradoDto> ingressosDto =
-                    repositorio.listarIngressosUsuario(usuarioId).stream()
-                            .filter(i -> i.getDataCompra().equals(ingresso.getDataCompra()))
-                            .map(IngressoMapper::toGeradoDto)
-                            .toList();
-
-            ResultadoCompraIngressoDto resposta = new ResultadoCompraIngressoDto(valorTotal, ingressosDto);
-
+            Long usuarioId = request.get("usuarioId");
+            ResultadoCompraIngressoDto resposta = ingressoService.comprarIngresso(
+                    usuarioId, eventoId, organizadorId
+            );
             return ResponseEntity.status(201, resposta);
-
         } catch (NumberFormatException e) {
-            return ResponseEntity.status(400, "ID inválido");
+            return ResponseEntity.status(400, "ID inválido.");
+        } catch (DadosInvalidosException e) {
+            return ResponseEntity.status(400, e.getMessage());
+        } catch (UsuarioNaoEncontradoException e) {
+            return ResponseEntity.status(404, "Usuário não encontrado.");
+        } catch (EventoNaoEncontradoException e) {
+            return ResponseEntity.status(404, "Evento não encontrado.");
+        } catch (UsuarioInativoException e) {
+            return ResponseEntity.status(403, e.getMessage());
+        } catch (EventoInativoException | EventoExpiradoException e) {
+            return ResponseEntity.status(422, e.getMessage());
+        } catch (EventoSemIngressosDisponiveisException | CompraIngressoException e) {
+            return ResponseEntity.status(409, e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(500, "Erro interno do servidor.");
         }
     }
 
-    // 2. Rota de Cancelar Ingresso (Que estava no UsuarioController)
-    @PostMapping(path = "/usuarios/{usuarioId}/ingressos/{ingressoId}")
+    @PostMapping(path = "/usuarios/{usuarioId}/ingressos/{ingressoId}/")
     public ResponseEntity<?> cancelarIngresso(
             @PathVariable(parameter = "usuarioId") String usuarioIdString,
-            @PathVariable(parameter = "ingressoId") String ingressoIdString) {
-
+            @PathVariable(parameter = "ingressoId") String ingressoIdString
+    ) {
         try {
-            long usuarioId = Long.parseLong(usuarioIdString);
-            long ingressoId = Long.parseLong(ingressoIdString);
-
-            Usuario usuario = repositorio.buscarUsuarioPorId(usuarioId);
-            if (usuario == null || !usuario.isAtivo()) {
-                return ResponseEntity.status(404, "Usuário não encontrado");
-            }
-
-            boolean cancelado = repositorio.cancelarIngresso(usuarioId, ingressoId);
-            if (!cancelado) {
-                return ResponseEntity.status(404, "Ingresso não encontrado ou já cancelado");
-            }
-
-            List<Ingresso> ingressos = repositorio.listarIngressosUsuario(usuarioId);
-            Ingresso ingressoExistente = null;
-
-            for (Ingresso ingresso : ingressos) {
-                if (ingresso.getId().equals(ingressoId)) {
-                    ingressoExistente = ingresso;
-                    break;
-                }
-            }
-
-            if (ingressoExistente == null) {
-                return ResponseEntity.status(404, "Ingresso não encontrado para este usuário.");
-            }
-
-
-            CancelarIngressoUsuarioDto resposta = UsuarioMapper.toCancelarDTO(
-                    "Ingresso cancelado com sucesso e o valor foi estornado.", ingressoExistente);
-
+            Long usuarioId = Long.parseLong(usuarioIdString);
+            Long ingressoId = Long.parseLong(ingressoIdString);
+            CancelarIngressoUsuarioDto resposta = ingressoService.cancelarIngresso(usuarioId, ingressoId);
             return ResponseEntity.status(200, resposta);
-        } catch (IllegalStateException e) {
-            return ResponseEntity.status(422, e.getMessage()); // 422 Unprocessable Entity
         } catch (NumberFormatException e) {
-            return ResponseEntity.status(400, "ID inválido");
+            return ResponseEntity.status(400, "ID inválido.");
+        } catch (DadosInvalidosException e) {
+            return ResponseEntity.status(400, e.getMessage());
+        } catch (UsuarioNaoEncontradoException | IngressoNaoEncontradoException | EventoNaoEncontradoException e) {
+            return ResponseEntity.status(404, e.getMessage());
+        } catch (CancelamentoNaoPermitidoException | IngressoJaCanceladoException e) {
+            return ResponseEntity.status(409, e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(500, "Erro interno do servidor.");
         }
     }
 
-    // 3. Rota de Listar Ingressos - US 15 (Que estava no UsuarioController)
     @GetMapping(path = "/usuarios/{usuarioId}/ingressos")
-    public ResponseEntity<?> listarIngressos(@PathVariable(parameter = "usuarioId") String usuarioIdString) {
+    public ResponseEntity<?> listarIngressos(
+            @PathVariable(parameter = "usuarioId") String usuarioIdString
+    ) {
         try {
-            long usuarioId = Long.parseLong(usuarioIdString);
-            Usuario usuario = repositorio.buscarUsuarioPorId(usuarioId);
-            if (usuario == null) return ResponseEntity.status(404, "Usuário não encontrado");
-
-            List<Ingresso> ingressos = repositorio.listarIngressosUsuario(usuarioId);
-
-            // ALTERADO: Retorna a lista de DTOs mapeados
-            List<ListaIngressosUsuarioDto> lista = ingressos.stream()
-                    .map(IngressoMapper::toListaUsuarioDto)
-                    .toList();
-
+            Long usuarioId = Long.parseLong(usuarioIdString);
+            List<ListaIngressosUsuarioDto> lista = ingressoService.listarIngressosUsuario(usuarioId);
             return ResponseEntity.status(200, lista);
         } catch (NumberFormatException e) {
-            return ResponseEntity.status(400, "ID inválido");
+            return ResponseEntity.status(400, "ID inválido.");
+        } catch (DadosInvalidosException e) {
+            return ResponseEntity.status(400, e.getMessage());
+        } catch (UsuarioNaoEncontradoException e) {
+            return ResponseEntity.status(404, e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(500, "Erro interno do servidor.");
         }
     }
 }
