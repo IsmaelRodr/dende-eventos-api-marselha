@@ -21,7 +21,7 @@ public class EventoRepository implements CrudRepository<Evento, Long> {
     // ===================== SALVAR =====================
     @Override
     public Evento save(Evento evento) {
-        String sql = "INSERT INTO eventos (organizador_id, nome, descricao, pagina_web, data_inicio, data_fim, " +
+        String sql = "INSERT INTO evento (organizador_id, nome, descricao, pagina_web, data_inicio, data_fim, " +
                 "tipo_evento, modalidade, preco_unitario, taxa_cancelamento, evento_estorno, " +
                 "capacidade_maxima, ingressos_disponiveis, local_evento, evento_ativo, evento_principal_id) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
@@ -62,7 +62,7 @@ public class EventoRepository implements CrudRepository<Evento, Long> {
     // ===================== BUSCAR POR ID =====================
     @Override
     public Optional<Evento> findById(Long id) {
-        String sql = "SELECT * FROM eventos WHERE id = ?";
+        String sql = "SELECT * FROM evento WHERE id = ?";
         try (Connection conn = connectionPool.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setLong(1, id);
@@ -94,7 +94,7 @@ public class EventoRepository implements CrudRepository<Evento, Long> {
     // ===================== ATUALIZAR =====================
     @Override
     public Evento update(Evento evento) {
-        String sql = "UPDATE eventos SET nome = ?, descricao = ?, pagina_web = ?, data_inicio = ?, data_fim = ?, " +
+        String sql = "UPDATE evento SET nome = ?, descricao = ?, pagina_web = ?, data_inicio = ?, data_fim = ?, " +
                 "tipo_evento = ?, modalidade = ?, preco_unitario = ?, taxa_cancelamento = ?, evento_estorno = ?, " +
                 "capacidade_maxima = ?, ingressos_disponiveis = ?, local_evento = ?, evento_ativo = ?, evento_principal_id = ? " +
                 "WHERE id = ?";
@@ -127,7 +127,7 @@ public class EventoRepository implements CrudRepository<Evento, Long> {
 
     // ===================== LISTAR EVENTOS ATIVOS (feed) =====================
     public List<Evento> findAllAtivos() {
-        String sql = "SELECT * FROM eventos WHERE evento_ativo = TRUE AND data_fim > NOW() AND ingressos_disponiveis > 0 " +
+        String sql = "SELECT * FROM evento WHERE evento_ativo = TRUE AND data_fim > NOW() AND ingressos_disponiveis > 0 " +
                 "ORDER BY data_inicio, nome";
         List<Evento> eventos = new ArrayList<>();
         try (Connection conn = connectionPool.getConnection();
@@ -155,7 +155,7 @@ public class EventoRepository implements CrudRepository<Evento, Long> {
 
     // ===================== LISTAR EVENTOS DE UM ORGANIZADOR =====================
     public List<Evento> findAllByOrganizadorId(Long organizadorId) {
-        String sql = "SELECT * FROM eventos WHERE organizador_id = ?";
+        String sql = "SELECT * FROM evento WHERE organizador_id = ?";
         List<Evento> eventos = new ArrayList<>();
         try (Connection conn = connectionPool.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -190,7 +190,7 @@ public class EventoRepository implements CrudRepository<Evento, Long> {
                    e.evento_ativo, e.evento_principal_id,
                    i.id AS ingresso_id, i.usuario_id, i.valor_pago, i.valor_estornado,
                    i.data_compra, i.status, i.email
-            FROM eventos e
+            FROM evento e
             LEFT JOIN ingressos i ON e.id = i.evento_id
             WHERE e.id = ?
             """;

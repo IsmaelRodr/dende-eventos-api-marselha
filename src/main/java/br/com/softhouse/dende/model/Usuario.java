@@ -34,10 +34,10 @@ public class Usuario{
         this.senha = senha;
     }
 
-
+    /*
     public List<Ingresso> getIngressos() {
         return List.copyOf(ingressos);
-    }
+    }*/
 
 
     public void adicionarIngresso(Ingresso ingresso) {
@@ -48,12 +48,12 @@ public class Usuario{
     }
 
 
-    public void cancelarIngresso(Ingresso ingresso) {
+    /*public void cancelarIngresso(Ingresso ingresso) {
         if(ingressos.contains(ingresso)){
             ingressos.remove(ingresso);
             ingresso.cancelar();
         }
-    }
+    }*/
 
     @Override
     public boolean equals(Object obj) {

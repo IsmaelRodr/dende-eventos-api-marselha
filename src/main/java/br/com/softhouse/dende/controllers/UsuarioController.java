@@ -20,9 +20,7 @@ import br.com.softhouse.dende.dto.usuario.VisualizarUsuarioDto;
 
 import br.com.softhouse.dende.exceptions.DadosInvalidosException;
 
-import br.com.softhouse.dende.exceptions.usuario.CredenciaisInvalidasException;
-import br.com.softhouse.dende.exceptions.usuario.UsuarioJaAtivoException;
-import br.com.softhouse.dende.exceptions.usuario.UsuarioNaoEncontradoException;
+import br.com.softhouse.dende.exceptions.usuario.*;
 
 import br.com.softhouse.dende.services.UsuarioService;
 
@@ -43,8 +41,10 @@ public class UsuarioController {
         try {
             StatusUsuarioDto resposta = usuarioService.cadastrar(dto);
             return ResponseEntity.status(201, resposta);
-        } catch (DadosInvalidosException e) {
+        } catch (DadosInvalidosException | DataNascimentoInvalidaException | EmailInvalidoException e) {
             return ResponseEntity.status(400, e.getMessage());
+        } catch (EmailJaCadastradoException e) {
+            return ResponseEntity.status(409, e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(500, "Erro interno no servidor.");
         }
@@ -99,6 +99,8 @@ public class UsuarioController {
             return ResponseEntity.status(400, "ID inválido.");
         } catch (UsuarioNaoEncontradoException e) {
             return ResponseEntity.status(404, e.getMessage());
+        }catch (UsuarioJaInativoException e) {
+            return ResponseEntity.status(409, e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(500, "Erro interno no servidor.");
         }
@@ -119,6 +121,8 @@ public class UsuarioController {
             return ResponseEntity.status(401, e.getMessage());
         } catch (UsuarioJaAtivoException e) {
             return ResponseEntity.status(409, e.getMessage());
+        } catch (DadosInvalidosException e) {
+            return ResponseEntity.status(400, e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(500, "Erro interno no servidor.");
         }

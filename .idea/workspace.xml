@@ -4,7 +4,16 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="de873ed2-eeb6-4ad1-9d97-2903a9f7e0fc" name="Changes" comment="" />
+    <list default="true" id="de873ed2-eeb6-4ad1-9d97-2903a9f7e0fc" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/br/com/softhouse/dende/controllers/EventoController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/br/com/softhouse/dende/controllers/EventoController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/br/com/softhouse/dende/controllers/IngressoController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/br/com/softhouse/dende/controllers/IngressoController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/br/com/softhouse/dende/controllers/OrganizadorController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/br/com/softhouse/dende/controllers/OrganizadorController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/br/com/softhouse/dende/controllers/UsuarioController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/br/com/softhouse/dende/controllers/UsuarioController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/br/com/softhouse/dende/model/Usuario.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/br/com/softhouse/dende/model/Usuario.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/br/com/softhouse/dende/repositories/EventoRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/br/com/softhouse/dende/repositories/EventoRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/br/com/softhouse/dende/repositories/IngressoRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/br/com/softhouse/dende/repositories/IngressoRepository.java" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />

@@ -20,7 +20,7 @@ public class IngressoRepository implements CrudRepository<Ingresso, Long> {
     // ===================== SALVAR =====================
     @Override
     public Ingresso save(Ingresso ingresso) {
-        String sql = "INSERT INTO ingressos (usuario_id, evento_id, valor_pago, valor_estornado, data_compra, status, email) " +
+        String sql = "INSERT INTO ingresso (usuario_id, evento_id, valor_pago, valor_estornado, data_compra, status, email) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = connectionPool.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -48,7 +48,7 @@ public class IngressoRepository implements CrudRepository<Ingresso, Long> {
     // ===================== BUSCAR POR ID =====================
     @Override
     public Optional<Ingresso> findById(Long id) {
-        String sql = "SELECT * FROM ingressos WHERE id = ?";
+        String sql = "SELECT * FROM ingresso WHERE id = ?";
         try (Connection conn = connectionPool.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setLong(1, id);
@@ -71,7 +71,7 @@ public class IngressoRepository implements CrudRepository<Ingresso, Long> {
     // ===================== ATUALIZAR =====================
     @Override
     public Ingresso update(Ingresso ingresso) {
-        String sql = "UPDATE ingressos SET status = ?, valor_estornado = ?, email = ? WHERE id = ?";
+        String sql = "UPDATE ingresso SET status = ?, valor_estornado = ?, email = ? WHERE id = ?";
         try (Connection conn = connectionPool.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
@@ -89,7 +89,7 @@ public class IngressoRepository implements CrudRepository<Ingresso, Long> {
 
     // ===================== LISTAR INGRESSOS DE UM USUÁRIO =====================
     public List<Ingresso> findAllByUsuarioId(Long usuarioId) {
-        String sql = "SELECT * FROM ingressos WHERE usuario_id = ?";
+        String sql = "SELECT * FROM ingresso WHERE usuario_id = ?";
         List<Ingresso> ingressos = new ArrayList<>();
         try (Connection conn = connectionPool.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -114,7 +114,7 @@ public class IngressoRepository implements CrudRepository<Ingresso, Long> {
 
     // ===================== LISTAR INGRESSOS DE UM EVENTO =====================
     public List<Ingresso> findAllByEventoId(Long eventoId) {
-        String sql = "SELECT * FROM ingressos WHERE evento_id = ?";
+        String sql = "SELECT * FROM ingresso WHERE evento_id = ?";
         List<Ingresso> ingressos = new ArrayList<>();
         try (Connection conn = connectionPool.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -146,7 +146,7 @@ public class IngressoRepository implements CrudRepository<Ingresso, Long> {
                e.preco_unitario, e.taxa_cancelamento, e.evento_estorno,
                e.capacidade_maxima, e.ingressos_disponiveis, e.local_evento,
                e.evento_ativo, e.evento_principal_id
-        FROM ingressos i
+        FROM ingresso i
         JOIN eventos e ON i.evento_id = e.id
         WHERE i.usuario_id = ?
         """;
