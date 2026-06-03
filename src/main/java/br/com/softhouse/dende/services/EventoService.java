@@ -119,7 +119,6 @@ public class EventoService {
 
     public List<FeedEventoDto> listarEventosAtivos() {
         return eventoRepository.findAllAtivos().stream()
-                .sorted(Comparator.comparing(Evento::getDataInicio).thenComparing(Evento::getNome))
                 .map(EventoMapper::toFeedEventoDto)
                 .toList();
     }

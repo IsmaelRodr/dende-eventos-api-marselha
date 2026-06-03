@@ -50,7 +50,9 @@ public class IngressoController {
             if (request == null || request.get("usuarioId") == null) {
                 throw new DadosInvalidosException("usuarioId é obrigatório.");
             }
-            Long usuarioId = request.get("usuarioId");
+            Number idObj = (Number) request.get("usuarioId");
+            if (idObj == null) throw new DadosInvalidosException("usuarioId é obrigatório.");
+            Long usuarioId = idObj.longValue();
             ResultadoCompraIngressoDto resposta = ingressoService.comprarIngresso(
                     usuarioId, eventoId, organizadorId
             );

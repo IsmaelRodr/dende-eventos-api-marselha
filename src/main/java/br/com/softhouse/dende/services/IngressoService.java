@@ -36,7 +36,7 @@ public class IngressoService {
         Usuario usuario = usuarioRepository.findById(usuarioId)
                 .orElseThrow(() -> new UsuarioNaoEncontradoException("Usuário não encontrado."));
         if (!usuario.isAtivo()) throw new UsuarioInativoException("Usuário inativo.");
-        Evento evento = eventoRepository.findById(eventoId)
+        Evento evento = eventoRepository.findByIdComIngressosDisponiveis(eventoId)
                 .orElseThrow(() -> new EventoNaoEncontradoException("Evento não encontrado."));
         if (!evento.isEventoAtivo()) throw new EventoInativoException("Evento inativo.");
         if (evento.getDataInicio().isBefore(LocalDateTime.now()))
@@ -49,7 +49,7 @@ public class IngressoService {
         double valorTotal = 0.0;
 
         if (evento.getEventoPrincipal() != null) {
-            Evento principal = eventoRepository.findById(evento.getEventoPrincipal().getId())
+            Evento principal = eventoRepository.findByIdComIngressosDisponiveis(evento.getEventoPrincipal().getId())
                     .orElseThrow(() -> new EventoNaoEncontradoException("Evento principal não encontrado."));
             if (!principal.isEventoAtivo())
                 throw new EventoInativoException("Evento principal está inativo.");
@@ -94,6 +94,7 @@ public class IngressoService {
         }
         Evento evento = eventoRepository.findById(ingresso.getEvento().getId())
                 .orElseThrow(() -> new EventoNaoEncontradoException("Evento não encontrado."));
+
         evento.cancelarIngressoIndividual(ingresso);
         ingressoRepository.update(ingresso);
         eventoRepository.update(evento);

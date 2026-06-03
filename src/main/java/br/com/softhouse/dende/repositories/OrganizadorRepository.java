@@ -201,7 +201,7 @@ public class OrganizadorRepository implements CrudRepository<Organizador, Long> 
                    e.descricao, e.pagina_web, e.data_inicio, e.data_fim,
                    e.tipo_evento, e.modalidade, e.preco_unitario_ingresso,
                    e.taxa_cancelamento, e.evento_estorno, e.capacidade_maxima,
-                   e.ingressos_disponiveis, e.local_evento, e.evento_ativo,
+                   e.local_evento, e.evento_ativo,
                    e.evento_principal_id
             FROM organizador o
             LEFT JOIN evento e ON o.id = e.organizador_id
@@ -239,6 +239,7 @@ public class OrganizadorRepository implements CrudRepository<Organizador, Long> 
                 }
             }
         } catch (SQLException e) {
+            e.printStackTrace(); // ou use um logger
             throw new PersistenciaException("Erro ao buscar organizador com eventos.");
         }
         return Optional.empty();
@@ -254,15 +255,14 @@ public class OrganizadorRepository implements CrudRepository<Organizador, Long> 
                 rs.getString("data_inicio"),
                 rs.getString("data_fim"),
                 rs.getString("tipo_evento"),
+                rs.getString("evento_principal_id"),
                 rs.getString("modalidade"),
                 rs.getString("preco_unitario_ingresso"),
                 rs.getString("taxa_cancelamento"),
                 rs.getString("evento_estorno"),
                 rs.getString("capacidade_maxima"),
-                rs.getString("ingressos_disponiveis"),
                 rs.getString("local_evento"),
                 rs.getString("evento_ativo"),
-                rs.getString("evento_principal_id")
         };
         return eventoMapper.mapRow(rowEvento);
     }

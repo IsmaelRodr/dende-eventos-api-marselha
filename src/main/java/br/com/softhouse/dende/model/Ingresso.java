@@ -47,7 +47,7 @@ public class Ingresso {
             throw new IngressoJaCanceladoException("Ingresso já cancelado.");
         }
         this.status = StatusIngresso.CANCELADO;
-        if (evento.isEventoEstorno()) {
+        if (this.evento.isEventoEstorno()) {
             this.valorEstornado = this.valorPago * (1 - evento.getTaxaCancelamento() / 100.0);
         } else {
             this.valorEstornado = 0.0;

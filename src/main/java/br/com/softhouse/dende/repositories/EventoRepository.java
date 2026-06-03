@@ -22,9 +22,9 @@ public class EventoRepository implements CrudRepository<Evento, Long> {
     @Override
     public Evento save(Evento evento) {
         String sql = "INSERT INTO evento (organizador_id, nome, descricao, pagina_web, data_inicio, data_fim, " +
-                "tipo_evento, modalidade, preco_unitario, taxa_cancelamento, evento_estorno, " +
-                "capacidade_maxima, ingressos_disponiveis, local_evento, evento_ativo, evento_principal_id) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                "tipo_evento, evento_principal_id, modalidade, preco_unitario_ingresso, taxa_cancelamento, " +
+                "evento_estorno, capacidade_maxima, local_evento, evento_ativo) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = connectionPool.getConnection();  // método de instância
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
@@ -35,15 +35,15 @@ public class EventoRepository implements CrudRepository<Evento, Long> {
             stmt.setTimestamp(5, Timestamp.valueOf(evento.getDataInicio()));
             stmt.setTimestamp(6, Timestamp.valueOf(evento.getDataFim()));
             stmt.setString(7, evento.getTipoEvento() != null ? evento.getTipoEvento().name() : null);
-            stmt.setString(8, evento.getModalidade() != null ? evento.getModalidade().name() : null);
-            stmt.setDouble(9, evento.getPrecoUnitarioIngresso());
-            stmt.setDouble(10, evento.getTaxaCancelamento());
-            stmt.setBoolean(11, evento.isEventoEstorno());
-            stmt.setInt(12, evento.getCapacidadeMaxima());
-            stmt.setInt(13, evento.getIngressosDisponiveis());
+            stmt.setObject(8, evento.getEventoPrincipal() != null ? evento.getEventoPrincipal().getId() : null);
+            stmt.setString(9, evento.getModalidade() != null ? evento.getModalidade().name() : null);
+            stmt.setDouble(10, evento.getPrecoUnitarioIngresso());
+            stmt.setDouble(11, evento.getTaxaCancelamento());
+            stmt.setBoolean(12, evento.isEventoEstorno());
+            stmt.setInt(13, evento.getCapacidadeMaxima());
             stmt.setString(14, evento.getLocalEvento());
             stmt.setBoolean(15, evento.isEventoAtivo());
-            stmt.setObject(16, evento.getEventoPrincipal() != null ? evento.getEventoPrincipal().getId() : null);
+
 
             int linhasAfetadas = stmt.executeUpdate();
             if (linhasAfetadas > 0) {
@@ -68,15 +68,7 @@ public class EventoRepository implements CrudRepository<Evento, Long> {
             stmt.setLong(1, id);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
-                    String[] row = {
-                            rs.getString("id"), rs.getString("organizador_id"), rs.getString("nome"),
-                            rs.getString("descricao"), rs.getString("pagina_web"), rs.getString("data_inicio"),
-                            rs.getString("data_fim"), rs.getString("tipo_evento"), rs.getString("modalidade"),
-                            rs.getString("preco_unitario"), rs.getString("taxa_cancelamento"), rs.getString("evento_estorno"),
-                            rs.getString("capacidade_maxima"), rs.getString("ingressos_disponiveis"),
-                            rs.getString("local_evento"), rs.getString("evento_ativo"), rs.getString("evento_principal_id")
-                    };
-                    Evento evento = mapper.mapRow(row);
+                    Evento evento = mapEventoBasico(rs);
                     carregarOrganizadorBasico(evento, rs.getLong("organizador_id"));
                     Long idPrincipal = rs.getLong("evento_principal_id");
                     if (!rs.wasNull()) {
@@ -95,9 +87,8 @@ public class EventoRepository implements CrudRepository<Evento, Long> {
     @Override
     public Evento update(Evento evento) {
         String sql = "UPDATE evento SET nome = ?, descricao = ?, pagina_web = ?, data_inicio = ?, data_fim = ?, " +
-                "tipo_evento = ?, modalidade = ?, preco_unitario = ?, taxa_cancelamento = ?, evento_estorno = ?, " +
-                "capacidade_maxima = ?, ingressos_disponiveis = ?, local_evento = ?, evento_ativo = ?, evento_principal_id = ? " +
-                "WHERE id = ?";
+                "tipo_evento = ?, evento_principal_id = ?,  modalidade = ?, preco_unitario_ingresso = ?, taxa_cancelamento = ?, evento_estorno = ?, " +
+                "capacidade_maxima = ?, local_evento = ?, evento_ativo = ? " + "WHERE id = ?";
         try (Connection conn = connectionPool.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
@@ -107,16 +98,15 @@ public class EventoRepository implements CrudRepository<Evento, Long> {
             stmt.setTimestamp(4, Timestamp.valueOf(evento.getDataInicio()));
             stmt.setTimestamp(5, Timestamp.valueOf(evento.getDataFim()));
             stmt.setString(6, evento.getTipoEvento() != null ? evento.getTipoEvento().name() : null);
-            stmt.setString(7, evento.getModalidade() != null ? evento.getModalidade().name() : null);
-            stmt.setDouble(8, evento.getPrecoUnitarioIngresso());
-            stmt.setDouble(9, evento.getTaxaCancelamento());
-            stmt.setBoolean(10, evento.isEventoEstorno());
-            stmt.setInt(11, evento.getCapacidadeMaxima());
-            stmt.setInt(12, evento.getIngressosDisponiveis());
+            stmt.setObject(7, evento.getEventoPrincipal() != null ? evento.getEventoPrincipal().getId() : null);
+            stmt.setString(8, evento.getModalidade() != null ? evento.getModalidade().name() : null);
+            stmt.setDouble(9, evento.getPrecoUnitarioIngresso());
+            stmt.setDouble(10, evento.getTaxaCancelamento());
+            stmt.setBoolean(11, evento.isEventoEstorno());
+            stmt.setInt(12, evento.getCapacidadeMaxima());
             stmt.setString(13, evento.getLocalEvento());
             stmt.setBoolean(14, evento.isEventoAtivo());
-            stmt.setObject(15, evento.getEventoPrincipal() != null ? evento.getEventoPrincipal().getId() : null);
-            stmt.setLong(16, evento.getId());
+            stmt.setLong(15, evento.getId());
 
             stmt.executeUpdate();
             return evento;
@@ -127,8 +117,24 @@ public class EventoRepository implements CrudRepository<Evento, Long> {
 
     // ===================== LISTAR EVENTOS ATIVOS (feed) =====================
     public List<Evento> findAllAtivos() {
-        String sql = "SELECT * FROM evento WHERE evento_ativo = TRUE AND data_fim > NOW() AND ingressos_disponiveis > 0 " +
-                "ORDER BY data_inicio, nome";
+        String sql = """
+            SELECT e.id, e.organizador_id, e.nome, e.descricao, e.pagina_web,
+                   e.data_inicio, e.data_fim, e.tipo_evento, e.evento_principal_id, e.modalidade,
+                   e.preco_unitario_ingresso, e.taxa_cancelamento, e.evento_estorno,
+                   e.capacidade_maxima, e.local_evento, e.evento_ativo,
+                   (e.capacidade_maxima - COALESCE(
+                       (SELECT COUNT(*) FROM ingresso i 
+                        WHERE i.evento_id = e.id AND i.status = 'ACEITO'), 0)
+                   ) AS ingressos_disponiveis_calculado
+            FROM evento e
+            WHERE e.evento_ativo = TRUE
+              AND e.data_fim > NOW()
+              AND e.capacidade_maxima > (
+                  SELECT COALESCE(COUNT(*), 0) FROM ingresso i
+                  WHERE i.evento_id = e.id AND i.status = 'ACEITO'
+              )
+            ORDER BY e.data_inicio, e.nome
+        """;
         List<Evento> eventos = new ArrayList<>();
         try (Connection conn = connectionPool.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);
@@ -138,12 +144,14 @@ public class EventoRepository implements CrudRepository<Evento, Long> {
                 String[] row = {
                         rs.getString("id"), rs.getString("organizador_id"), rs.getString("nome"),
                         rs.getString("descricao"), rs.getString("pagina_web"), rs.getString("data_inicio"),
-                        rs.getString("data_fim"), rs.getString("tipo_evento"), rs.getString("modalidade"),
-                        rs.getString("preco_unitario"), rs.getString("taxa_cancelamento"), rs.getString("evento_estorno"),
-                        rs.getString("capacidade_maxima"), rs.getString("ingressos_disponiveis"),
-                        rs.getString("local_evento"), rs.getString("evento_ativo"), rs.getString("evento_principal_id")
+                        rs.getString("data_fim"), rs.getString("tipo_evento"), rs.getString("evento_principal_id"),
+                        rs.getString("modalidade"), rs.getString("preco_unitario_ingresso"), rs.getString("taxa_cancelamento"),
+                        rs.getString("evento_estorno"), rs.getString("capacidade_maxima"), rs.getString("local_evento"),
+                        rs.getString("evento_ativo")
                 };
                 Evento evento = mapper.mapRow(row);
+                int disponiveis = rs.getInt("ingressos_disponiveis_calculado");
+                evento.setIngressosDisponiveis(disponiveis);
                 carregarOrganizadorBasico(evento, rs.getLong("organizador_id"));
                 eventos.add(evento);
             }
@@ -185,13 +193,12 @@ public class EventoRepository implements CrudRepository<Evento, Long> {
         String sql = """
             SELECT e.id, e.organizador_id, e.nome, e.descricao, e.pagina_web,
                    e.data_inicio, e.data_fim, e.tipo_evento, e.modalidade,
-                   e.preco_unitario, e.taxa_cancelamento, e.evento_estorno,
-                   e.capacidade_maxima, e.ingressos_disponiveis, e.local_evento,
-                   e.evento_ativo, e.evento_principal_id,
+                   e.preco_unitario_ingresso, e.taxa_cancelamento, e.evento_estorno,
+                   e.capacidade_maxima, e.local_evento, e.evento_ativo, e.evento_principal_id,
                    i.id AS ingresso_id, i.usuario_id, i.valor_pago, i.valor_estornado,
                    i.data_compra, i.status, i.email
             FROM evento e
-            LEFT JOIN ingressos i ON e.id = i.evento_id
+            LEFT JOIN ingresso i ON e.id = i.evento_id
             WHERE e.id = ?
             """;
 
@@ -251,16 +258,48 @@ public class EventoRepository implements CrudRepository<Evento, Long> {
         evento.setDataFim(rs.getTimestamp("data_fim").toLocalDateTime());
         evento.setTipoEvento(Evento.TipoEvento.valueOf(rs.getString("tipo_evento")));
         evento.setModalidade(Evento.Modalidade.valueOf(rs.getString("modalidade")));
-        evento.setPrecoUnitarioIngresso(rs.getDouble("preco_unitario"));
+        evento.setPrecoUnitarioIngresso(rs.getDouble("preco_unitario_ingresso"));
         evento.setTaxaCancelamento(rs.getDouble("taxa_cancelamento"));
         evento.setEventoEstorno(rs.getBoolean("evento_estorno"));
         evento.setCapacidadeMaxima(rs.getInt("capacidade_maxima"));
-        evento.setIngressosDisponiveis(rs.getInt("ingressos_disponiveis"));
         evento.setLocalEvento(rs.getString("local_evento"));
         evento.setEventoAtivo(rs.getBoolean("evento_ativo"));
         return evento;
     }
 
+    public Optional<Evento> findByIdComIngressosDisponiveis(Long id) {
+        String sql = """
+        SELECT e.id, e.organizador_id, e.nome, e.descricao, e.pagina_web,
+               e.data_inicio, e.data_fim, e.tipo_evento, e.evento_principal_id,
+               e.modalidade, e.preco_unitario_ingresso, e.taxa_cancelamento,
+               e.evento_estorno, e.capacidade_maxima, e.local_evento, e.evento_ativo,
+               (e.capacidade_maxima - COALESCE(
+                   (SELECT COUNT(*) FROM ingresso i 
+                    WHERE i.evento_id = e.id AND i.status = 'ACEITO'), 0)
+               ) AS ingressos_disponiveis_calculado
+        FROM evento e
+        WHERE e.id = ?
+    """;
+        try (Connection conn = connectionPool.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setLong(1, id);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    Evento evento = mapEventoBasico(rs);
+                    evento.setIngressosDisponiveis(rs.getInt("ingressos_disponiveis_calculado"));
+                    carregarOrganizadorBasico(evento, rs.getLong("organizador_id"));
+                    Long idPrincipal = rs.getLong("evento_principal_id");
+                    if (!rs.wasNull()) {
+                        carregarEventoPrincipalBasico(evento, idPrincipal);
+                    }
+                    return Optional.of(evento);
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao buscar evento com disponibilidade.", e);
+        }
+        return Optional.empty();
+    }
     // ===================== AUXILIARES =====================
     private void carregarOrganizadorBasico(Evento evento, Long organizadorId) {
         Organizador org = new Organizador();
