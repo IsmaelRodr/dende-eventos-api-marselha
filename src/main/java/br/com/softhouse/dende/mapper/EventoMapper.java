@@ -38,35 +38,21 @@ public class EventoMapper {
                 .build();
     }
 
-    public static Evento updateModel(Evento evento, AtualizarEventoDto dto) {
-        if (evento == null || dto == null) return null;
+    public static void updateModel(Evento evento, AtualizarEventoDto dto) {
+        if (evento == null || dto == null) return;
 
-        return Evento.builder()
-                .nome(dto.nome())
-                .descricao(dto.descricao())
-                .paginaWeb(dto.paginaWeb())
-                .dataInicio(dto.dataInicio())
-                .dataFim(dto.dataFim())
-                .tipoEvento(parseTipoEvento(dto.tipoEvento()))
-                .modalidade(parseModalidade(dto.modalidade()))
-                .precoUnitarioIngresso(
-                        dto.precoUnitarioIngresso() != null
-                                ? dto.precoUnitarioIngresso()
-                                : 0.0
-                )
-                .taxaCancelamento(
-                        dto.taxaCancelamento() != null
-                                ? dto.taxaCancelamento()
-                                : 0.0
-                )
-                .eventoEstorno(dto.eventoEstorno())
-                .capacidadeMaxima(
-                        dto.capacidadeMaxima() != null
-                                ? dto.capacidadeMaxima()
-                                : 0
-                )
-                .localEvento(dto.localEvento())
-                .build();
+        if (dto.nome() != null) evento.setNome(dto.nome());
+        if (dto.descricao() != null) evento.setDescricao(dto.descricao());
+        if (dto.paginaWeb() != null) evento.setPaginaWeb(dto.paginaWeb());
+        if (dto.dataInicio() != null) evento.setDataInicio(dto.dataInicio());
+        if (dto.dataFim() != null) evento.setDataFim(dto.dataFim());
+        if (dto.tipoEvento() != null) evento.setTipoEvento(parseTipoEvento(dto.tipoEvento()));
+        if (dto.modalidade() != null) evento.setModalidade(parseModalidade(dto.modalidade()));
+        if (dto.precoUnitarioIngresso() != null) evento.setPrecoUnitarioIngresso(dto.precoUnitarioIngresso());
+        if (dto.taxaCancelamento() != null) evento.setTaxaCancelamento(dto.taxaCancelamento());
+        if (dto.eventoEstorno() != null) evento.setEventoEstorno(dto.eventoEstorno());
+        if (dto.capacidadeMaxima() != null) evento.setCapacidadeMaxima(dto.capacidadeMaxima());
+        if (dto.localEvento() != null) evento.setLocalEvento(dto.localEvento());
     }
 
     public static EventosOrganizadorDto toEventosOrganizadorDto(Evento evento) {

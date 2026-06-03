@@ -169,9 +169,9 @@ public class OrganizadorController {
                  EventoDataFimInvalidaException | EventoDataFimAnteriorInicioException |
                  EventoDuracaoInvalidaException | DadosInvalidosException e) {
             return ResponseEntity.status(400, e.getMessage());
-        } catch (Exception e) {
+        } /*catch (Exception e) {
             return ResponseEntity.status(500, "Erro interno no servidor.");
-        }
+        }*/
     }
 
     @PatchMapping(path = "/{organizadorId}/eventos/{eventoId}/ativar")

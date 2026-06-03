@@ -26,18 +26,17 @@ public class EventoRowMapper implements RowMapper<Evento> {
         evento.setDataInicio(LocalDateTime.parse(row[5].replace(" ", "T")));
         evento.setDataFim(LocalDateTime.parse(row[6].replace(" ", "T")));
         evento.setTipoEvento(Evento.TipoEvento.valueOf(row[7]));
-        evento.setModalidade(Evento.Modalidade.valueOf(row[8]));
-        evento.setPrecoUnitarioIngresso(Double.parseDouble(row[9]));
-        evento.setTaxaCancelamento(Double.parseDouble(row[10]));
-        evento.setEventoEstorno(Boolean.parseBoolean(row[11]) || "1".equals(row[11]));
-        evento.setCapacidadeMaxima(Integer.parseInt(row[12]));
-        evento.setIngressosDisponiveis(Integer.parseInt(row[13]));
+        evento.setModalidade(Evento.Modalidade.valueOf(row[9]));
+        evento.setPrecoUnitarioIngresso(Double.parseDouble(row[10]));
+        evento.setTaxaCancelamento(Double.parseDouble(row[11]));
+        evento.setEventoEstorno("1".equals(row[12]) || Boolean.parseBoolean(row[12]));
+        evento.setCapacidadeMaxima(Integer.parseInt(row[13]));
         evento.setLocalEvento(row[14]);
-        evento.setEventoAtivo(Boolean.parseBoolean(row[15]) || "1".equals(row[15]));
+        evento.setEventoAtivo("1".equals(row[15]) || Boolean.parseBoolean(row[15]));
 
-        if (row[16] != null && !row[16].trim().isEmpty()) {
+        if (row[8] != null && !row[8].trim().isEmpty()) {
             Evento principal = new Evento();
-            principal.setId(Long.parseLong(row[16]));
+            principal.setId(Long.parseLong(row[8]));
             evento.setEventoPrincipal(principal);
         }
         return evento;
