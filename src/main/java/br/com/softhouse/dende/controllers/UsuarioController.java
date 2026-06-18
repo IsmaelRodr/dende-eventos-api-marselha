@@ -27,6 +27,11 @@ public class UsuarioController {
     }
 
     // API 01 - Cadastrar
+    // [AVALIAÇÃO - Item 1] O nome do método 'cadastroUsuario()' usa um substantivo ("cadastro"),
+    // quando métodos em Java devem representar ações (verbos). O nome não deixa claro que se
+    // trata de uma ação de cadastramento.
+    // Sugestão: adote o nome 'cadastrarUsuario()', que expressa claramente a ação realizada.
+    // A nova assinatura ficaria: public ResponseEntity<String> cadastrarUsuario(@RequestBody Usuario usuario)
     @PostMapping
     public ResponseEntity<String> cadastroUsuario(@RequestBody Usuario usuario) {
 
@@ -54,6 +59,12 @@ public class UsuarioController {
 
         repositorio.salvarUsuario(usuario);
 
+        // [AVALIAÇÃO - Item 9] O status 201 (Created) está correto para criação de recursos.
+        // Porém, a resposta retorna uma String com o ID embutido no texto, o que não é uma boa prática de API REST.
+        // [AVALIAÇÃO - Item 4/5] Retornar a String com o ID concatenado expõe informação de implementação
+        // interna. O ideal seria retornar um DTO com o ID e nome do usuário criado: { "id": 1, "nome": "João" }
+        // Uma classe UsuarioCadastroResponseDTO e um Mapper seriam a forma mais adequada, mas não eram
+        // obrigatórios nesta avaliação.
         // Status 201 (Created) para novos cadastros
         return ResponseEntity.status(201, "Utilizador " + usuario.getNome() + " registado com sucesso! O seu ID é: " + usuario.getId());
     }
@@ -164,6 +175,11 @@ public class UsuarioController {
         // Aplica a desativação
         usuario.setAtivo(false);
         repositorio.salvarUsuario(usuario); // persistência pelo ID
+        // [AVALIAÇÃO - Item 9] O status 200 OK é aceitável, mas para operações de update sem retorno de
+        // corpo significativo, o status 204 No Content seria mais semântico na REST.
+        // [AVALIAÇÃO - Item 7] Retornar 409 quando o usuário já está inativo fere a idempotência do
+        // endpoint PATCH /desativar. Uma operação idempotente deveria retornar 200/204 mesmo se o recurso
+        // já estiver no estado desejado, pois o resultado final é o mesmo: usuário desativado.
         return ResponseEntity.status(200, "Usuário desativado com sucesso!");
     }
 
@@ -207,6 +223,12 @@ public class UsuarioController {
         return ResponseEntity.status(200, "Usuário reativado com sucesso!");
     }
 
+    // [AVALIAÇÃO - Item 9] O mapeamento @PostMapping para cancelamento de ingresso está semanticamente
+    // incorreto. POST é utilizado para criar novos recursos. Para uma ação de cancelamento (que altera
+    // o estado de um recurso existente), o verbo mais adequado seria @DeleteMapping (se semanticamente
+    // remover o recurso) ou @PatchMapping (se apenas alterar o status).
+    // Sugestão: @DeleteMapping(path = "/{usuarioId}/ingressos/{ingressoId}") ou
+    //           @PatchMapping(path = "/{usuarioId}/ingressos/{ingressoId}/cancelar")
     @PostMapping(path = "/{usuarioId}/ingressos/{ingressoId}")
     public ResponseEntity<String> cancelarIngresso(
             @PathVariable(parameter = "usuarioId") String usuarioIdString,
@@ -255,6 +277,10 @@ public class UsuarioController {
                 }
                 map.put("eventoAtivo", i.getEvento().isEventoAtivo());
                 map.put("dataCompra", i.getDataCompra());
+                // [AVALIAÇÃO - Item 4] O campo 'email' do Ingresso está sendo exposto na listagem.
+                // Conforme a US 15, a lista de ingressos deve exibir: evento (nome, data), status,
+                // valor pago/estornado. O e-mail não foi solicitado na User Story e expõe informação
+                // desnecessária na resposta. Considere remover este campo do retorno.
                 map.put("email", i.getEmail());
                 return map;
             }).toList();

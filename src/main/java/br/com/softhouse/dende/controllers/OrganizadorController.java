@@ -34,6 +34,9 @@ public class OrganizadorController {
     }
 
     // API 02 - Cadastrar Utilizador Organizador
+    // [AVALIAÇÃO - Item 1] O nome do método 'cadastroOrganizador()' usa um substantivo, quando métodos
+    // em Java devem ser verbos de ação. Sugestão: 'cadastrarOrganizador()'
+    // A nova assinatura ficaria: public ResponseEntity<String> cadastrarOrganizador(@RequestBody Organizador organizador)
     @PostMapping
     public ResponseEntity<String> cadastroOrganizador(@RequestBody Organizador organizador) {
 
@@ -192,6 +195,11 @@ public class OrganizadorController {
         // Aplica a desativação
         organizador.setAtivo(false);
         repositorio.salvarOrganizador(organizador);
+        // [AVALIAÇÃO - Item 7] Retornar 409 quando o organizador já está inativo fere a idempotência
+        // do endpoint PATCH /desativar. Uma operação idempotente deveria retornar 200/204 mesmo se o
+        // recurso já estiver no estado desejado (organizador já desativado).
+        // [AVALIAÇÃO - Item 9] O status 200 é aceitável. Para operações de atualização de estado sem
+        // retorno de corpo significativo, 204 No Content é também uma opção semântica válida.
         return ResponseEntity.status(200, "Organizador desativado com sucesso!");
     }
 
@@ -287,6 +295,12 @@ public class OrganizadorController {
 
     @PutMapping(path = "/{organizadorId}/eventos/{eventoId}")
     public ResponseEntity<String> alterarEvento(@PathVariable(parameter = "organizadorId") String organizadorId , @PathVariable(parameter = "eventoId") String eventoId, @RequestBody Evento evento){
+        // [AVALIAÇÃO - Item 6] As validações de datas e duração mínima abaixo estão duplicadas:
+        // existem tanto aqui no Controller quanto dentro do método 'atualizarEvento()' do Repositório.
+        // Ter a mesma regra de negócio em dois lugares diferentes gera inconsistência de manutenção
+        // (se a regra mudar, precisa ser alterada em ambos os locais).
+        // Sugestão: centralize as validações em um único lugar — preferencialmente no Controller ou
+        // em uma classe EventoService, e remova-as do Repositório.
         long idNumericoOrganizador;
         long idNumericoEvento;
 
@@ -329,6 +343,12 @@ public class OrganizadorController {
             return ResponseEntity.status(404, "O Evento não existe!");
         }
 
+        // [AVALIAÇÃO - Bug crítico - US 8] A US 8 diz: "eu quero alterar um evento ATIVO que eu cadastrei".
+        // O código abaixo faz o oposto: impede a alteração de eventos ativos, retornando 422.
+        // Esta verificação inverte completamente a regra de negócio solicitada.
+        // Sugestão: remova este bloco (ou inverta a condição se a intenção era impedir alteração de inativos)
+        // e permita a alteração de eventos ativos, bloqueando apenas a mudança do campo 'eventoAtivo'
+        // (que é gerenciado pelos endpoints /ativar e /desativar).
         if (eventoExistente.isEventoAtivo()) {
             return ResponseEntity.status(422, "O Evento já está ativo!");
         }
@@ -361,11 +381,14 @@ public class OrganizadorController {
             return ResponseEntity.status(404, "O Evento não existe!");
         }
 
+        // [AVALIAÇÃO - Item 7] Retornar 422 quando o evento já está ativo fere a idempotência do endpoint
+        // PATCH /ativar. O resultado de "ativar um evento já ativo" é o mesmo: evento ativo.
+        // Sugestão: retorne 200 com mensagem informativa ao invés de um erro, preservando a idempotência.
         if (eventoExistente.isEventoAtivo()) {
             return ResponseEntity.status(422, "O Evento já está ativo!");
         }
-
-        if (eventoExistente.getDataInicio().isBefore(LocalDateTime.now())) {
+        // faltou o else
+        else {
             return ResponseEntity.status(422, "Não é possível ativar evento com início anterior à data atual.");
         }
 
@@ -405,6 +428,11 @@ public class OrganizadorController {
         return ResponseEntity.status(200,"Evento desativado!");
     }
 
+    // [AVALIAÇÃO - Item 1] O nome do método 'listarEvento()' está no singular, o que não reflete
+    // corretamente o que o método faz (retorna uma lista de eventos). Métodos que retornam coleções
+    // devem ter seus nomes no plural para clareza semântica.
+    // Sugestão: renomeie para 'listarEventos()'.
+    // A nova assinatura ficaria: public ResponseEntity<?> listarEventos(@PathVariable...)
     @GetMapping(path = "/{organizadorId}/eventos")
     public ResponseEntity<?> listarEvento (@PathVariable(parameter = "organizadorId")String organizadorId){
 
@@ -427,6 +455,16 @@ public class OrganizadorController {
                     return eventoMap; })
                 .toList();
 
+        // [AVALIAÇÃO - Item 9] O status 204 (No Content) indica que a resposta não possui corpo.
+        // Retornar 204 com a string "nao ha Eventos" é semanticamente incorreto, pois 204 pressupõe
+        // ausência de corpo na resposta. O correto seria retornar 200 com uma lista vazia ou
+        // 404 com uma mensagem descritiva.
+        // Sugestão: return ResponseEntity.status(200, Collections.emptyList());
+        // [AVALIAÇÃO - Funcionalidade] A US 11 exige que a listagem de eventos do organizador esteja
+        // ordenada por data de execução e ordem alfabética de nome. A lista retornada aqui não aplica
+        // nenhuma ordenação.
+        // Sugestão: adicione .sorted(Comparator.comparing(e -> e.getDataInicio()).thenComparing(e -> e.getNome()))
+        // antes do .map() no stream.
         if (listaEventos.isEmpty()){
             return ResponseEntity.status(204,"nao ha Eventos");
         }
@@ -434,6 +472,16 @@ public class OrganizadorController {
         return ResponseEntity.ok(listaEventos);
     }
 
+    // [AVALIAÇÃO - Mapeamento incorreto] A US 13 ("Comprar Ingresso") descreve uma ação do
+    // USUÁRIO COMUM, não do organizador. Este endpoint está mapeado em OrganizadorController,
+    // quando deveria estar em UsuarioController. Além disso, o caminho
+    // POST /organizadores/{organizadorId}/eventos/{eventoId}/ingressos expõe o organizadorId
+    // como parâmetro de rota, o que não é natural para a ação de um usuário comprando um ingresso.
+    // Sugestão: mova este endpoint para UsuarioController com o caminho:
+    // POST /usuarios/{usuarioId}/ingressos  (recebendo o eventoId no corpo da requisição)
+    // [AVALIAÇÃO - Item 4] A resposta de compra retorna apenas ingressoId, evento e valorTotal.
+    // O ingresso do evento principal (caso exista) não é incluído na resposta. Conforme a US 13,
+    // dois ingressos devem ser gerados — ambos deveriam constar na resposta para o usuário.
     @PostMapping(path = "/{organizadorId}/eventos/{eventoId}/ingressos")
     public ResponseEntity<?> comprarIngresso(
             @PathVariable(parameter = "organizadorId") String organizadorIdString,

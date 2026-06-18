@@ -8,16 +8,28 @@ public class Organizador {
     private Long id;
     private String nome;
     private LocalDate dataNascimento;
+    // [AVALIAÇÃO - Item 2] O atributo 'sexo' é do tipo String, o que permite qualquer valor livre.
+    // Sugestão: utilize o mesmo enum Sexo { MASCULINO, FEMININO, NAO_INFORMADO } criado para Usuario.
+    // A nova declaração ficaria: private Sexo sexo;
     private String sexo;
     private String email;
     private String senha;
     private boolean ativo = true;
+    // [AVALIAÇÃO - Princípio OO] As classes Usuario e Organizador possuem exatamente os mesmos atributos
+    // básicos (id, nome, dataNascimento, sexo, email, senha, ativo). Isso configura duplicação de código.
+    // No projeto orientado a objetos, uma boa solução seria criar uma classe abstrata 'Pessoa' ou
+    // 'UsuarioBase' com os atributos comuns, e Organizador e Usuario herdariam dela.
+    // Exemplo: public class Organizador extends Pessoa { private Empresa empresa; }
     // A alteração de mestre: Composição usando a classe opcional Empresa
     private Empresa empresa;
 
     // Construtor vazio exigido pelo Jackson para receber o JSON
     public Organizador() {}
 
+    // [AVALIAÇÃO - Item 5] Mesma observação da classe Usuario: o record 'Credenciais' está embutido
+    // no modelo. O ideal seria um pacote 'dto' com classes específicas de entrada/saída.
+    // [AVALIAÇÃO - Item 4] Da mesma forma que Usuario, ao serializar Organizador diretamente a senha
+    // fica exposta. Um OrganizadorResponseDTO que omite senha seria o mais adequado.
     public record Credenciais(String email, String senha) {}
     
     // Getters e Setters

@@ -5,6 +5,10 @@ import java.time.LocalDateTime;
 public class Evento {
 
     private Long id;
+    // [AVALIAÇÃO - Item 10] O atributo 'organizador' está declarado como Long, o que caracteriza o estilo de
+    // chave estrangeira relacional. Em Orientação a Objetos, o relacionamento deve ser expresso via referência ao objeto.
+    // Sugestão: substitua o tipo Long pelo tipo Organizador.
+    // A nova declaração ficaria assim: private Organizador organizador;
     private Long organizador ;
     private String nome;
     private String descricao;
@@ -14,8 +18,19 @@ public class Evento {
     private TipoEvento tipoEvento;
     private Evento eventoPrincipal;
     private Modalidade modalidade;
+    // [AVALIAÇÃO - Item 14] O atributo 'precoUnitarioIngresso' utiliza o tipo double, que não é adequado para
+    // valores financeiros devido a problemas de precisão de ponto flutuante (ex: 0.1 + 0.2 != 0.3 em double).
+    // Sugestão: utilize BigDecimal para garantir precisão em dados monetários.
+    // A nova declaração ficaria assim: private BigDecimal precoUnitarioIngresso;
     private double precoUnitarioIngresso;
+    // [AVALIAÇÃO - Item 14] O mesmo problema de precisão financeira se aplica ao atributo 'taxaCancelamento'.
+    // Sugestão: utilize BigDecimal no lugar de double.
+    // A nova declaração ficaria assim: private BigDecimal taxaCancelamento;
     private double taxaCancelamento;
+    // [AVALIAÇÃO - Item 2] O nome do atributo 'eventoEstorno' não deixa claro o valor que ele armazena.
+    // Ao ler, não fica óbvio se representa "um evento de estorno" ou "se o evento permite estorno".
+    // Sugestão: adote um nome que expresse claramente um valor booleano, como 'permiteEstorno'.
+    // A nova declaração ficaria assim: private boolean permiteEstorno;
     private boolean eventoEstorno;
     private int capacidadeMaxima;
     private int ingressosDisponiveis;
@@ -189,6 +204,11 @@ public class Evento {
         this.eventoAtivo = eventoAtivo;
     }
 
+    // [AVALIAÇÃO - Item 6] O método 'disponibilizarIngressos()' realiza validação de regra de negócio
+    // dentro da classe de modelo. A responsabilidade do modelo é representar os dados da entidade;
+    // as validações de negócio pertencem à camada de Serviço ou ao Repositório.
+    // Sugestão: mova as verificações de quantidade (quantidade <= 0, quantidade > capacidadeMaxima)
+    // para o Repositório ou para uma classe EventoService.
     public void disponibilizarIngressos(int quantidade) {
 
         if (quantidade <= 0) {
@@ -207,6 +227,11 @@ public class Evento {
         if (o == null || getClass() != o.getClass()) return false;
 
         Evento evento = (Evento) o;
+        // [AVALIAÇÃO - Atenção ao Bug] O operador '==' compara referências de objetos, não valores.
+        // Para o tipo Long, IDs fora do intervalo [-128, 127] podem falhar silenciosamente (retornar false
+        // mesmo que os valores sejam numericamente iguais, pois o cache do Java não cobre esse range).
+        // Sugestão: utilize Objects.equals() para uma comparação segura de valores.
+        // A linha corrigida ficaria assim: return Objects.equals(getId(), evento.getId());
         return getId() == evento.getId();
     }
 

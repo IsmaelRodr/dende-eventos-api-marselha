@@ -8,6 +8,10 @@ public class Usuario {
     private Long id;
     private String nome;
     private LocalDate dataNascimento;
+    // [AVALIAÇÃO - Item 2] O atributo 'sexo' é do tipo String, o que permite qualquer valor
+    // (ex: "masculino", "M", "male", "Masculino"). Para garantir consistência dos dados, recomenda-se
+    // utilizar um enum com os valores possíveis.
+    // Sugestão: crie enum Sexo { MASCULINO, FEMININO, NAO_INFORMADO } e declare: private Sexo sexo;
     private String sexo;
     private String email;
     private String senha;
@@ -16,6 +20,12 @@ public class Usuario {
     // Construtor vazio exigido pelo Jackson para receber o JSON
     public Usuario() {}
 
+    // [AVALIAÇÃO - Item 5] O record 'Credenciais' é um mini-DTO embutido na classe de modelo.
+    // Embora funcione, o ideal seria que esse record estivesse em um pacote 'dto' separado.
+    // Não era obrigatório nesta avaliação, mas é uma boa prática de organização.
+    // [AVALIAÇÃO - Item 4] A classe Usuario, quando serializada diretamente como resposta,
+    // expõe o campo 'senha'. O ideal seria ter um UsuarioResponseDTO que omite campos sensíveis
+    // como senha, retornando apenas os dados que a US 4 solicita (nome, dataNascimento, idade, email).
     public record Credenciais(String email, String senha) {}
     
     // Getters e Setters
